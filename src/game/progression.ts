@@ -138,19 +138,38 @@ export function loadPlayerProgress(storage?: Pick<Storage, 'getItem'>): PlayerPr
     const raw = storage.getItem('banh_trang_player_progress_v1');
     if (!raw) return INITIAL_PLAYER_PROGRESS;
     const parsed = JSON.parse(raw) as Partial<PlayerProgress>;
-    if (parsed.version !== 1 || !Number.isInteger(parsed.level) || !Number.isFinite(parsed.xp)) {
+    if (
+      parsed.version !== 1 ||
+      !Number.isInteger(parsed.level) ||
+      (parsed.level ?? 0) < 1 ||
+      !Number.isFinite(parsed.xp) ||
+      (parsed.xp ?? -1) < 0 ||
+      (parsed.xp ?? 0) >= xpRequiredForLevel(parsed.level ?? 1)
+    ) {
       return INITIAL_PLAYER_PROGRESS;
     }
 
     const validIds = (value: unknown): DecorationId[] => Array.isArray(value)
-      ? value.filter((id): id is DecorationId => DECORATIONS.some((item) => item.id === id))
+      ? [...new Set(value.filter((id): id is DecorationId => DECORATIONS.some((item) => item.id === id)))]
       : [];
+    const ownedDecorations = validIds(parsed.ownedDecorations);
+    const equippedDecorations: DecorationId[] = [];
+    const occupiedSlots = new Set<DecorationDefinition['slot']>();
+    for (const id of validIds(parsed.equippedDecorations)) {
+      const item = DECORATIONS.find((decoration) => decoration.id === id);
+      if (item && ownedDecorations.includes(id) && !occupiedSlots.has(item.slot)) {
+        equippedDecorations.push(id);
+        occupiedSlots.add(item.slot);
+      }
+    }
 
     return {
       ...INITIAL_PLAYER_PROGRESS,
       ...parsed,
-      ownedDecorations: validIds(parsed.ownedDecorations),
-      equippedDecorations: validIds(parsed.equippedDecorations),
+      lifetimeEarnings: Number.isFinite(parsed.lifetimeEarnings) ? Math.max(0, Math.floor(parsed.lifetimeEarnings ?? 0)) : 0,
+      completedOrders: Number.isFinite(parsed.completedOrders) ? Math.max(0, Math.floor(parsed.completedOrders ?? 0)) : 0,
+      ownedDecorations,
+      equippedDecorations,
       difficulty: parsed.difficulty === 'EASY' || parsed.difficulty === 'HARD'
         ? parsed.difficulty
         : 'NORMAL',
