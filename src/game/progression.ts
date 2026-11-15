@@ -1,0 +1,173 @@
+export type GameDifficulty = 'EASY' | 'NORMAL' | 'HARD';
+
+export type DecorationId =
+  | 'neon_sign'
+  | 'colorful_awning'
+  | 'string_lights'
+  | 'sticker_pack'
+  | 'stainless_counter'
+  | 'premium_menu';
+
+export interface DecorationDefinition {
+  id: DecorationId;
+  name: string;
+  description: string;
+  price: number;
+  attraction: number;
+  unlockLevel: number;
+  slot: 'SIGN' | 'ROOF' | 'LIGHTING' | 'BODY' | 'COUNTER' | 'MENU';
+}
+
+export interface PlayerProgress {
+  version: 1;
+  level: number;
+  xp: number;
+  lifetimeEarnings: number;
+  completedOrders: number;
+  ownedDecorations: DecorationId[];
+  equippedDecorations: DecorationId[];
+  difficulty: GameDifficulty;
+}
+
+export const DIFFICULTY_SETTINGS: Record<GameDifficulty, {
+  label: string;
+  customerSpawnMultiplier: number;
+  customerPatienceMultiplier: number;
+  policeChanceMultiplier: number;
+  rewardMultiplier: number;
+}> = {
+  EASY: { label: 'Thư thả', customerSpawnMultiplier: 0.8, customerPatienceMultiplier: 1.3, policeChanceMultiplier: 0.65, rewardMultiplier: 0.85 },
+  NORMAL: { label: 'Vỉa hè Sài Gòn', customerSpawnMultiplier: 1, customerPatienceMultiplier: 1, policeChanceMultiplier: 1, rewardMultiplier: 1 },
+  HARD: { label: 'Căng thẳng', customerSpawnMultiplier: 1.25, customerPatienceMultiplier: 0.8, policeChanceMultiplier: 1.5, rewardMultiplier: 1.3 },
+};
+
+export const DECORATIONS: DecorationDefinition[] = [
+  { id: 'neon_sign', name: 'Bảng hiệu đèn neon', description: 'Bảng hiệu nổi bật, thu hút ánh nhìn từ xa.', price: 120000, attraction: 5, unlockLevel: 2, slot: 'SIGN' },
+  { id: 'colorful_awning', name: 'Mái che sắc màu', description: 'Tạo điểm nhấn riêng cho xe bánh tráng.', price: 180000, attraction: 4, unlockLevel: 3, slot: 'ROOF' },
+  { id: 'string_lights', name: 'Dây đèn trang trí', description: 'Không gian lung linh khi bán buổi tối.', price: 90000, attraction: 4, unlockLevel: 2, slot: 'LIGHTING' },
+  { id: 'sticker_pack', name: 'Bộ sticker cá tính', description: 'Trang trí thân xe theo phong cách riêng.', price: 50000, attraction: 2, unlockLevel: 1, slot: 'BODY' },
+  { id: 'stainless_counter', name: 'Quầy inox sạch sẽ', description: 'Quầy chế biến gọn gàng, chuyên nghiệp.', price: 250000, attraction: 6, unlockLevel: 4, slot: 'COUNTER' },
+  { id: 'premium_menu', name: 'Bảng menu cao cấp', description: 'Menu bắt mắt giúp khách dễ chọn món.', price: 150000, attraction: 5, unlockLevel: 3, slot: 'MENU' },
+];
+
+export const INITIAL_PLAYER_PROGRESS: PlayerProgress = {
+  version: 1,
+  level: 1,
+  xp: 0,
+  lifetimeEarnings: 0,
+  completedOrders: 0,
+  ownedDecorations: [],
+  equippedDecorations: [],
+  difficulty: 'NORMAL',
+};
+
+export function xpRequiredForLevel(level: number): number {
+  return 100 + Math.max(0, level - 1) * 50;
+}
+
+export function addProgress(
+  current: PlayerProgress,
+  earnedXp: number,
+  earnings = 0,
+  completedOrders = 0,
+): PlayerProgress {
+  let level = current.level;
+  let xp = current.xp + Math.max(0, Math.floor(earnedXp));
+
+  while (xp >= xpRequiredForLevel(level)) {
+    xp -= xpRequiredForLevel(level);
+    level += 1;
+  }
+
+  return {
+    ...current,
+    level,
+    xp,
+    lifetimeEarnings: current.lifetimeEarnings + Math.max(0, Math.floor(earnings)),
+    completedOrders: current.completedOrders + Math.max(0, Math.floor(completedOrders)),
+  };
+}
+
+export function buyDecoration(
+  progress: PlayerProgress,
+  decorationId: DecorationId,
+  money: number,
+): { progress: PlayerProgress; remainingMoney: number } | null {
+  const item = DECORATIONS.find((decoration) => decoration.id === decorationId);
+  if (
+    !item ||
+    progress.ownedDecorations.includes(decorationId) ||
+    progress.level < item.unlockLevel ||
+    money < item.price
+  ) return null;
+
+  return {
+    progress: {
+      ...progress,
+      ownedDecorations: [...progress.ownedDecorations, decorationId],
+    },
+    remainingMoney: money - item.price,
+  };
+}
+
+export function equipDecoration(
+  progress: PlayerProgress,
+  decorationId: DecorationId,
+): PlayerProgress {
+  if (!progress.ownedDecorations.includes(decorationId)) return progress;
+  const item = DECORATIONS.find((decoration) => decoration.id === decorationId);
+  if (!item) return progress;
+
+  const equippedDecorations = progress.equippedDecorations.filter((id) =>
+    DECORATIONS.find((decoration) => decoration.id === id)?.slot !== item.slot
+  );
+  return { ...progress, equippedDecorations: [...equippedDecorations, decorationId] };
+}
+
+export function getDecorationAttraction(progress: PlayerProgress): number {
+  return progress.equippedDecorations.reduce(
+    (total, id) => total + (DECORATIONS.find((item) => item.id === id)?.attraction ?? 0),
+    0,
+  );
+}
+
+export function loadPlayerProgress(storage?: Pick<Storage, 'getItem'>): PlayerProgress {
+  if (!storage) return INITIAL_PLAYER_PROGRESS;
+
+  try {
+    const raw = storage.getItem('banh_trang_player_progress_v1');
+    if (!raw) return INITIAL_PLAYER_PROGRESS;
+    const parsed = JSON.parse(raw) as Partial<PlayerProgress>;
+    if (parsed.version !== 1 || !Number.isInteger(parsed.level) || !Number.isFinite(parsed.xp)) {
+      return INITIAL_PLAYER_PROGRESS;
+    }
+
+    const validIds = (value: unknown): DecorationId[] => Array.isArray(value)
+      ? value.filter((id): id is DecorationId => DECORATIONS.some((item) => item.id === id))
+      : [];
+
+    return {
+      ...INITIAL_PLAYER_PROGRESS,
+      ...parsed,
+      ownedDecorations: validIds(parsed.ownedDecorations),
+      equippedDecorations: validIds(parsed.equippedDecorations),
+      difficulty: parsed.difficulty === 'EASY' || parsed.difficulty === 'HARD'
+        ? parsed.difficulty
+        : 'NORMAL',
+    };
+  } catch {
+    return INITIAL_PLAYER_PROGRESS;
+  }
+}
+
+export function savePlayerProgress(
+  progress: PlayerProgress,
+  storage?: Pick<Storage, 'setItem'>,
+): void {
+  if (!storage) return;
+  try {
+    storage.setItem('banh_trang_player_progress_v1', JSON.stringify(progress));
+  } catch {
+    // Browser storage may be unavailable.
+  }
+}
