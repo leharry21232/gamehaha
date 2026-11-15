@@ -59,6 +59,7 @@ import type {
   FlyingCashItem,
   FlyingTopping,
   GameHudSnapshot,
+  NpcEncounterSnapshot,
   GameScreenState,
   GuardGrabState,
   InventoryState,
@@ -450,6 +451,7 @@ export class GameEngine {
   private money = INITIAL_PLAYER_PROGRESS.wallet;
   private playerProgress: PlayerProgress = INITIAL_PLAYER_PROGRESS;
   private completedMissionIds: string[] = [];
+  private npcInteracted = false;
   private xu = 0;
   private score = 0;
   private ordersServed = 0;
@@ -1805,6 +1807,7 @@ export class GameEngine {
       vipType || rollRoomHunters || rollFortuneType ? undefined : this.waitingCustomers.shift();
     this.fillWaitingQueue();
 
+    this.npcInteracted = false;
     this.order = generateCustomerOrder(
       this.ordersServed,
       this.nextId,
@@ -5772,6 +5775,37 @@ export class GameEngine {
     });
   }
 
+  public interactWithCurrentNpc(choice: 'FRIENDLY' | 'QUICK'): boolean {
+    if (!this.order || this.npcInteracted || this.screen !== 'PLAYING' || this.phase !== 'COOKING') return false;
+    const encounter = this.getNpcEncounterSnapshot();
+    if (!encounter) return false;
+    this.npcInteracted = true;
+    if (choice === 'FRIENDLY') {
+      this.order.baseReward = Math.round(this.order.baseReward * 1.1);
+      this.spawnCallout('💛 +10% tiền công', `Bạn đã trò chuyện thân thiện với ${encounter.name}!`, this.width * 0.5, this.height * 0.22, '#F59E0B');
+    } else {
+      const extraPatience = Math.max(2, this.order.maxPatience * 0.2);
+      this.order.patience = Math.min(this.order.maxPatience, this.order.patience + extraPatience);
+      this.spawnCallout('⏳ Khách kiên nhẫn hơn', `${encounter.name} cho bạn thêm thời gian!`, this.width * 0.5, this.height * 0.22, '#38BDF8');
+    }
+    this.audio.playPickup();
+    this.emitHud(true);
+    return true;
+  }
+
+  private getNpcEncounterSnapshot(): NpcEncounterSnapshot | null {
+    if (!this.order) return null;
+    const npcByType: Partial<Record<CustomerType, { name: string; role: string; dialogue: string }>> = {
+      STUDENT: { name: 'Cô Sáu', role: 'Khách quen đầu hẻm', dialogue: '“Con làm cho cô phần ngon nha, cô hay ghé ủng hộ lắm!”' },
+      OFFICE: { name: 'Chị Hạnh', role: 'Nhân viên văn phòng', dialogue: '“Chị đang vội đi làm, quán mình đông mà phục vụ dễ thương ghê.”' },
+      NINJA_LEAD: { name: 'Chú Bảy', role: 'Tài xế công nghệ', dialogue: '“Bán buôn phải có trước có sau, chú thấy con chịu khó đó!”' },
+      GEN_Z: { name: 'Tí Reviewer', role: 'Nhà sáng tạo nội dung', dialogue: '“Món này lên clip mà ngon là mình nổi liền nha!”' },
+      APP_SHIPPER: { name: 'Anh Tài', role: 'Shipper thân thiện', dialogue: '“Có đơn gấp nhưng anh vẫn chờ được, mình phối hợp nha!”' },
+    };
+    const npc = npcByType[this.order.customerType];
+    return npc ? { ...npc, customerLabel: this.order.customerLabel, interacted: this.npcInteracted } : null;
+  }
+
   private emitHud(force: boolean): void {
     const raidSec = Math.ceil(this.raidTimeLeft);
     const daySec = Math.ceil(this.dayTimeLeft);
@@ -5792,7 +5826,8 @@ export class GameEngine {
       : '0';
     const dayBannerTenths = Math.ceil(this.dayBannerTimer * 10);
     const penaltyHash = `${this.policeHeat}-${this.ruinedBagBlocking}-${this.badRepOrdersLeft}-${Math.ceil(this.recordingPhoneTimer * 5)}-${Math.ceil(this.yellingTimer * 5)}-${this.sauceSplatterWipes}`;
-    const hash = `${this.playerProgress.level}-${this.playerProgress.xp}-${this.playerProgress.ownedDecorations.length}-${this.playerProgress.equippedDecorations.join(',')}-${this.playerProgress.difficulty}|${this.screen}|${this.phase}|${this.dishType}|${this.prepStep}|${this.money}|${this.xu}|${this.score}|${this.ordersServed}|${this.redChairs}|${this.maxRedChairs}|${this.combo}|${raidSec}|${this.day}-${daySec}-${this.dayDuration}-${dayBannerTenths}|${this.audio.isMuted()}|${this.shopOpen}|${upHash}|${invHash}|${buffHash}|${advHash}|${featHash}|${tycoonHash}|${wuxiaHash}|${this.dailyHexagram.element}|${this.viralOrdersLeft}|${bpSec}|${this.rainEvent.active}|${this.tiktokQte.active}|${this.checkout.active}-${this.checkout.givenChangeK}-${chkTenths}-${this.checkout.selectedBills.length}-${this.checkout.discountAccepted}|${this.raidChanceBonus}|${penaltyHash}`;
+    const npcHash = this.order ? `${this.order.id}-${this.npcInteracted}` : 'none';
+    const hash = `${npcHash}-${this.playerProgress.level}-${this.playerProgress.xp}-${this.playerProgress.ownedDecorations.length}-${this.playerProgress.equippedDecorations.join(',')}-${this.playerProgress.difficulty}|${this.screen}|${this.phase}|${this.dishType}|${this.prepStep}|${this.money}|${this.xu}|${this.score}|${this.ordersServed}|${this.redChairs}|${this.maxRedChairs}|${this.combo}|${raidSec}|${this.day}-${daySec}-${this.dayDuration}-${dayBannerTenths}|${this.audio.isMuted()}|${this.shopOpen}|${upHash}|${invHash}|${buffHash}|${advHash}|${featHash}|${tycoonHash}|${wuxiaHash}|${this.dailyHexagram.element}|${this.viralOrdersLeft}|${bpSec}|${this.rainEvent.active}|${this.tiktokQte.active}|${this.checkout.active}-${this.checkout.givenChangeK}-${chkTenths}-${this.checkout.selectedBills.length}-${this.checkout.discountAccepted}|${this.raidChanceBonus}|${penaltyHash}`;
     if (!force && hash === this.lastHudHash) return;
     this.lastHudHash = hash;
 
@@ -5815,6 +5850,7 @@ export class GameEngine {
       equippedDecorations: [...this.playerProgress.equippedDecorations],
       difficulty: this.playerProgress.difficulty,
       storyMission: getStoryMissionSnapshot(this.playerProgress, this.completedMissionIds),
+      npcEncounter: this.getNpcEncounterSnapshot(),
       screen: this.screen,
       phase: this.phase,
       dishType: this.dishType,
