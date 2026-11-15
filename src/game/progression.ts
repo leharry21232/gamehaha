@@ -42,6 +42,22 @@ export const DIFFICULTY_SETTINGS: Record<GameDifficulty, {
   HARD: { label: 'Căng thẳng', customerSpawnMultiplier: 1.25, customerPatienceMultiplier: 0.8, policeChanceMultiplier: 1.5, rewardMultiplier: 1.3 },
 };
 
+export interface PlayerSkillBonus {
+  id: 'FAST_LEARNER' | 'CUSTOMER_CARE' | 'STREET_REPUTATION';
+  level: number;
+  name: string;
+  description: string;
+}
+
+export function getUnlockedSkills(level: number): PlayerSkillBonus[] {
+  const skills: PlayerSkillBonus[] = [
+    { id: 'FAST_LEARNER', level: 3, name: 'Học việc nhanh', description: '+10% XP nhận được từ đơn hàng.' },
+    { id: 'CUSTOMER_CARE', level: 5, name: 'Giữ chân khách', description: '+5% thời gian chờ của khách.' },
+    { id: 'STREET_REPUTATION', level: 8, name: 'Danh tiếng vỉa hè', description: '+5% tiền thưởng từ đơn hàng.' },
+  ];
+  return skills.filter((skill) => level >= skill.level);
+}
+
 export const DECORATIONS: DecorationDefinition[] = [
   { id: 'neon_sign', name: 'Bảng hiệu đèn neon', description: 'Bảng hiệu nổi bật, thu hút ánh nhìn từ xa.', price: 120000, attraction: 5, unlockLevel: 2, slot: 'SIGN' },
   { id: 'colorful_awning', name: 'Mái che sắc màu', description: 'Tạo điểm nhấn riêng cho xe bánh tráng.', price: 180000, attraction: 4, unlockLevel: 3, slot: 'ROOF' },
