@@ -491,6 +491,10 @@ export default function App() {
   const engineRef = useRef<GameEngine | null>(null);
 
   const [hud, setHud] = useState<GameHudSnapshot>(INITIAL_HUD);
+  const [onboardingStep, setOnboardingStep] = useState<'STORY' | 'MAP' | null>(null);
+  const [selectedVendorSpot, setSelectedVendorSpot] = useState(() => {
+    try { return localStorage.getItem('banhtrang_vendor_spot_v1') || 'CHO_BEN_THANH'; } catch { return 'CHO_BEN_THANH'; }
+  });
   const [bestRecord, setBestRecord] = useState<BestRecord>(() => loadBestRecord());
   const [heroImgFailed, setHeroImgFailed] = useState(false);
   const [draggingSquadId, setDraggingSquadId] = useState<string | null>(null);
@@ -586,7 +590,7 @@ export default function App() {
     const onKey = (e: KeyboardEvent) => {
       if (hud.screen === 'TITLE_MENU' && (e.code === 'Enter' || e.code === 'Space')) {
         e.preventDefault();
-        engineRef.current?.startNewGame();
+        setOnboardingStep('STORY');
         return;
       }
       if (hud.screen === 'PLAYING' && hud.checkout.active && !hud.shopOpen) {
@@ -621,7 +625,7 @@ export default function App() {
   }, [hud.screen, hud.checkout.active, hud.shopOpen]);
 
   const handleStart = () => {
-    engineRef.current?.startNewGame();
+    setOnboardingStep('STORY');
   };
 
   const handleTogglePause = () => {
@@ -913,6 +917,63 @@ export default function App() {
         </div>
       )}
 
+      {/* STORY INTRO + REAL VENDOR LOCATION SELECTOR */}
+      {onboardingStep && (
+        <div className="absolute inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-[#080B12]/95 p-4 allow-touch-scroll">
+          {onboardingStep === 'STORY' ? (
+            <div className="w-full max-w-2xl rounded-2xl border-[3px] border-amber-400 bg-[#171923] p-6 sm:p-8 shadow-2xl">
+              <p className="text-xs font-extrabold tracking-[0.2em] text-amber-300">MỞ ĐẦU · SÀI GÒN, 6:00 SÁNG</p>
+              <h2 className="mt-2 font-display text-3xl font-extrabold text-white">Một chiếc xe, một cơ hội đổi đời</h2>
+              <div className="mt-5 space-y-3 text-sm leading-relaxed text-slate-200">
+                <p>Ba tháng trước, nhân vật chính vừa nghỉ việc ở xưởng in. Tiền trọ đến hạn, mẹ ở quê lại đang cần tiền thuốc. Những công việc xin được đều trả công bèo bọt, còn khoản tiết kiệm cuối cùng chỉ đủ để bắt đầu một việc nhỏ.</p>
+                <p>Một buổi sáng, người bạn cũ để lại chiếc xe bánh tráng và chỉ cho bạn mối lấy nguyên liệu ở chợ đầu mối. Bạn quyết định thử bán bánh tráng trộn trên vỉa hè: tự tay chuẩn bị từng phần, kiếm những vị khách đầu tiên và gây dựng lại cuộc sống.</p>
+                <p className="rounded-xl border border-amber-400/40 bg-amber-400/10 p-3 text-amber-100 italic">“Không cần giàu ngay hôm nay. Chỉ cần bán được những hộp đầu tiên, rồi ngày mai sẽ có hy vọng.”</p>
+                <p className="text-xs text-slate-400">Bạn bắt đầu với 120.000đ vốn, một chiếc rổ nhựa và quyết tâm tự làm chủ.</p>
+              </div>
+              <div className="mt-6 flex flex-wrap justify-between gap-3">
+                <button type="button" onClick={() => setOnboardingStep(null)} className="rounded-xl border-2 border-slate-500 px-5 py-3 font-bold text-slate-200 hover:bg-slate-700">← Quay lại màn hình chính</button>
+                <button type="button" onClick={() => setOnboardingStep('MAP')} className="rounded-xl border-[3px] border-[#111318] bg-amber-400 px-6 py-3 font-extrabold text-slate-950 hover:bg-amber-300">Chọn nơi bắt đầu →</button>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full max-w-3xl rounded-2xl border-[3px] border-emerald-400 bg-[#171923] p-5 sm:p-7 shadow-2xl">
+              <div className="flex items-start justify-between gap-3">
+                <div><p className="text-xs font-extrabold tracking-widest text-emerald-300">BẢN ĐỒ SÀI GÒN</p><h2 className="mt-1 font-display text-2xl font-extrabold">Chọn chỗ dựng xe bán hàng</h2><p className="mt-1 text-xs text-slate-300">Chọn một khu vực để bắt đầu. Bạn có thể đổi vị trí trước mỗi ngày kinh doanh.</p></div>
+                <button type="button" onClick={() => setOnboardingStep(hud.screen === 'TITLE_MENU' ? 'STORY' : null)} className="rounded-lg border border-slate-500 px-3 py-2 text-sm font-bold">← Quay lại</button>
+              </div>
+              <div className="relative mt-5 h-56 overflow-hidden rounded-xl border-2 border-slate-500 bg-[linear-gradient(35deg,#1f493d_0%,#284c43_35%,#243b50_36%,#243b50_62%,#344a38_63%,#1f493d_100%)]">
+                <div className="absolute inset-0 opacity-30" style={{backgroundImage:'linear-gradient(90deg,transparent 48%,#cbd5e1 49%,#cbd5e1 51%,transparent 52%),linear-gradient(0deg,transparent 48%,#cbd5e1 49%,#cbd5e1 51%,transparent 52%)',backgroundSize:'90px 90px'}} />
+                <span className="absolute left-[8%] top-[12%] text-[10px] font-bold text-white">KÊNH NHIÊU LỘC</span><span className="absolute right-[8%] bottom-[10%] text-[10px] font-bold text-white">TRUNG TÂM SÀI GÒN</span>
+                {[
+                  {id:'CONG_VIEN',name:'Công viên 23/9',x:'18%',y:'62%',traffic:'Khách ổn định',rent:'15.000đ/ngày',risk:'Ít cạnh tranh'},
+                  {id:'DAI_HOC',name:'Khu đại học',x:'48%',y:'18%',traffic:'Đông sinh viên',rent:'20.000đ/ngày',risk:'Cạnh tranh vừa'},
+                  {id:'CHO_BEN_THANH',name:'Chợ Bến Thành',x:'75%',y:'38%',traffic:'Rất đông khách',rent:'30.000đ/ngày',risk:'Cạnh tranh cao'},
+                  {id:'NGA_TU',name:'Ngã tư Hàng Xanh',x:'80%',y:'75%',traffic:'Nhiều người đi đường',rent:'22.000đ/ngày',risk:'Rủi ro trật tự vừa'},
+                  {id:'PHO_DI_BO',name:'Phố đi bộ Nguyễn Huệ',x:'48%',y:'72%',traffic:'Khách đông buổi tối',rent:'35.000đ/ngày',risk:'Rủi ro cao'},
+                ].map((spot) => (
+                  <button key={spot.id} type="button" onClick={() => setSelectedVendorSpot(spot.id)} style={{left:spot.x,top:spot.y}} className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 px-2.5 py-1.5 text-[10px] font-extrabold shadow-lg ${selectedVendorSpot===spot.id?'border-amber-300 bg-amber-400 text-slate-950 scale-110':'border-white bg-slate-900/90 text-white'}`} aria-pressed={selectedVendorSpot===spot.id}>📍 {spot.name}</button>
+                ))}
+              </div>
+              {(() => {
+                const spots = [
+                  {id:'CONG_VIEN',name:'Công viên 23/9',traffic:'Khách ổn định',rent:'15.000đ/ngày',risk:'Ít cạnh tranh'},
+                  {id:'DAI_HOC',name:'Khu đại học',traffic:'Đông sinh viên',rent:'20.000đ/ngày',risk:'Cạnh tranh vừa'},
+                  {id:'CHO_BEN_THANH',name:'Chợ Bến Thành',traffic:'Rất đông khách',rent:'30.000đ/ngày',risk:'Cạnh tranh cao'},
+                  {id:'NGA_TU',name:'Ngã tư Hàng Xanh',traffic:'Nhiều người đi đường',rent:'22.000đ/ngày',risk:'Rủi ro trật tự vừa'},
+                  {id:'PHO_DI_BO',name:'Phố đi bộ Nguyễn Huệ',traffic:'Khách đông buổi tối',rent:'35.000đ/ngày',risk:'Rủi ro cao'},
+                ];
+                const chosen = spots.find((spot) => spot.id === selectedVendorSpot) ?? spots[2];
+                return <div className="mt-4 rounded-xl border border-emerald-400/50 bg-emerald-400/10 p-4"><p className="font-extrabold text-emerald-200">{chosen.name}</p><p className="mt-1 text-xs text-slate-200">{chosen.traffic} · {chosen.risk}</p><p className="mt-1 text-sm font-bold text-amber-300">Chi phí chỗ dự kiến: {chosen.rent}</p></div>;
+              })()}
+              <div className="mt-5 flex flex-wrap justify-between gap-3">
+                <button type="button" onClick={() => setOnboardingStep(hud.screen === 'TITLE_MENU' ? 'STORY' : null)} className="rounded-xl border-2 border-slate-500 px-5 py-3 font-bold text-slate-200 hover:bg-slate-700">← Quay lại</button>
+                <button type="button" onClick={() => { try { localStorage.setItem('banhtrang_vendor_spot_v1', selectedVendorSpot); } catch {} setOnboardingStep(null); if (hud.screen === 'TITLE_MENU') engineRef.current?.startNewGame(); }} className="rounded-xl border-[3px] border-[#111318] bg-emerald-400 px-6 py-3 font-extrabold text-slate-950 hover:bg-emerald-300">{hud.screen === 'TITLE_MENU' ? 'Xác nhận địa điểm & vào chợ →' : 'Lưu địa điểm này'}</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* TITLE SCREEN */}
       {hud.screen === 'TITLE_MENU' && (
         <div className="safe-inset-container absolute inset-0 z-20 flex items-center overflow-y-auto allow-touch-scroll bg-[#181920]">
@@ -1097,18 +1158,12 @@ export default function App() {
               </button>
               <button
                 type="button"
-                onClick={() => engineRef.current?.openCityTycoon()}
+                onClick={() => setOnboardingStep('MAP')}
                 className="flex items-center gap-2 px-5 py-3.5 rounded-xl bg-[#10B981] hover:bg-[#34D399] text-white font-display font-extrabold text-base border-[3px] border-[#111318] comic-shadow transition-transform hover:-translate-y-0.5 active:translate-y-0.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <MapIcon className="w-5 h-5" />
-                <span>Bản Đồ Đội Nhóm (16 NV)</span>
+                <span>Bản Đồ Điểm Bán</span>
               </button>
-              <a
-                href="/banh-trang-master.html"
-                className="flex items-center gap-2 px-5 py-3.5 rounded-xl bg-[#38BDF8] hover:bg-[#7DD3FC] text-[#111318] font-display font-extrabold text-base border-[3px] border-[#111318] comic-shadow transition-transform hover:-translate-y-0.5 active:translate-y-0.5 whitespace-nowrap shrink-0 cursor-pointer"
-              >
-                <span>Bánh Tráng Master (2D Lab)</span>
-              </a>
             </div>
 
             {/* Single flat control-hint line + personal best */}
@@ -1143,6 +1198,7 @@ export default function App() {
                   <h2 className="font-display font-extrabold text-2xl text-[#111318]">
                     Chợ Sớm Ngày {hud.day} · Nhập Nguyên Liệu
                   </h2>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-600"><span>📍 Điểm bán: <strong className="text-emerald-800">{({CONG_VIEN:'Công viên 23/9',DAI_HOC:'Khu đại học',CHO_BEN_THANH:'Chợ Bến Thành',NGA_TU:'Ngã tư Hàng Xanh',PHO_DI_BO:'Phố đi bộ Nguyễn Huệ'} as Record<string,string>)[selectedVendorSpot] || 'Chợ Bến Thành'}</strong></span><button type="button" onClick={() => setOnboardingStep('MAP')} className="rounded-md border border-emerald-700 px-2 py-1 font-bold text-emerald-800">Đổi vị trí</button><button type="button" onClick={() => engineRef.current?.returnToTitle()} className="rounded-md border border-slate-500 px-2 py-1 font-bold text-slate-700">← Quay lại menu</button></div>
                   <p className="text-xs text-slate-600 mt-0.5">
                     Phương tiện: <strong className="text-[#111318]">{vehicleMeta.name}</strong> (Tối đa{' '}
                     <span className="font-mono-tabular font-bold">{hud.maxStockPerItem}</span> phần/món) ·{' '}
