@@ -884,6 +884,20 @@ export class GameEngine {
     return true;
   }
 
+  public removeIngredient(id: RawIngredientId, qty = 1): boolean {
+    if (this.screen !== 'MORNING_PREP') return false;
+    const actualQty = Math.min(Math.max(1, Math.floor(qty)), this.inventory[id]);
+    if (actualQty <= 0) return false;
+
+    const refund = actualQty * this.marketPrices[id];
+    this.inventory[id] -= actualQty;
+    this.money += refund;
+    this.dayIngredientSpend = Math.max(0, this.dayIngredientSpend - refund);
+    this.audio.playPickup();
+    this.emitHud(true);
+    return true;
+  }
+
   public buyRecommendedStock(): void {
     if (this.screen !== 'MORNING_PREP') return;
     this.audio.unlock();
