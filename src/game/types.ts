@@ -608,6 +608,13 @@ export interface DailyPacingSnapshot {
 }
 
 export interface GameHudSnapshot {
+  playerLevel: number;
+  playerXp: number;
+  playerXpToNext: number;
+  lifetimeEarnings: number;
+  completedOrdersLifetime: number;
+  decorationAttraction: number;
+  difficulty: 'EASY' | 'NORMAL' | 'HARD';
   screen: GameScreenState;
   phase: PlayPhase;
   dishType: DishType;
