@@ -1,5 +1,5 @@
 import { GameAudio } from './audio';
-import { addProgress, getDecorationAttraction, INITIAL_PLAYER_PROGRESS, loadPlayerProgress, savePlayerProgress, xpRequiredForLevel, type PlayerProgress, type DecorationId, buyDecoration as purchaseDecoration, equipDecoration as applyDecoration, type GameDifficulty } from './progression';
+import { addProgress, getDecorationAttraction, INITIAL_PLAYER_PROGRESS, loadPlayerProgress, savePlayerProgress, xpRequiredForLevel, type PlayerProgress, type DecorationId, buyDecoration as purchaseDecoration, equipDecoration as applyDecoration, DIFFICULTY_SETTINGS, type GameDifficulty } from './progression';
 import { DayManager } from './dayManager';
 import { createInitialRicePaper, createInitialRollPolygon, splitPolygonBySegment } from './geometry';
 import { Haptics } from './haptics';
@@ -3728,9 +3728,10 @@ export class GameEngine {
     const maxOrders = this.upgrades.loaKeoKeo ? 3 : 4;
     if (this.ordersSinceRaid >= maxOrders) return true;
     const basePerMin = this.dayManager.pacing.policeRaidChancePerMin;
+    const difficulty = DIFFICULTY_SETTINGS[this.playerProgress.difficulty];
     const raidChance = Math.min(
       0.95,
-      basePerMin * 1.4 + (this.upgrades.loaKeoKeo ? 0.2 : 0) + this.raidChanceBonus
+      (basePerMin * 1.4 + (this.upgrades.loaKeoKeo ? 0.2 : 0) + this.raidChanceBonus) * difficulty.policeChanceMultiplier
     );
     return Math.random() < raidChance;
   }
@@ -3741,9 +3742,11 @@ export class GameEngine {
     const loaMult = this.upgrades.loaKeoKeo ? 0.8 : 1.0;
     const penaltyFactor = 1 / Math.max(0.4, 1 - this.spawnPenaltyPercentToday / 100);
     const thugFactor = this.thugsActive ? 1.5 : 1.0;
+    const difficulty = DIFFICULTY_SETTINGS[this.playerProgress.difficulty];
+    const attractionFactor = 1 - Math.min(0.2, getDecorationAttraction(this.playerProgress) * 0.01);
     this.customerSpawnDelay = Math.max(
       2.5,
-      this.dayManager.pacing.customerSpawnTimer * loaMult * penaltyFactor * thugFactor
+      this.dayManager.pacing.customerSpawnTimer * loaMult * penaltyFactor * thugFactor * difficulty.customerSpawnMultiplier * attractionFactor
     );
   }
 
@@ -3970,10 +3973,11 @@ export class GameEngine {
 
   private recordPlayerProgress(score: number, earnings: number): void {
     if (earnings <= 0) return;
+    const previousLevel = this.playerProgress.level;
     const earnedXp = 10 + Math.max(0, Math.floor(score / 100));
     this.playerProgress = addProgress(this.playerProgress, earnedXp, earnings, 1);
     savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
-    if (this.playerProgress.xp < earnedXp) {
+    if (this.playerProgress.level > previousLevel) {
       this.spawnCallout(
         `⭐ LÊN CẤP ${this.playerProgress.level}!`,
         'Bạn đã mở khóa thêm lựa chọn trang trí Garage!',
