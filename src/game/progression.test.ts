@@ -8,6 +8,7 @@ import {
   equipDecoration,
   getDecorationAttraction,
   INITIAL_PLAYER_PROGRESS,
+  type PlayerProgress,
   loadPlayerProgress,
   savePlayerProgress,
   xpRequiredForLevel,
@@ -45,7 +46,7 @@ test('decoration purchase checks level, balance and duplicate ownership', () => 
 test('equipping requires ownership and replaces an item in the same slot', () => {
   const withSticker = {
     ...INITIAL_PLAYER_PROGRESS,
-    ownedDecorations: ['sticker_pack', 'neon_sign'] as const,
+    ownedDecorations: ['sticker_pack', 'neon_sign'] as PlayerProgress['ownedDecorations'],
   };
   const equipped = equipDecoration(withSticker, 'sticker_pack');
   assert.deepEqual(equipped.equippedDecorations, ['sticker_pack']);
