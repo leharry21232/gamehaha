@@ -1040,9 +1040,10 @@ export default function App() {
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-700">
                 <div className="h-full rounded-full bg-amber-400 transition-all" style={{ width: `${Math.min(100, hud.playerXp / Math.max(1, hud.playerXpToNext) * 100)}%` }} />
               </div>
-              <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-slate-300">
+              <div className="mt-2 grid grid-cols-3 gap-2 text-[10px] text-slate-300">
                 <span>Đơn hoàn thành: {hud.completedOrdersLifetime}</span>
-                <span className="text-right">Tổng thu: {hud.lifetimeEarnings.toLocaleString('vi-VN')}đ</span>
+                <span className="text-center">Tổng thu: {hud.lifetimeEarnings.toLocaleString('vi-VN')}đ</span>
+                <span className="text-right font-bold text-emerald-300">Ví: {hud.money.toLocaleString('vi-VN')}đ</span>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <span className="text-xs font-bold">Độ khó:</span>
