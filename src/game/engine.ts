@@ -1,5 +1,5 @@
 import { GameAudio } from './audio';
-import { addProgress, getDecorationAttraction, INITIAL_PLAYER_PROGRESS, loadPlayerProgress, savePlayerProgress, xpRequiredForLevel, type PlayerProgress, type DecorationId, buyDecoration as purchaseDecoration, equipDecoration as applyDecoration, DIFFICULTY_SETTINGS, type GameDifficulty } from './progression';
+import { addProgress, getDecorationAttraction, INITIAL_PLAYER_PROGRESS, loadPlayerProgress, savePlayerProgress, xpRequiredForLevel, type PlayerProgress, type DecorationId, buyDecoration as purchaseDecoration, equipDecoration as applyDecoration, type GameDifficulty } from './progression';
 import { DayManager } from './dayManager';
 import { createInitialRicePaper, createInitialRollPolygon, splitPolygonBySegment } from './geometry';
 import { Haptics } from './haptics';
@@ -5782,6 +5782,8 @@ export class GameEngine {
       lifetimeEarnings: this.playerProgress.lifetimeEarnings,
       completedOrdersLifetime: this.playerProgress.completedOrders,
       decorationAttraction: getDecorationAttraction(this.playerProgress),
+      ownedDecorations: [...this.playerProgress.ownedDecorations],
+      equippedDecorations: [...this.playerProgress.equippedDecorations],
       difficulty: this.playerProgress.difficulty,
       screen: this.screen,
       phase: this.phase,
