@@ -148,6 +148,7 @@ const INITIAL_HUD: GameHudSnapshot = {
   ownedDecorations: [],
   equippedDecorations: [],
   difficulty: 'NORMAL',
+  npcEncounter: null,
   storyMission: { id: 'story_first_customers', chapter: 'Chương 1 · Khởi nghiệp', title: 'Ba vị khách đầu tiên', description: 'Hoàn thành 3 đơn hàng để chứng minh xe bánh tráng của bạn có thể trụ vững.', npcName: 'Cô Sáu', storyText: 'Cứ làm ngon, sạch sẽ, khách quen sẽ tự tìm tới.', progress: 0, target: 3, reward: 15000, completed: false, allCompleted: false },
   screen: 'TITLE_MENU',
   phase: 'COOKING',
@@ -2099,6 +2100,25 @@ export default function App() {
           </div>
         );
       })()}
+
+      {hud.screen === 'PLAYING' && hud.phase === 'COOKING' && hud.npcEncounter && !hud.checkout.active && !hud.shopOpen && (
+        <div className="pointer-events-auto absolute left-3 top-20 z-20 w-[min(92vw,340px)] rounded-2xl border-[3px] border-[#111318] bg-[#FFFDF5]/95 p-3 text-[#111318] comic-shadow">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] font-extrabold tracking-wide text-amber-700">🤝 GẶP GỠ NHÂN VẬT</span>
+            <span className="rounded-full bg-amber-100 px-2 py-1 text-[9px] font-extrabold">{hud.npcEncounter.role}</span>
+          </div>
+          <p className="mt-1 font-display text-base font-extrabold">{hud.npcEncounter.name}</p>
+          <p className="mt-1 text-xs font-semibold text-slate-700">“{hud.npcEncounter.dialogue}”</p>
+          {!hud.npcEncounter.interacted ? (
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => engineRef.current?.interactWithCurrentNpc('FRIENDLY')} className="rounded-lg border-2 border-[#111318] bg-amber-300 px-2 py-2 text-[10px] font-extrabold hover:bg-amber-200">💛 Trò chuyện (+10% tiền)</button>
+              <button type="button" onClick={() => engineRef.current?.interactWithCurrentNpc('QUICK')} className="rounded-lg border-2 border-[#111318] bg-sky-200 px-2 py-2 text-[10px] font-extrabold hover:bg-sky-100">⏳ Xin thêm thời gian</button>
+            </div>
+          ) : (
+            <p className="mt-2 rounded-lg bg-emerald-100 px-2 py-1.5 text-center text-[10px] font-extrabold text-emerald-800">Đã tương tác · Lựa chọn đã có hiệu lực cho đơn này</p>
+          )}
+        </div>
+      )}
 
       {/* DAY START ACCELERATION FLASH BANNER ("Day [X] - Tốc độ tăng cường!") */}
       {hud.screen === 'PLAYING' && hud.dayBannerTimer > 0 && hud.dayBannerText && (
