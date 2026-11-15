@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Volume2, VolumeX, Pause, Play, RotateCcw, Home, Store, X, Check, Newspaper, TrendingUp, TrendingDown, Truck, Zap, Wrench, Scissors, Clock, LogOut, Map as MapIcon, Swords, Shield, Sparkles, Users, AlertTriangle, Trash2, Megaphone, Smartphone } from 'lucide-react';
 import { GameEngine } from './game/engine';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
-import { DECORATIONS } from './game/progression';
+import { DECORATIONS, getUnlockedSkills } from './game/progression';
 import type { BestRecord, CityDistrictId, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
 import heroBgUrl from './assets/images/saigon_sidewalk_hero_1794649926456.jpg';
 
@@ -1449,6 +1449,50 @@ export default function App() {
                   <span className="text-xs font-bold text-emerald-700">+{hud.decorationAttraction} điểm thu hút</span>
                 </div>
                 <p className="text-xs text-slate-600">Mua vật phẩm bằng tiền hiện có. Mỗi vị trí chỉ trang bị một món; đồ đã mua được giữ lại lâu dài.</p>
+                <div className="overflow-hidden rounded-xl border-2 border-[#111318] bg-gradient-to-br from-amber-100 via-orange-50 to-sky-100 p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-extrabold text-slate-800">XE BÁNH TRÁNG CỦA BẠN</span>
+                    <span className="rounded-full bg-white/80 px-2 py-1 text-[10px] font-bold text-emerald-800">Độ thu hút +{hud.decorationAttraction}</span>
+                  </div>
+                  <div className="relative mx-auto mt-3 flex max-w-sm items-center justify-center">
+                    <div className="absolute bottom-1 h-3 w-64 rounded-full bg-slate-900/15 blur-sm" />
+                    <div className="relative flex h-24 w-64 items-end justify-center">
+                      <div className="absolute top-1 h-3 w-48 rounded-t-lg border-2 border-slate-900 bg-rose-500" />
+                      <div className="absolute top-4 h-12 w-52 rounded-lg border-[3px] border-slate-900 bg-amber-300 shadow-[inset_0_-8px_0_rgba(120,53,15,0.12)]">
+                        <div className="mt-2 text-center text-[11px] font-black tracking-widest text-slate-900">BÁNH TRÁNG TRỘN</div>
+                        <div className="mt-1 text-center text-lg">🥬 🥚 🌶️</div>
+                      </div>
+                      <div className="absolute bottom-0 left-10 h-5 w-5 rounded-full border-[3px] border-slate-900 bg-slate-500" />
+                      <div className="absolute bottom-0 right-10 h-5 w-5 rounded-full border-[3px] border-slate-900 bg-slate-500" />
+                      {hud.equippedDecorations.includes('neon_sign') && <span className="absolute -top-5 rounded border border-fuchsia-500 bg-fuchsia-100 px-2 py-0.5 text-[9px] font-black text-fuchsia-800 shadow-[0_0_12px_rgba(217,70,239,0.5)]">✦ NEON ✦</span>}
+                      {hud.equippedDecorations.includes('string_lights') && <span className="absolute top-0 text-xs tracking-[0.3em] text-amber-500">● ● ● ● ●</span>}
+                      {hud.equippedDecorations.includes('colorful_awning') && <span className="absolute -top-1 text-xs font-black text-emerald-700">☂ MÁI CHE</span>}
+                    </div>
+                  </div>
+                  <p className="mt-2 text-center text-[10px] font-semibold text-slate-600">
+                    {hud.equippedDecorations.length ? 'Đang trang bị: ' + hud.equippedDecorations.map((id) => DECORATIONS.find((item) => item.id === id)?.name).filter(Boolean).join(' · ') : 'Chưa có đồ trang trí — hãy mua vật phẩm đầu tiên ở bên dưới.'}
+                  </p>
+                </div>
+                <div className="rounded-lg border-2 border-[#111318] bg-white p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <p className="text-xs font-extrabold text-slate-900">🌟 KỸ NĂNG THEO CẤP ĐỘ</p>
+                    <span className="text-[10px] font-bold text-emerald-700">{getUnlockedSkills(hud.playerLevel).length}/3 đã mở</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {[
+                      { id: 'FAST_LEARNER', level: 3, name: 'Học việc nhanh', desc: '+10% XP mỗi đơn' },
+                      { id: 'CUSTOMER_CARE', level: 5, name: 'Giữ chân khách', desc: '+5% thời gian chờ' },
+                      { id: 'STREET_REPUTATION', level: 8, name: 'Danh tiếng vỉa hè', desc: '+5% tiền thưởng' },
+                    ].map((skill) => {
+                      const unlocked = hud.playerLevel >= skill.level;
+                      return <div key={skill.id} className={unlocked ? 'rounded-lg border border-emerald-500 bg-emerald-50 p-2' : 'rounded-lg border border-slate-300 bg-slate-50 p-2'}>
+                        <p className="text-[10px] font-extrabold text-slate-900">{unlocked ? '✓' : '🔒'} {skill.name}</p>
+                        <p className="mt-1 text-[10px] text-slate-600">{skill.desc}</p>
+                        <p className="mt-1 text-[9px] font-bold text-slate-500">Mở ở cấp {skill.level}</p>
+                      </div>;
+                    })}
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {DECORATIONS.map((item) => {
                     const owned = hud.ownedDecorations.includes(item.id);
