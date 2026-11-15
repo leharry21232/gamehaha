@@ -1,5 +1,5 @@
 import { GameAudio } from './audio';
-import { addProgress, getDecorationAttraction, INITIAL_PLAYER_PROGRESS, loadPlayerProgress, savePlayerProgress, xpRequiredForLevel, type PlayerProgress, type DecorationId, buyDecoration as purchaseDecoration, equipDecoration as applyDecoration, DIFFICULTY_SETTINGS, type GameDifficulty } from './progression';
+import { addProgress, getDecorationAttraction, getUnlockedSkills, INITIAL_PLAYER_PROGRESS, loadPlayerProgress, savePlayerProgress, xpRequiredForLevel, type PlayerProgress, type DecorationId, buyDecoration as purchaseDecoration, equipDecoration as applyDecoration, DIFFICULTY_SETTINGS, type GameDifficulty } from './progression';
 import { DayManager } from './dayManager';
 import { createInitialRicePaper, createInitialRollPolygon, splitPolygonBySegment } from './geometry';
 import { Haptics } from './haptics';
@@ -1822,7 +1822,7 @@ export class GameEngine {
     if (this.order.patienceDrainRate > 0) {
       this.order.maxPatience = Math.max(
         6,
-        Number((this.order.maxPatience * this.dayManager.pacing.patienceRatio * DIFFICULTY_SETTINGS[this.playerProgress.difficulty].customerPatienceMultiplier).toFixed(1))
+        Number((this.order.maxPatience * this.dayManager.pacing.patienceRatio * DIFFICULTY_SETTINGS[this.playerProgress.difficulty].customerPatienceMultiplier * (getUnlockedSkills(this.playerProgress.level).some((skill) => skill.id === 'CUSTOMER_CARE') ? 1.05 : 1)).toFixed(1))
       );
       if (this.badRepOrdersLeft > 0) {
         this.badRepOrdersLeft -= 1;
@@ -3977,7 +3977,8 @@ export class GameEngine {
   private recordPlayerProgress(score: number, earnings: number): void {
     if (earnings <= 0) return;
     const previousLevel = this.playerProgress.level;
-    const earnedXp = 10 + Math.max(0, Math.floor(score / 100));
+    const skillMultiplier = getUnlockedSkills(this.playerProgress.level).some((skill) => skill.id === 'FAST_LEARNER') ? 1.1 : 1;
+    const earnedXp = Math.round((10 + Math.max(0, Math.floor(score / 100))) * skillMultiplier);
     this.playerProgress = addProgress(this.playerProgress, earnedXp, earnings, 1);
     savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
     if (this.playerProgress.level > previousLevel) {
@@ -4027,15 +4028,17 @@ export class GameEngine {
 
     if (!timedOut && c.givenChangeK === c.expectedChangeK) {
       const speedBonus = Math.round(Math.max(0, c.timeLeft) * 140);
-      this.money += c.pendingMoney;
-      this.dayRevenue += c.pendingMoney;
-      this.recordPlayerProgress(c.pendingScore, c.pendingMoney);
+      const reputationBonus = getUnlockedSkills(this.playerProgress.level).some((skill) => skill.id === 'STREET_REPUTATION') ? 1.05 : 1;
+      const finalPayout = Math.round(c.pendingMoney * reputationBonus);
+      this.money += finalPayout;
+      this.dayRevenue += finalPayout;
+      this.recordPlayerProgress(c.pendingScore, finalPayout);
       this.xu += c.pendingXu;
       this.score += c.pendingScore + speedBonus;
       this.playMoneyAnimation(registerX, registerY, c.givenChangeK * 1000, c.selectedBills);
       this.spawnParticles(layout.customerX + 24, layout.customerY - 40, 22, '#FACC15', 'rect');
       this.spawnCallout(
-        `+${c.pendingMoney.toLocaleString('vi-VN')}đ · +${c.pendingXu} Xu`,
+        `+${finalPayout.toLocaleString('vi-VN')}đ · +${c.pendingXu} Xu`,
         c.viralMult > 1
           ? `CHING! Thối chuẩn! VIRAL x3 (+${speedBonus}đ tốc độ)`
           : `CHING! Thối chuẩn từng đồng! (+${speedBonus}đ tốc độ)`,
