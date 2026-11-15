@@ -24,6 +24,7 @@ export interface PlayerProgress {
   xp: number;
   lifetimeEarnings: number;
   completedOrders: number;
+  wallet: number;
   ownedDecorations: DecorationId[];
   equippedDecorations: DecorationId[];
   difficulty: GameDifficulty;
@@ -56,6 +57,7 @@ export const INITIAL_PLAYER_PROGRESS: PlayerProgress = {
   xp: 0,
   lifetimeEarnings: 0,
   completedOrders: 0,
+  wallet: 120000,
   ownedDecorations: [],
   equippedDecorations: [],
   difficulty: 'NORMAL',
@@ -168,6 +170,7 @@ export function loadPlayerProgress(storage?: Pick<Storage, 'getItem'>): PlayerPr
       ...parsed,
       lifetimeEarnings: Number.isFinite(parsed.lifetimeEarnings) ? Math.max(0, Math.floor(parsed.lifetimeEarnings ?? 0)) : 0,
       completedOrders: Number.isFinite(parsed.completedOrders) ? Math.max(0, Math.floor(parsed.completedOrders ?? 0)) : 0,
+      wallet: Number.isFinite(parsed.wallet) ? Math.max(0, Math.floor(parsed.wallet ?? 120000)) : 120000,
       ownedDecorations,
       equippedDecorations,
       difficulty: parsed.difficulty === 'EASY' || parsed.difficulty === 'HARD'
