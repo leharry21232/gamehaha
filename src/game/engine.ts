@@ -1,6 +1,6 @@
 import { GameAudio } from './audio';
 import { addProgress, getDecorationAttraction, getUnlockedSkills, INITIAL_PLAYER_PROGRESS, loadPlayerProgress, savePlayerProgress, xpRequiredForLevel, type PlayerProgress, type DecorationId, buyDecoration as purchaseDecoration, equipDecoration as applyDecoration, DIFFICULTY_SETTINGS, type GameDifficulty } from './progression';
-import { DayManager } from './dayManager';
+import { DayManager } from './dayManager';\nimport { claimStoryMissionReward, getStoryMissionSnapshot, loadCompletedMissionIds, saveCompletedMissionIds } from './missions';
 import { createInitialRicePaper, createInitialRollPolygon, splitPolygonBySegment } from './geometry';
 import { Haptics } from './haptics';
 import {
@@ -81,7 +81,7 @@ import type {
   SeasoningLevel,
   SeasoningMeter,
   ShopItemId,
-  ShopUpgrades,
+  ShopUpgrades,\n  StoryMissionSnapshot,
   SquadCrisisType,
   TarotDialogueTone,
   TarotState,
@@ -447,7 +447,7 @@ export class GameEngine {
 
   // Economy & Stats
   private money = INITIAL_PLAYER_PROGRESS.wallet;
-  private playerProgress: PlayerProgress = INITIAL_PLAYER_PROGRESS;
+  private playerProgress: PlayerProgress = INITIAL_PLAYER_PROGRESS;\n  private completedMissionIds: string[] = [];
   private xu = 0;
   private score = 0;
   private ordersServed = 0;
@@ -4009,7 +4009,7 @@ export class GameEngine {
     this.emitHud(true);
   }
 
-  public setGameDifficulty(difficulty: GameDifficulty): void {
+  public claimCurrentStoryMission(): boolean {\n    const result = claimStoryMissionReward(this.playerProgress, this.completedMissionIds);\n    if (!result) return false;\n    this.completedMissionIds = result.completedIds;\n    this.money += result.reward;\n    saveCompletedMissionIds(this.completedMissionIds, typeof window !== 'undefined' ? window.localStorage : undefined);\n    this.audio.playCashChing();\n    this.spawnCallout(`🎉 +${result.reward.toLocaleString('vi-VN')}đ`, 'Hoàn thành nhiệm vụ cốt truyện!', this.width * 0.5, this.height * 0.25, '#10B981');\n    this.emitHud(true);\n    return true;\n  }\n\n  public setGameDifficulty(difficulty: GameDifficulty): void {
     if (this.screen !== 'TITLE_MENU' && this.screen !== 'MORNING_PREP') return;
     this.playerProgress = { ...this.playerProgress, difficulty };
     savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
@@ -5799,7 +5799,7 @@ export class GameEngine {
       decorationAttraction: getDecorationAttraction(this.playerProgress),
       ownedDecorations: [...this.playerProgress.ownedDecorations],
       equippedDecorations: [...this.playerProgress.equippedDecorations],
-      difficulty: this.playerProgress.difficulty,
+      difficulty: this.playerProgress.difficulty,\n      storyMission: getStoryMissionSnapshot(this.playerProgress, this.completedMissionIds),
       screen: this.screen,
       phase: this.phase,
       dishType: this.dishType,
