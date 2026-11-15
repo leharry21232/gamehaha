@@ -621,6 +621,14 @@ export interface StoryMissionSnapshot {
   allCompleted: boolean;
 }
 
+export interface NpcEncounterSnapshot {
+  name: string;
+  role: string;
+  customerLabel: string;
+  dialogue: string;
+  interacted: boolean;
+}
+
 export interface GameHudSnapshot {
   playerLevel: number;
   playerXp: number;
@@ -632,6 +640,7 @@ export interface GameHudSnapshot {
   equippedDecorations: string[];
   difficulty: 'EASY' | 'NORMAL' | 'HARD';
   storyMission: StoryMissionSnapshot;
+  npcEncounter: NpcEncounterSnapshot | null;
   screen: GameScreenState;
   phase: PlayPhase;
   dishType: DishType;
