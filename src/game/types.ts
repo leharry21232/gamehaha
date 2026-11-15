@@ -614,6 +614,8 @@ export interface GameHudSnapshot {
   lifetimeEarnings: number;
   completedOrdersLifetime: number;
   decorationAttraction: number;
+  ownedDecorations: string[];
+  equippedDecorations: string[];
   difficulty: 'EASY' | 'NORMAL' | 'HARD';
   screen: GameScreenState;
   phase: PlayPhase;
