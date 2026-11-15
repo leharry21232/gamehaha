@@ -147,7 +147,7 @@ const INITIAL_HUD: GameHudSnapshot = {
   decorationAttraction: 0,
   ownedDecorations: [],
   equippedDecorations: [],
-  difficulty: 'NORMAL',
+  difficulty: 'NORMAL',\n  storyMission: { id: 'story_first_customers', chapter: 'Chương 1 · Khởi nghiệp', title: 'Ba vị khách đầu tiên', description: 'Hoàn thành 3 đơn hàng để chứng minh xe bánh tráng của bạn có thể trụ vững.', npcName: 'Cô Sáu', storyText: 'Cứ làm ngon, sạch sẽ, khách quen sẽ tự tìm tới.', progress: 0, target: 3, reward: 15000, completed: false, allCompleted: false },
   screen: 'TITLE_MENU',
   phase: 'COOKING',
   dishType: 'CUON',
@@ -1054,6 +1054,29 @@ export default function App() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="w-full max-w-lg rounded-xl border-2 border-[#F59E0B] bg-[#181920]/95 p-3 text-slate-100">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-extrabold tracking-wide text-amber-300">📖 NHẬT KÝ VỈA HÈ · {hud.storyMission.chapter}</p>
+                <span className="rounded-full bg-amber-400/15 px-2 py-1 text-[10px] font-bold text-amber-200">{hud.storyMission.allCompleted ? 'Đã hoàn thành' : hud.storyMission.completed ? 'Hoàn thành' : 'Đang thực hiện'}</span>
+              </div>
+              <p className="mt-2 font-display text-lg font-extrabold">{hud.storyMission.title}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-300">{hud.storyMission.description}</p>
+              <div className="mt-2 rounded-lg border border-slate-700 bg-slate-800/80 p-2">
+                <p className="text-[10px] font-bold text-amber-200">💬 {hud.storyMission.npcName}</p>
+                <p className="mt-1 text-xs italic text-slate-200">“{hud.storyMission.storyText}”</p>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-[11px]">
+                <span className="font-bold text-slate-300">Tiến độ: {hud.storyMission.progress.toLocaleString('vi-VN')} / {hud.storyMission.target.toLocaleString('vi-VN')}</span>
+                <span className="font-bold text-emerald-300">Thưởng: {hud.storyMission.reward.toLocaleString('vi-VN')}đ</span>
+              </div>
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-700">
+                <div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${Math.min(100, hud.storyMission.progress / Math.max(1, hud.storyMission.target) * 100)}%` }} />
+              </div>
+              {hud.storyMission.completed && !hud.storyMission.allCompleted && (
+                <button type="button" onClick={() => engineRef.current?.claimCurrentStoryMission()} className="mt-3 w-full rounded-lg bg-emerald-500 px-3 py-2 text-xs font-extrabold text-slate-950 hover:bg-emerald-400">Nhận thưởng nhiệm vụ</button>
+              )}
             </div>
 
             {/* Customizable Play Duration Selector */}
