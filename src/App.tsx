@@ -492,6 +492,12 @@ export default function App() {
 
   const [hud, setHud] = useState<GameHudSnapshot>(INITIAL_HUD);
   const [onboardingStep, setOnboardingStep] = useState<'STORY' | 'MAP' | null>(null);
+  const [worldHubOpen, setWorldHubOpen] = useState(false);
+  const [worldPlayer, setWorldPlayer] = useState({ x: 50, y: 76 });
+  const [worldNotice, setWorldNotice] = useState('Dùng WASD hoặc phím mũi tên để đi lại. Đến gần bàn chế biến rồi nhấn E.');
+  const [tutorialDismissed, setTutorialDismissed] = useState(() => {
+    try { return localStorage.getItem('banhtrang_tutorial_v1') === 'done'; } catch { return false; }
+  });
   const [selectedVendorSpot, setSelectedVendorSpot] = useState(() => {
     try { return localStorage.getItem('banhtrang_vendor_spot_v1') || 'CHO_BEN_THANH'; } catch { return 'CHO_BEN_THANH'; }
   });
@@ -572,6 +578,21 @@ export default function App() {
       engineRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (!worldHubOpen) return;
+    const move = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+      if (!['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) return;
+      event.preventDefault();
+      setWorldPlayer((p) => ({
+        x: Math.max(8, Math.min(92, p.x + (key === 'a' || key === 'arrowleft' ? -3 : key === 'd' || key === 'arrowright' ? 3 : 0))),
+        y: Math.max(18, Math.min(88, p.y + (key === 'w' || key === 'arrowup' ? -3 : key === 's' || key === 'arrowdown' ? 3 : 0))),
+      }));
+    };
+    window.addEventListener('keydown', move);
+    return () => window.removeEventListener('keydown', move);
+  }, [worldHubOpen]);
 
   // Persist high scores cleanly whenever money or ordersServed increases
   useEffect(() => {
@@ -967,10 +988,47 @@ export default function App() {
               })()}
               <div className="mt-5 flex flex-wrap justify-between gap-3">
                 <button type="button" onClick={() => setOnboardingStep(hud.screen === 'TITLE_MENU' ? 'STORY' : null)} className="rounded-xl border-2 border-slate-500 px-5 py-3 font-bold text-slate-200 hover:bg-slate-700">← Quay lại</button>
-                <button type="button" onClick={() => { try { localStorage.setItem('banhtrang_vendor_spot_v1', selectedVendorSpot); } catch {} setOnboardingStep(null); if (hud.screen === 'TITLE_MENU') engineRef.current?.startNewGame(); }} className="rounded-xl border-[3px] border-[#111318] bg-emerald-400 px-6 py-3 font-extrabold text-slate-950 hover:bg-emerald-300">{hud.screen === 'TITLE_MENU' ? 'Xác nhận địa điểm & vào chợ →' : 'Lưu địa điểm này'}</button>
+                <button type="button" onClick={() => { try { localStorage.setItem('banhtrang_vendor_spot_v1', selectedVendorSpot); } catch {} setOnboardingStep(null); if (hud.screen === 'TITLE_MENU') { engineRef.current?.startNewGame(); setWorldPlayer({ x: 50, y: 76 }); setWorldHubOpen(true); } }} className="rounded-xl border-[3px] border-[#111318] bg-emerald-400 px-6 py-3 font-extrabold text-slate-950 hover:bg-emerald-300">{hud.screen === 'TITLE_MENU' ? 'Xác nhận địa điểm & vào chợ →' : 'Lưu địa điểm này'}</button>
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {worldHubOpen && (
+        <div className="absolute inset-0 z-[80] overflow-hidden bg-[#18232b] text-white">
+          <style>{`@keyframes streetWalk { 0% { transform: translateX(-35px); } 50% { transform: translateX(35px); } 100% { transform: translateX(-35px); } } @keyframes npcBob { 0%,100% { margin-top: 0; } 50% { margin-top: -5px; } }`}</style>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#617b75_0%,#344b50_65%,#1d2b35_100%)]" />
+          <div className="absolute inset-x-[-15%] top-[18%] h-[75%] rotate-[-12deg] bg-[#aab7bd] border-y-[18px] border-[#667985] shadow-2xl" />
+          <div className="absolute inset-x-[-10%] top-[49%] h-[15%] rotate-[-12deg] bg-[#d5dfe0] opacity-90" />
+          <div className="absolute left-[4%] top-[8%] rounded-xl border-2 border-white/20 bg-slate-950/75 px-4 py-2 shadow-xl">
+            <p className="text-[10px] font-black tracking-[.2em] text-amber-300">KHU PHỐ SÀI GÒN</p>
+            <p className="text-sm font-extrabold">Ngày {hud.day} · {hud.money.toLocaleString('vi-VN')}đ</p>
+            <p className="text-[11px] text-slate-300">Cấp {hud.playerLevel} · Xe bánh tráng của bạn</p>
+          </div>
+          <button type="button" onClick={() => { setWorldHubOpen(false); }} className="absolute right-4 top-4 z-20 rounded-xl border-2 border-white/30 bg-slate-950/80 px-4 py-2 text-sm font-bold">Đóng khu phố ✕</button>
+          <div className="absolute left-[8%] top-[25%] h-[27%] w-[32%] min-w-[170px] -skew-y-6 rounded-2xl border-[5px] border-[#533d2c] bg-[#d79b54] shadow-[12px_16px_0_#392d2b]">
+            <div className="absolute -top-8 left-3 right-3 rounded-t-xl border-4 border-[#533d2c] bg-[#f5bd58] py-2 text-center text-sm font-black text-[#392d2b]">KHO NGUYÊN LIỆU</div>
+            <div className="flex h-full items-center justify-center text-5xl">📦 🥬</div>
+            <button type="button" onClick={() => setWorldNotice('Kho nguyên liệu sẽ mở rộng ở bản cập nhật quản lý kho. Hiện tại bạn nhập hàng tại Chợ Sớm.')} className="absolute inset-0" aria-label="Tương tác kho nguyên liệu" />
+          </div>
+          <div className="absolute right-[8%] top-[27%] h-[28%] w-[32%] min-w-[170px] -skew-y-6 rounded-2xl border-[5px] border-[#533d2c] bg-[#e7a64f] shadow-[12px_16px_0_#392d2b]">
+            <div className="absolute -top-8 left-3 right-3 rounded-t-xl border-4 border-[#533d2c] bg-[#ef6c42] py-2 text-center text-sm font-black">XE BÁNH TRÁNG</div>
+            <div className="flex h-full items-center justify-center text-6xl">🛒 🥣</div>
+            <button type="button" onClick={() => { setWorldNotice('Bạn đã đến bàn chế biến. Nhấn nút BẮT ĐẦU LÀM BÁNH để vào ca chuẩn bị.'); }} className="absolute inset-0" aria-label="Tương tác bàn chế biến" />
+          </div>
+          <div className="absolute bottom-[13%] left-[8%] right-[8%] h-[16%] rounded-[50%] border-4 border-white/15 bg-[#78918d]/80" />
+          <div className="absolute bottom-[19%] left-[17%] flex gap-10 text-3xl" style={{ animation: 'streetWalk 12s ease-in-out infinite' }}><span>🚶🏻</span><span>🧍🏻‍♀️</span><span>🚶🏽‍♂️</span></div>
+          <div className="absolute bottom-[24%] right-[18%] text-3xl" style={{ animation: 'npcBob 1s ease-in-out infinite' }}>🧑🏻‍🍳</div>
+          <div className="absolute z-10 -translate-x-1/2 -translate-y-1/2 text-4xl drop-shadow-[0_5px_2px_rgba(0,0,0,.7)] transition-all duration-100" style={{ left: worldPlayer.x + '%', top: worldPlayer.y + '%' }}>🧑🏻‍🦱</div>
+          <div className="absolute bottom-3 left-1/2 z-20 w-[min(92%,620px)] -translate-x-1/2 rounded-2xl border-2 border-amber-300/70 bg-slate-950/90 p-3 shadow-2xl">
+            <p className="text-center text-xs text-slate-200">{worldNotice}</p>
+            <div className="mt-2 flex flex-wrap justify-center gap-2">
+              <button type="button" onClick={() => { setWorldHubOpen(false); setWorldNotice(''); }} className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-black text-slate-950">BÀN CHẾ BIẾN · VÀO LÀM BÁNH</button>
+              <button type="button" onClick={() => setWorldNotice('Bạn đang đứng trong khu phố. Di chuyển bằng WASD / phím mũi tên. Những khu vực nâng cao sẽ mở khi đạt cấp 5 và thuê nhân viên.')} className="rounded-lg border border-white/30 px-3 py-2 text-xs font-bold">Hướng dẫn</button>
+              <button type="button" disabled={hud.playerLevel < 5} onClick={() => setWorldNotice('Khu tuyển dụng đang mở! Hệ thống thuê NPC sẽ được kích hoạt ở mốc phát triển này.')} className="rounded-lg border border-white/30 px-3 py-2 text-xs font-bold disabled:opacity-40">👥 Tuyển NPC {hud.playerLevel < 5 ? '🔒 Lv.5' : ''}</button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1193,6 +1251,14 @@ export default function App() {
           <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#111318]/85 p-4 pt-16 overflow-y-auto allow-touch-scroll safe-inset-container">
             <div className="w-full max-w-3xl rounded-2xl bg-[#FFFDF5] text-[#111318] border-[3px] border-[#111318] comic-shadow p-6 flex flex-col gap-4 my-auto">
               {/* Header */}
+              {!tutorialDismissed && hud.day === 1 && (
+                <div className="rounded-xl border-2 border-sky-400 bg-sky-50 p-4 text-slate-900">
+                  <div className="flex items-start justify-between gap-3">
+                    <div><p className="text-xs font-black tracking-widest text-sky-700">HƯỚNG DẪN NGƯỜI MỚI · BƯỚC 1/3</p><p className="mt-1 font-extrabold">Nhập nguyên liệu cho mẻ bánh đầu tiên</p><p className="mt-1 text-xs leading-relaxed">Mua bánh tráng, tắc và ít nhất 2 phần topping. Dùng nút −1 / −5 để trả bớt hàng. Chưa có khách hay sự kiện gây gián đoạn trong phần hướng dẫn.</p></div>
+                    <button type="button" onClick={() => { setTutorialDismissed(true); try { localStorage.setItem('banhtrang_tutorial_v1','done'); } catch {} }} className="rounded-lg border border-slate-400 px-2 py-1 text-xs font-bold">Ẩn</button>
+                  </div>
+                </div>
+              )}
               <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-slate-200 pb-3">
                 <div>
                   <h2 className="font-display font-extrabold text-2xl text-[#111318]">
