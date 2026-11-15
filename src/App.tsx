@@ -1344,12 +1344,28 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="grid grid-cols-4 gap-1.5">
+                        <button
+                          type="button"
+                          disabled={stock < 1}
+                          onClick={() => engineRef.current?.removeIngredient(id, 1)}
+                          className="py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
+                        >
+                          −1
+                        </button>
+                        <button
+                          type="button"
+                          disabled={stock < 5}
+                          onClick={() => engineRef.current?.removeIngredient(id, 5)}
+                          className="py-1.5 rounded-lg bg-rose-200 hover:bg-rose-300 disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
+                        >
+                          −5
+                        </button>
                         <button
                           type="button"
                           disabled={!canBuy1}
                           onClick={() => engineRef.current?.buyIngredient(id, 1)}
-                          className="flex-1 py-1.5 rounded-lg bg-white hover:bg-amber-100 disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
+                          className="py-1.5 rounded-lg bg-white hover:bg-amber-100 disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
                         >
                           +1
                         </button>
@@ -1357,7 +1373,7 @@ export default function App() {
                           type="button"
                           disabled={!canBuy5}
                           onClick={() => engineRef.current?.buyIngredient(id, 5)}
-                          className="flex-1 py-1.5 rounded-lg bg-[#F59E0B] hover:bg-[#FBBF24] disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
+                          className="py-1.5 rounded-lg bg-[#F59E0B] hover:bg-[#FBBF24] disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
                         >
                           +5
                         </button>
