@@ -976,7 +976,7 @@ export default function App() {
           ) : (
             <div className="w-full max-w-3xl rounded-2xl border-[3px] border-emerald-400 bg-[#171923] p-5 sm:p-7 shadow-2xl">
               <div className="flex items-start justify-between gap-3">
-                <div><p className="text-xs font-extrabold tracking-widest text-emerald-300">BẢN ĐỒ SÀI GÒN</p><h2 className="mt-1 font-display text-2xl font-extrabold">Chọn chỗ dựng xe bán hàng</h2><p className="mt-1 text-xs text-slate-300">Chọn một khu vực để bắt đầu. Bạn có thể đổi vị trí trước mỗi ngày kinh doanh.</p></div>
+                <div><p className="text-xs font-extrabold tracking-widest text-emerald-300">BẢN ĐỒ SÀI GÒN</p><h2 className="mt-1 font-display text-2xl font-extrabold">Chọn chỗ dựng xe bán hàng</h2><p className="mt-1 text-xs text-slate-300">{hud.screen === 'TITLE_MENU' ? 'Chọn khu vực kinh doanh đầu tiên. Sau khi xác nhận, bạn sẽ vào khu phố ngay.' : 'Bạn chỉ có thể đổi địa điểm tại màn hình tổng kết cuối ngày. Xác nhận để áp dụng từ ngày tiếp theo.'}</p></div>
                 <button type="button" onClick={() => setOnboardingStep(hud.screen === 'TITLE_MENU' ? 'STORY' : null)} className="rounded-lg border border-slate-500 px-3 py-2 text-sm font-bold">← Quay lại</button>
               </div>
               <div className="relative mt-5 h-56 overflow-hidden rounded-xl border-2 border-slate-500 bg-[linear-gradient(35deg,#1f493d_0%,#284c43_35%,#243b50_36%,#243b50_62%,#344a38_63%,#1f493d_100%)]">
@@ -1762,13 +1762,22 @@ export default function App() {
                 )}
               </div>
 
-              <button
-                type="button"
-                onClick={() => engineRef.current?.startNextDay()}
-                className="w-full py-3.5 rounded-xl bg-[#10B981] hover:bg-[#34D399] text-white font-display font-extrabold text-base border-[3px] border-[#111318] comic-shadow-sm active:translate-y-0.5 cursor-pointer"
-              >
-                Sang Ngày {hud.day + 1} · Đi Chợ Sớm →
-              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setOnboardingStep('MAP')}
+                  className="w-full py-3 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-display font-extrabold text-sm border-[3px] border-[#111318] comic-shadow-sm"
+                >
+                  📍 Đổi địa điểm bán
+                </button>
+                <button
+                  type="button"
+                  onClick={() => engineRef.current?.startNextDay()}
+                  className="w-full py-3.5 rounded-xl bg-[#10B981] hover:bg-[#34D399] text-white font-display font-extrabold text-base border-[3px] border-[#111318] comic-shadow-sm active:translate-y-0.5 cursor-pointer"
+                >
+                  Giữ địa điểm · Sang Ngày {hud.day + 1} →
+                </button>
+              </div>
             </div>
           </div>
         );
