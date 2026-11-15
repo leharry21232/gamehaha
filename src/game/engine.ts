@@ -1,4 +1,5 @@
 import { GameAudio } from './audio';
+import { addProgress, getDecorationAttraction, INITIAL_PLAYER_PROGRESS, loadPlayerProgress, savePlayerProgress, xpRequiredForLevel, type PlayerProgress, type DecorationId, buyDecoration as purchaseDecoration, equipDecoration as applyDecoration, DIFFICULTY_SETTINGS, type GameDifficulty } from './progression';
 import { DayManager } from './dayManager';
 import { createInitialRicePaper, createInitialRollPolygon, splitPolygonBySegment } from './geometry';
 import { Haptics } from './haptics';
@@ -446,6 +447,7 @@ export class GameEngine {
 
   // Economy & Stats
   private money = 120000;
+  private playerProgress: PlayerProgress = INITIAL_PLAYER_PROGRESS;
   private xu = 0;
   private score = 0;
   private ordersServed = 0;
@@ -631,6 +633,7 @@ export class GameEngine {
     }
     this.ctx = context;
     this.onHudChange = onHudChange;
+    this.playerProgress = loadPlayerProgress(typeof window !== 'undefined' ? window.localStorage : undefined);
 
     const img = new Image();
     img.src = cookingBackdropUrl;
@@ -3965,6 +3968,46 @@ export class GameEngine {
     }
   }
 
+  private recordPlayerProgress(score: number, earnings: number): void {
+    if (earnings <= 0) return;
+    const earnedXp = 10 + Math.max(0, Math.floor(score / 100));
+    this.playerProgress = addProgress(this.playerProgress, earnedXp, earnings, 1);
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    if (this.playerProgress.xp < earnedXp) {
+      this.spawnCallout(
+        `⭐ LÊN CẤP ${this.playerProgress.level}!`,
+        'Bạn đã mở khóa thêm lựa chọn trang trí Garage!',
+        this.width * 0.5,
+        this.height * 0.24,
+        '#FACC15',
+      );
+    }
+  }
+
+  public buyGarageDecoration(id: DecorationId): boolean {
+    const result = purchaseDecoration(this.playerProgress, id, this.money);
+    if (!result) return false;
+    this.playerProgress = result.progress;
+    this.money = result.remainingMoney;
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    this.audio.playCashChing();
+    this.emitHud(true);
+    return true;
+  }
+
+  public equipGarageDecoration(id: DecorationId): void {
+    this.playerProgress = applyDecoration(this.playerProgress, id);
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    this.emitHud(true);
+  }
+
+  public setGameDifficulty(difficulty: GameDifficulty): void {
+    if (this.screen !== 'TITLE_MENU' && this.screen !== 'MORNING_PREP') return;
+    this.playerProgress = { ...this.playerProgress, difficulty };
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    this.emitHud(true);
+  }
+
   private resolveCheckout(timedOut: boolean): void {
     if (!this.checkout.active) return;
     const c = this.checkout;
@@ -3979,6 +4022,7 @@ export class GameEngine {
       const speedBonus = Math.round(Math.max(0, c.timeLeft) * 140);
       this.money += c.pendingMoney;
       this.dayRevenue += c.pendingMoney;
+      this.recordPlayerProgress(c.pendingScore, c.pendingMoney);
       this.xu += c.pendingXu;
       this.score += c.pendingScore + speedBonus;
       this.playMoneyAnimation(registerX, registerY, c.givenChangeK * 1000, c.selectedBills);
@@ -4025,6 +4069,7 @@ export class GameEngine {
       const scorePenalty = overpaidK * 120;
       this.money += netMoney;
       this.dayRevenue += netMoney;
+      this.recordPlayerProgress(Math.round(c.pendingScore * 0.5), netMoney);
       this.xu += c.pendingXu;
       this.score = Math.max(0, this.score + Math.round(c.pendingScore * 0.5) - scorePenalty);
       this.playMoneyAnimation(registerX, registerY, c.givenChangeK * 1000, c.selectedBills);
@@ -5723,7 +5768,7 @@ export class GameEngine {
       : '0';
     const dayBannerTenths = Math.ceil(this.dayBannerTimer * 10);
     const penaltyHash = `${this.policeHeat}-${this.ruinedBagBlocking}-${this.badRepOrdersLeft}-${Math.ceil(this.recordingPhoneTimer * 5)}-${Math.ceil(this.yellingTimer * 5)}-${this.sauceSplatterWipes}`;
-    const hash = `${this.screen}|${this.phase}|${this.dishType}|${this.prepStep}|${this.money}|${this.xu}|${this.score}|${this.ordersServed}|${this.redChairs}|${this.maxRedChairs}|${this.combo}|${raidSec}|${this.day}-${daySec}-${this.dayDuration}-${dayBannerTenths}|${this.audio.isMuted()}|${this.shopOpen}|${upHash}|${invHash}|${buffHash}|${advHash}|${featHash}|${tycoonHash}|${wuxiaHash}|${this.dailyHexagram.element}|${this.viralOrdersLeft}|${bpSec}|${this.rainEvent.active}|${this.tiktokQte.active}|${this.checkout.active}-${this.checkout.givenChangeK}-${chkTenths}-${this.checkout.selectedBills.length}-${this.checkout.discountAccepted}|${this.raidChanceBonus}|${penaltyHash}`;
+    const hash = `${this.playerProgress.level}-${this.playerProgress.xp}-${this.playerProgress.ownedDecorations.length}-${this.playerProgress.equippedDecorations.join(',')}-${this.playerProgress.difficulty}|${this.screen}|${this.phase}|${this.dishType}|${this.prepStep}|${this.money}|${this.xu}|${this.score}|${this.ordersServed}|${this.redChairs}|${this.maxRedChairs}|${this.combo}|${raidSec}|${this.day}-${daySec}-${this.dayDuration}-${dayBannerTenths}|${this.audio.isMuted()}|${this.shopOpen}|${upHash}|${invHash}|${buffHash}|${advHash}|${featHash}|${tycoonHash}|${wuxiaHash}|${this.dailyHexagram.element}|${this.viralOrdersLeft}|${bpSec}|${this.rainEvent.active}|${this.tiktokQte.active}|${this.checkout.active}-${this.checkout.givenChangeK}-${chkTenths}-${this.checkout.selectedBills.length}-${this.checkout.discountAccepted}|${this.raidChanceBonus}|${penaltyHash}`;
     if (!force && hash === this.lastHudHash) return;
     this.lastHudHash = hash;
 
@@ -5731,6 +5776,13 @@ export class GameEngine {
       this.loanDebt > 0 ? Math.max(5000, Math.round((this.loanDebt * 0.25) / 1000) * 1000) : 0;
 
     this.onHudChange({
+      playerLevel: this.playerProgress.level,
+      playerXp: this.playerProgress.xp,
+      playerXpToNext: xpRequiredForLevel(this.playerProgress.level),
+      lifetimeEarnings: this.playerProgress.lifetimeEarnings,
+      completedOrdersLifetime: this.playerProgress.completedOrders,
+      decorationAttraction: getDecorationAttraction(this.playerProgress),
+      difficulty: this.playerProgress.difficulty,
       screen: this.screen,
       phase: this.phase,
       dishType: this.dishType,
