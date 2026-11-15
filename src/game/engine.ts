@@ -446,7 +446,7 @@ export class GameEngine {
   private shopOpen = false;
 
   // Economy & Stats
-  private money = 120000;
+  private money = INITIAL_PLAYER_PROGRESS.wallet;
   private playerProgress: PlayerProgress = INITIAL_PLAYER_PROGRESS;
   private xu = 0;
   private score = 0;
@@ -461,8 +461,8 @@ export class GameEngine {
 
   // Mechanic 7, 8, 9: Day/Night Tycoon, Inventory, VIPs & Garage
   private day = 1;
-  private dayDuration = 180; // Default 3 minutes (customizable; 0 = Endless)
-  private dayTimeLeft = 180;
+  private dayDuration = 600; // Fixed 10-minute business day; long-term wallet persists between sessions.
+  private dayTimeLeft = 600;
   private dayElapsedTime = 0;
   private inventory: InventoryState = emptyInventory();
   private newspaper: NewspaperEvent = rollNewspaperEvent(1);
@@ -634,6 +634,7 @@ export class GameEngine {
     this.ctx = context;
     this.onHudChange = onHudChange;
     this.playerProgress = loadPlayerProgress(typeof window !== 'undefined' ? window.localStorage : undefined);
+    this.money = this.playerProgress.wallet;
 
     const img = new Image();
     img.src = cookingBackdropUrl;
@@ -762,7 +763,7 @@ export class GameEngine {
     this.screen = 'MORNING_PREP';
     this.phase = 'COOKING';
     this.shopOpen = false;
-    this.money = 120000; // Vốn khởi nghiệp ngày đầu
+    this.money = this.playerProgress.wallet; // Giữ lại số dư giữa các phiên chơi
     this.xu = 0;
     this.score = 0;
     this.ordersServed = 0;
@@ -5777,6 +5778,11 @@ export class GameEngine {
     const hash = `${this.playerProgress.level}-${this.playerProgress.xp}-${this.playerProgress.ownedDecorations.length}-${this.playerProgress.equippedDecorations.join(',')}-${this.playerProgress.difficulty}|${this.screen}|${this.phase}|${this.dishType}|${this.prepStep}|${this.money}|${this.xu}|${this.score}|${this.ordersServed}|${this.redChairs}|${this.maxRedChairs}|${this.combo}|${raidSec}|${this.day}-${daySec}-${this.dayDuration}-${dayBannerTenths}|${this.audio.isMuted()}|${this.shopOpen}|${upHash}|${invHash}|${buffHash}|${advHash}|${featHash}|${tycoonHash}|${wuxiaHash}|${this.dailyHexagram.element}|${this.viralOrdersLeft}|${bpSec}|${this.rainEvent.active}|${this.tiktokQte.active}|${this.checkout.active}-${this.checkout.givenChangeK}-${chkTenths}-${this.checkout.selectedBills.length}-${this.checkout.discountAccepted}|${this.raidChanceBonus}|${penaltyHash}`;
     if (!force && hash === this.lastHudHash) return;
     this.lastHudHash = hash;
+
+    if (this.playerProgress.wallet !== this.money) {
+      this.playerProgress = { ...this.playerProgress, wallet: Math.max(0, Math.floor(this.money)) };
+      savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    }
 
     const loanDailyInterest =
       this.loanDebt > 0 ? Math.max(5000, Math.round((this.loanDebt * 0.25) / 1000) * 1000) : 0;
