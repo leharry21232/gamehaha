@@ -47,80 +47,15 @@ function formatClock(sec: number): string {
   return `${m}:${rem.toString().padStart(2, '0')}`;
 }
 
-const DURATION_PRESETS = [
-  { label: '2 phút', seconds: 120 },
-  { label: '3 phút', seconds: 180 },
-  { label: '5 phút', seconds: 300 },
-  { label: '10 phút', seconds: 600 },
-  { label: 'Tự do ∞', seconds: 0 },
-];
-
-function ShiftDurationSelector({
-  dayDuration,
-  onSelect,
-  dark = false,
-}: {
-  dayDuration: number;
-  onSelect: (seconds: number) => void;
-  dark?: boolean;
-}) {
-  const minutes = dayDuration > 0 ? Math.max(1, Math.round(dayDuration / 60)) : 3;
+function BusinessDayInfo({ dark = false }: { dark?: boolean }) {
   return (
-    <div
-      className={`rounded-xl border-2 border-[#111318] px-3 py-2.5 flex flex-wrap items-center justify-between gap-2.5 ${
-        dark ? 'bg-[#181920]/90 text-slate-100' : 'bg-slate-100 text-[#111318]'
-      }`}
-    >
-      <div className="flex items-center gap-1.5 text-xs font-extrabold whitespace-nowrap">
-        <Clock className={`w-4 h-4 ${dark ? 'text-[#FBBF24]' : 'text-amber-600'}`} />
-        <span>Thời lượng mỗi ngày:</span>
+    <div className={`w-full rounded-xl border-2 border-[#111318] px-3 py-3 flex items-center gap-3 ${dark ? 'bg-[#181920]/90 text-slate-100' : 'bg-slate-100 text-[#111318]'}`}>
+      <Clock className={`w-5 h-5 shrink-0 ${dark ? 'text-[#FBBF24]' : 'text-amber-600'}`} />
+      <div>
+        <p className="text-xs font-extrabold">MÔ HÌNH KINH DOANH DÀI HẠN</p>
+        <p className={`text-[11px] ${dark ? 'text-slate-300' : 'text-slate-600'}`}>Mỗi ngày kinh doanh kéo dài 10 phút trong game. Ví tiền, cấp độ và đồ trang trí được lưu lại khi bạn quay lại.</p>
       </div>
-      <div className="flex flex-wrap items-center gap-1.5">
-        {DURATION_PRESETS.map((preset) => {
-          const active = dayDuration === preset.seconds;
-          return (
-            <button
-              key={preset.seconds}
-              type="button"
-              onClick={() => onSelect(preset.seconds)}
-              className={`px-2.5 py-1 rounded-lg border-2 border-[#111318] font-display font-bold text-xs whitespace-nowrap transition-transform active:translate-y-0.5 cursor-pointer ${
-                active
-                  ? 'bg-[#F59E0B] text-[#111318]'
-                  : dark
-                  ? 'bg-[#272A36] hover:bg-[#343848] text-slate-200'
-                  : 'bg-white hover:bg-amber-50 text-[#111318]'
-              }`}
-            >
-              {preset.label}
-            </button>
-          );
-        })}
-        <div className="flex items-center gap-1 ml-1">
-          <button
-            type="button"
-            aria-label="Giảm 1 phút"
-            onClick={() => onSelect(Math.max(60, (dayDuration > 0 ? minutes - 1 : 2) * 60))}
-            className={`w-7 h-7 rounded-lg border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer ${
-              dark ? 'bg-[#272A36] hover:bg-[#343848] text-white' : 'bg-white hover:bg-slate-200 text-[#111318]'
-            }`}
-          >
-            -
-          </button>
-          <span className="font-mono-tabular font-extrabold text-xs px-1.5 min-w-[54px] text-center">
-            {dayDuration === 0 ? 'Tự do ∞' : `${minutes} phút`}
-          </span>
-          <button
-            type="button"
-            aria-label="Tăng 1 phút"
-            onClick={() => onSelect(Math.min(3600, (dayDuration > 0 ? minutes + 1 : 3) * 60))}
-            className={`w-7 h-7 rounded-lg border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer ${
-              dark ? 'bg-[#272A36] hover:bg-[#343848] text-white' : 'bg-white hover:bg-slate-200 text-[#111318]'
-            }`}
-          >
-            +
-          </button>
-        </div>
-      </div>
+      <span className="ml-auto shrink-0 rounded-lg bg-amber-400 px-2.5 py-1 text-xs font-extrabold text-slate-950">10 PHÚT / NGÀY</span>
     </div>
   );
 }
@@ -1122,11 +1057,7 @@ export default function App() {
 
             {/* Customizable Play Duration Selector */}
             <div className="w-full max-w-lg">
-              <ShiftDurationSelector
-                dayDuration={hud.dayDuration}
-                onSelect={(secs) => engineRef.current?.setDayDuration(secs)}
-                dark
-              />
+              <BusinessDayInfo dark />
             </div>
 
             {/* Primary CTA */}
@@ -1203,10 +1134,7 @@ export default function App() {
               </div>
 
               {/* Customizable Shift Duration before opening */}
-              <ShiftDurationSelector
-                dayDuration={hud.dayDuration}
-                onSelect={(secs) => engineRef.current?.setDayDuration(secs)}
-              />
+              <BusinessDayInfo />
 
               {/* Daily Newspaper Event & Daily Hexagram */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -3241,10 +3169,7 @@ export default function App() {
               </div>
             </div>
 
-            <ShiftDurationSelector
-              dayDuration={hud.dayDuration}
-              onSelect={(secs) => engineRef.current?.setDayDuration(secs)}
-            />
+            <BusinessDayInfo />
 
             <div className="flex flex-wrap items-center gap-2.5">
               <button
