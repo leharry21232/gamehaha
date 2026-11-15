@@ -583,6 +583,13 @@ export default function App() {
     if (!worldHubOpen) return;
     const move = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
+      if (key === 'e') {
+        event.preventDefault();
+        const distance = Math.hypot(worldPlayer.x - 75, worldPlayer.y - 42);
+        if (distance <= 16) { setWorldHubOpen(false); setWorldNotice(''); }
+        else setWorldNotice('Đi đến gần xe bánh tráng phía bên phải rồi nhấn E để vào bàn chế biến.');
+        return;
+      }
       if (!['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) return;
       event.preventDefault();
       setWorldPlayer((p) => ({
@@ -644,6 +651,16 @@ export default function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [hud.screen, hud.checkout.active, hud.shopOpen]);
+
+  const handleWorldInteract = () => {
+    const distance = Math.hypot(worldPlayer.x - 75, worldPlayer.y - 42);
+    if (distance > 16) {
+      setWorldNotice('Hãy đi đến gần xe bánh tráng ở phía bên phải rồi nhấn E để tương tác.');
+      return;
+    }
+    setWorldHubOpen(false);
+    setWorldNotice('');
+  };
 
   const handleStart = () => {
     setOnboardingStep('STORY');
@@ -1015,7 +1032,7 @@ export default function App() {
           <div className="absolute right-[8%] top-[27%] h-[28%] w-[32%] min-w-[170px] -skew-y-6 rounded-2xl border-[5px] border-[#533d2c] bg-[#e7a64f] shadow-[12px_16px_0_#392d2b]">
             <div className="absolute -top-8 left-3 right-3 rounded-t-xl border-4 border-[#533d2c] bg-[#ef6c42] py-2 text-center text-sm font-black">XE BÁNH TRÁNG</div>
             <div className="flex h-full items-center justify-center text-6xl">🛒 🥣</div>
-            <button type="button" onClick={() => { setWorldNotice('Bạn đã đến bàn chế biến. Nhấn nút BẮT ĐẦU LÀM BÁNH để vào ca chuẩn bị.'); }} className="absolute inset-0" aria-label="Tương tác bàn chế biến" />
+            <button type="button" onClick={handleWorldInteract} className="absolute inset-0" aria-label="Đi đến và tương tác bàn chế biến" />
           </div>
           <div className="absolute bottom-[13%] left-[8%] right-[8%] h-[16%] rounded-[50%] border-4 border-white/15 bg-[#78918d]/80" />
           <div className="absolute bottom-[19%] left-[17%] flex gap-10 text-3xl" style={{ animation: 'streetWalk 12s ease-in-out infinite' }}><span>🚶🏻</span><span>🧍🏻‍♀️</span><span>🚶🏽‍♂️</span></div>
@@ -1024,7 +1041,7 @@ export default function App() {
           <div className="absolute bottom-3 left-1/2 z-20 w-[min(92%,620px)] -translate-x-1/2 rounded-2xl border-2 border-amber-300/70 bg-slate-950/90 p-3 shadow-2xl">
             <p className="text-center text-xs text-slate-200">{worldNotice}</p>
             <div className="mt-2 flex flex-wrap justify-center gap-2">
-              <button type="button" onClick={() => { setWorldHubOpen(false); setWorldNotice(''); }} className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-black text-slate-950">BÀN CHẾ BIẾN · VÀO LÀM BÁNH</button>
+              <button type="button" onClick={handleWorldInteract} className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-black text-slate-950">E · TƯƠNG TÁC BÀN CHẾ BIẾN</button>
               <button type="button" onClick={() => setWorldNotice('Bạn đang đứng trong khu phố. Di chuyển bằng WASD / phím mũi tên. Những khu vực nâng cao sẽ mở khi đạt cấp 5 và thuê nhân viên.')} className="rounded-lg border border-white/30 px-3 py-2 text-xs font-bold">Hướng dẫn</button>
               <button type="button" disabled={hud.playerLevel < 5} onClick={() => setWorldNotice('Khu tuyển dụng đang mở! Hệ thống thuê NPC sẽ được kích hoạt ở mốc phát triển này.')} className="rounded-lg border border-white/30 px-3 py-2 text-xs font-bold disabled:opacity-40">👥 Tuyển NPC {hud.playerLevel < 5 ? '🔒 Lv.5' : ''}</button>
             </div>
