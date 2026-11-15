@@ -939,6 +939,14 @@ export class GameEngine {
     this.emitHud(true);
   }
 
+  public setVendorLocationRent(rentPerDay: number): boolean {
+    if (this.screen !== 'MORNING_PREP' && this.screen !== 'END_OF_DAY') return false;
+    if (!Number.isFinite(rentPerDay) || rentPerDay < 0) return false;
+    this.dayRentCost = Math.floor(rentPerDay);
+    this.emitHud(true);
+    return true;
+  }
+
   public startDayShift(): boolean {
     if (this.screen !== 'MORNING_PREP') return false;
     if (!this.hasEnoughIngredientsToOperate()) return false;
