@@ -607,7 +607,7 @@ export interface DailyPacingSnapshot {
   speedMultiplierLabel: string;
 }
 
-export interface GameHudSnapshot {
+export interface StoryMissionSnapshot {\n  id: string;\n  chapter: string;\n  title: string;\n  description: string;\n  npcName: string;\n  storyText: string;\n  progress: number;\n  target: number;\n  reward: number;\n  completed: boolean;\n  allCompleted: boolean;\n}\n\nexport interface GameHudSnapshot {
   playerLevel: number;
   playerXp: number;
   playerXpToNext: number;
@@ -616,7 +616,7 @@ export interface GameHudSnapshot {
   decorationAttraction: number;
   ownedDecorations: string[];
   equippedDecorations: string[];
-  difficulty: 'EASY' | 'NORMAL' | 'HARD';
+  difficulty: 'EASY' | 'NORMAL' | 'HARD';\n  storyMission: StoryMissionSnapshot;
   screen: GameScreenState;
   phase: PlayPhase;
   dishType: DishType;
