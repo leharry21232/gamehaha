@@ -1821,7 +1821,7 @@ export class GameEngine {
     if (this.order.patienceDrainRate > 0) {
       this.order.maxPatience = Math.max(
         6,
-        Number((this.order.maxPatience * this.dayManager.pacing.patienceRatio).toFixed(1))
+        Number((this.order.maxPatience * this.dayManager.pacing.patienceRatio * DIFFICULTY_SETTINGS[this.playerProgress.difficulty].customerPatienceMultiplier).toFixed(1))
       );
       if (this.badRepOrdersLeft > 0) {
         this.badRepOrdersLeft -= 1;
@@ -3746,7 +3746,7 @@ export class GameEngine {
     const attractionFactor = 1 - Math.min(0.2, getDecorationAttraction(this.playerProgress) * 0.01);
     this.customerSpawnDelay = Math.max(
       2.5,
-      this.dayManager.pacing.customerSpawnTimer * loaMult * penaltyFactor * thugFactor * difficulty.customerSpawnMultiplier * attractionFactor
+      this.dayManager.pacing.customerSpawnTimer * loaMult * penaltyFactor * thugFactor / difficulty.customerSpawnMultiplier * attractionFactor
     );
   }
 
@@ -3769,6 +3769,8 @@ export class GameEngine {
     pendingScore: number,
     viralMult: number
   ): void {
+    const rewardMultiplier = DIFFICULTY_SETTINGS[this.playerProgress.difficulty].rewardMultiplier;
+    pendingMoney = Math.round((pendingMoney * rewardMultiplier) / 1000) * 1000;
     const trickyBills = [16, 17, 18, 22, 23, 24, 26, 27, 28, 32, 33, 34, 36, 37, 38, 42, 43];
     const standardBills = [15, 18, 20, 22, 25, 27, 30, 32, 35, 37, 40, 42, 45];
     const useTricky = Math.random() < 0.55;
