@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Volume2, VolumeX, Pause, Play, RotateCcw, Home, Store, X, Check, Newspaper, TrendingUp, TrendingDown, Truck, Zap, Wrench, Scissors, Clock, LogOut, Map as MapIcon, Swords, Shield, Sparkles, Users, AlertTriangle, Trash2, Megaphone, Smartphone } from 'lucide-react';
 import { GameEngine } from './game/engine';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
+import { DECORATIONS } from './game/progression';
 import type { BestRecord, CityDistrictId, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
 import heroBgUrl from './assets/images/saigon_sidewalk_hero_1794649926456.jpg';
 
@@ -203,6 +204,15 @@ const BILL_STYLES: Record<number, { label: string; bg: string; border: string; t
 const REGISTER_BILLS = [1, 2, 5, 10, 20, 50];
 
 const INITIAL_HUD: GameHudSnapshot = {
+  playerLevel: 1,
+  playerXp: 0,
+  playerXpToNext: 100,
+  lifetimeEarnings: 0,
+  completedOrdersLifetime: 0,
+  decorationAttraction: 0,
+  ownedDecorations: [],
+  equippedDecorations: [],
+  difficulty: 'NORMAL',
   screen: 'TITLE_MENU',
   phase: 'COOKING',
   dishType: 'CUON',
@@ -1081,6 +1091,35 @@ export default function App() {
               Cắt bánh tráng chuẩn từng khúc, chiều lòng Ninja Lead &amp; Gen Z với combo dị, và đẩy xe chạy hết tốc lực mỗi khi còi Trật Tự vang lên.
             </p>
 
+            <div className="w-full max-w-lg rounded-xl border-2 border-[#F59E0B] bg-[#181920]/95 p-3 text-slate-100">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold text-amber-300">HỒ SƠ NGƯỜI BÁN</p>
+                  <p className="font-display text-xl font-extrabold">Cấp {hud.playerLevel}</p>
+                </div>
+                <div className="text-right text-xs">
+                  <p>{hud.playerXp.toLocaleString('vi-VN')} / {hud.playerXpToNext.toLocaleString('vi-VN')} XP</p>
+                  <p className="text-amber-200">⭐ Thu hút: +{hud.decorationAttraction}</p>
+                </div>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-700">
+                <div className="h-full rounded-full bg-amber-400 transition-all" style={{ width: `${Math.min(100, hud.playerXp / Math.max(1, hud.playerXpToNext) * 100)}%` }} />
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-slate-300">
+                <span>Đơn hoàn thành: {hud.completedOrdersLifetime}</span>
+                <span className="text-right">Tổng thu: {hud.lifetimeEarnings.toLocaleString('vi-VN')}đ</span>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold">Độ khó:</span>
+                {(['EASY', 'NORMAL', 'HARD'] as const).map((difficulty) => (
+                  <button key={difficulty} type="button" onClick={() => engineRef.current?.setGameDifficulty(difficulty)}
+                    className={`rounded-lg border border-slate-500 px-2.5 py-1 text-xs font-bold ${hud.difficulty === difficulty ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-200'}`}>
+                    {difficulty === 'EASY' ? 'Thư thả' : difficulty === 'NORMAL' ? 'Vỉa hè Sài Gòn' : 'Căng thẳng'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Customizable Play Duration Selector */}
             <div className="w-full max-w-lg">
               <ShiftDurationSelector
@@ -1474,6 +1513,42 @@ export default function App() {
                     {Math.min(60, hud.nextDayOneStarCount * 20)}% lượng khách!
                   </div>
                 )}
+              </div>
+
+              <div className="rounded-xl border-2 border-[#111318] bg-slate-100 p-4 flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-display font-extrabold text-base text-[#111318]">🎨 Trang trí xe bánh tráng</h3>
+                  <span className="text-xs font-bold text-emerald-700">+{hud.decorationAttraction} điểm thu hút</span>
+                </div>
+                <p className="text-xs text-slate-600">Mua vật phẩm bằng tiền hiện có. Mỗi vị trí chỉ trang bị một món; đồ đã mua được giữ lại lâu dài.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {DECORATIONS.map((item) => {
+                    const owned = hud.ownedDecorations.includes(item.id);
+                    const equipped = hud.equippedDecorations.includes(item.id);
+                    const locked = hud.playerLevel < item.unlockLevel;
+                    return (
+                      <div key={item.id} className="rounded-lg border-2 border-[#111318] bg-white p-3 flex flex-col gap-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-xs font-extrabold text-slate-900">{item.name}</p>
+                            <p className="mt-1 text-[11px] text-slate-600">{item.description}</p>
+                          </div>
+                          <span className="shrink-0 rounded bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-900">+{item.attraction}</span>
+                        </div>
+                        <p className="text-[10px] font-semibold text-slate-500">Mở ở cấp {item.unlockLevel} · {item.price.toLocaleString('vi-VN')}đ</p>
+                        {equipped ? (
+                          <span className="text-xs font-bold text-emerald-700">✓ Đang trang bị</span>
+                        ) : owned ? (
+                          <button type="button" onClick={() => engineRef.current?.equipGarageDecoration(item.id)} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white">Trang bị</button>
+                        ) : (
+                          <button type="button" disabled={locked || hud.money < item.price} onClick={() => engineRef.current?.buyGarageDecoration(item.id)} className="rounded-lg bg-amber-400 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-300">
+                            {locked ? `Cần cấp ${item.unlockLevel}` : hud.money < item.price ? 'Không đủ tiền' : 'Mua vật phẩm'}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Mechanic 9: Garage Vehicle Upgrades */}
