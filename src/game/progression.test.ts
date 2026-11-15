@@ -7,6 +7,7 @@ import {
   DIFFICULTY_SETTINGS,
   equipDecoration,
   getDecorationAttraction,
+  getUnlockedSkills,
   INITIAL_PLAYER_PROGRESS,
   type PlayerProgress,
   loadPlayerProgress,
@@ -66,6 +67,7 @@ test('saved progress round-trips through storage', () => {
   assert.equal(loaded.xp, 20);
   assert.equal(loaded.lifetimeEarnings, 50000);
   assert.equal(loaded.completedOrders, 4);
+  assert.equal(loaded.wallet, 120000);
 });
 
 test('invalid or corrupt saved progress safely falls back to defaults', () => {
@@ -89,4 +91,22 @@ test('difficulty tuning increases pressure from easy to hard', () => {
   assert.ok(DIFFICULTY_SETTINGS.EASY.customerPatienceMultiplier > DIFFICULTY_SETTINGS.HARD.customerPatienceMultiplier);
   assert.ok(DIFFICULTY_SETTINGS.EASY.policeChanceMultiplier < DIFFICULTY_SETTINGS.HARD.policeChanceMultiplier);
   assert.ok(DIFFICULTY_SETTINGS.EASY.rewardMultiplier < DIFFICULTY_SETTINGS.HARD.rewardMultiplier);
+});
+
+test('wallet balance persists and invalid values are normalized', () => {
+  let saved = '';
+  savePlayerProgress(
+    { ...INITIAL_PLAYER_PROGRESS, wallet: 87500 },
+    { setItem: (_key, value) => { saved = value; } },
+  );
+  assert.equal(loadPlayerProgress({ getItem: () => saved }).wallet, 87500);
+  const invalidWallet = JSON.stringify({ ...INITIAL_PLAYER_PROGRESS, wallet: -50 });
+  assert.equal(loadPlayerProgress({ getItem: () => invalidWallet }).wallet, 0);
+});
+
+test('passive skills unlock at the configured player levels', () => {
+  assert.deepEqual(getUnlockedSkills(1), []);
+  assert.deepEqual(getUnlockedSkills(3).map((skill) => skill.id), ['FAST_LEARNER']);
+  assert.deepEqual(getUnlockedSkills(5).map((skill) => skill.id), ['FAST_LEARNER', 'CUSTOMER_CARE']);
+  assert.deepEqual(getUnlockedSkills(8).map((skill) => skill.id), ['FAST_LEARNER', 'CUSTOMER_CARE', 'STREET_REPUTATION']);
 });
