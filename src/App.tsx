@@ -1018,20 +1018,28 @@ export default function App() {
       {worldHubOpen && (
         <div className="absolute inset-0 z-[80] overflow-hidden bg-[#26343a] text-white">
           <style>{`@keyframes npcBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } } @keyframes walkEast { from { transform: translateX(-24vw); } to { transform: translateX(42vw); } } @keyframes walkWest { from { transform: translateX(34vw); } to { transform: translateX(-26vw); } }`}</style>
-          <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1200 720" preserveAspectRatio="none" role="img" aria-label="Khu phố bán bánh tráng trộn phong cách pixel art">
+          <svg className="absolute inset-0 h-full w-full [image-rendering:pixelated]" viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid slice" shapeRendering="crispEdges" role="img" aria-label="Khu phố bán bánh tráng trộn phong cách pixel art">
             <defs>
-              <pattern id="sidewalkTiles" width="48" height="36" patternUnits="userSpaceOnUse">
-                <rect width="48" height="36" fill="#c8b99b"/>
-                <path d="M0 0H48M0 0V36" stroke="#a99a7d" strokeWidth="2"/>
-                <path d="M24 0V36M0 18H48" stroke="#d9cdb5" strokeWidth="1"/>
+              <pattern id="sidewalkTiles" width="32" height="32" patternUnits="userSpaceOnUse">
+                <rect width="32" height="32" fill="#c9b995"/>
+                <path d="M0 0H32V32H0Z" fill="none" stroke="#9d8969" strokeWidth="2"/>
+                <path d="M16 0V16H32M0 16H16V32" fill="none" stroke="#e0d0ad" strokeWidth="2"/>
+                <rect x="3" y="3" width="3" height="3" fill="#b09d7c"/>
               </pattern>
-              <pattern id="roadTexture" width="96" height="64" patternUnits="userSpaceOnUse">
-                <rect width="96" height="64" fill="#59656a"/>
-                <path d="M12 12h3m42 31h4m23-25h2" stroke="#69777b" strokeWidth="3"/>
+              <pattern id="roadTexture" width="64" height="64" patternUnits="userSpaceOnUse">
+                <rect width="64" height="64" fill="#566267"/>
+                <path d="M8 10h8v3H8zM42 42h5v3h-5zM26 25h3v3h-3z" fill="#68767a"/>
+                <path d="M0 63H64" stroke="#4b585d" strokeWidth="2"/>
               </pattern>
-              <pattern id="brickWall" width="54" height="30" patternUnits="userSpaceOnUse">
-                <rect width="54" height="30" fill="#c98555"/>
-                <path d="M0 0H54M0 15H54M27 0V15M0 15V30" stroke="#a86645" strokeWidth="2"/>
+              <pattern id="brickWall" width="48" height="24" patternUnits="userSpaceOnUse">
+                <rect width="48" height="24" fill="#bd7951"/>
+                <path d="M0 0H48M0 12H48M24 0V12M0 12V24" stroke="#995d40" strokeWidth="2"/>
+                <rect x="4" y="4" width="4" height="2" fill="#d99565"/>
+              </pattern>
+              <pattern id="awningStripe" width="24" height="24" patternUnits="userSpaceOnUse">
+                <rect width="24" height="24" fill="#f1d9a5"/>
+                <rect width="12" height="24" fill="#bd5548"/>
+                <path d="M0 20H24" stroke="#76503b" strokeWidth="3"/>
               </pattern>
               <filter id="pixelShadow" x="-30%" y="-30%" width="160%" height="160%">
                 <feDropShadow dx="0" dy="7" stdDeviation="0" floodColor="#172126" floodOpacity=".5"/>
@@ -1041,6 +1049,8 @@ export default function App() {
             <rect y="0" width="1200" height="222" fill="url(#brickWall)"/>
             <rect y="0" width="1200" height="20" fill="#754a3b"/>
             <rect y="210" width="1200" height="24" fill="#79523d"/>
+            <rect y="218" width="1200" height="5" fill="#e4b77b"/>
+            <g fill="#f0d5a1" opacity=".8"><rect x="18" y="30" width="7" height="7"/><rect x="280" y="28" width="7" height="7"/><rect x="548" y="30" width="7" height="7"/><rect x="810" y="28" width="7" height="7"/><rect x="1170" y="30" width="7" height="7"/></g>
             <g stroke="#543c32" strokeWidth="8" filter="url(#pixelShadow)">
               <rect x="28" y="42" width="250" height="166" fill="#e9c58d"/>
               <rect x="292" y="42" width="250" height="166" fill="#e9d4a8"/>
@@ -1065,6 +1075,15 @@ export default function App() {
             <g fill="#d9e9dd" stroke="#6b5947" strokeWidth="4">
               <path d="M75 124h58v68H75zM339 124h60v68h-60zM603 124h60v68h-60zM867 124h76v68h-76z"/>
             </g>
+            <g shapeRendering="crispEdges">
+              <path d="M28 98H278V108H28zM292 98H542V108H292zM556 98H806V108H556zM820 98H1170V108H820z" fill="#714832"/>
+              <path d="M28 42H278V80H28zM292 42H542V80H292zM556 42H806V80H556zM820 42H1170V80H820z" fill="none" stroke="#4c382d" strokeWidth="5"/>
+              <rect x="88" y="136" width="34" height="4" fill="#e9f2dc"/><rect x="352" y="136" width="34" height="4" fill="#e9f2dc"/><rect x="616" y="136" width="34" height="4" fill="#e9f2dc"/><rect x="884" y="136" width="42" height="4" fill="#e9f2dc"/>
+              <rect x="78" y="178" width="52" height="8" fill="#548c82"/><rect x="342" y="178" width="54" height="8" fill="#548c82"/><rect x="606" y="178" width="54" height="8" fill="#548c82"/><rect x="876" y="178" width="58" height="8" fill="#548c82"/>
+              <rect x="156" y="118" width="8" height="84" fill="#654632"/><rect x="420" y="118" width="8" height="84" fill="#654632"/><rect x="684" y="118" width="8" height="84" fill="#654632"/>
+              <rect x="952" y="118" width="8" height="84" fill="#654632"/>
+              <g fill="#f8d77e"><rect x="46" y="112" width="10" height="10"/><rect x="310" y="112" width="10" height="10"/><rect x="574" y="112" width="10" height="10"/><rect x="838" y="112" width="10" height="10"/></g>
+            </g>
             <g fill="#d8c8a8"><rect y="232" width="1200" height="174"/></g>
             <rect y="232" width="1200" height="174" fill="url(#sidewalkTiles)"/>
             <path d="M0 232H1200M0 406H1200" stroke="#7b654c" strokeWidth="12"/>
@@ -1073,16 +1092,28 @@ export default function App() {
               <rect x="24" y="266" width="1152" height="5" fill="#b7a788"/>
               <rect x="24" y="366" width="1152" height="5" fill="#b7a788"/>
             </g>
+            <g shapeRendering="crispEdges">
+              <rect x="164" y="236" width="242" height="10" fill="#68442f"/>
+              <rect x="172" y="228" width="226" height="8" fill="#f5d17b"/>
+              <path d="M172 228H398V246H172z" fill="url(#awningStripe)" stroke="#68442f" strokeWidth="4"/>
+              <rect x="178" y="242" width="10" height="14" fill="#7d4b32"/><rect x="382" y="242" width="10" height="14" fill="#7d4b32"/>
+              <rect x="210" y="254" width="10" height="10" fill="#f6e5b8"/><rect x="352" y="254" width="10" height="10" fill="#f6e5b8"/>
+            </g>
             <g filter="url(#pixelShadow)">
               <rect x="180" y="264" width="210" height="116" fill="#a64e36" stroke="#593c2d" strokeWidth="8"/>
               <rect x="168" y="246" width="234" height="36" fill="#f2c45f" stroke="#593c2d" strokeWidth="7"/>
               <path d="M168 282h234l-14 22H182z" fill="#e5a84d"/>
               <g fill="#f7e8c5" fontFamily="monospace" fontSize="19" fontWeight="bold" textAnchor="middle"><text x="285" y="271">BÁNH TRÁNG</text></g>
               <rect x="202" y="309" width="164" height="58" fill="#e8d8b2" stroke="#684633" strokeWidth="6"/>
+              <rect x="208" y="315" width="152" height="8" fill="#f8edcf"/>
+              <rect x="208" y="358" width="152" height="6" fill="#a8784e"/>
+              <rect x="278" y="326" width="7" height="30" fill="#684633"/>
               <rect x="218" y="319" width="52" height="36" fill="#7caaa0"/><rect x="282" y="319" width="68" height="36" fill="#f0c477"/>
               <rect x="194" y="374" width="184" height="10" fill="#6e4937"/>
               <circle cx="220" cy="392" r="13" fill="#343a3d" stroke="#d2b58a" strokeWidth="5"/><circle cx="350" cy="392" r="13" fill="#343a3d" stroke="#d2b58a" strokeWidth="5"/>
               <rect x="224" y="294" width="122" height="10" fill="#f8e6bd"/>
+              <g fill="#dc754b"><rect x="234" y="286" width="18" height="8"/><rect x="258" y="286" width="18" height="8"/><rect x="282" y="286" width="18" height="8"/><rect x="306" y="286" width="18" height="8"/></g>
+              <g fill="#6d8b49"><rect x="240" y="282" width="8" height="5"/><rect x="288" y="282" width="8" height="5"/><rect x="318" y="282" width="8" height="5"/></g>
               <g fill="#b85b38"><circle cx="246" cy="300" r="5"/><circle cx="264" cy="300" r="5"/><circle cx="282" cy="300" r="5"/><circle cx="300" cy="300" r="5"/><circle cx="318" cy="300" r="5"/></g>
             </g>
             <g filter="url(#pixelShadow)">
@@ -1104,22 +1135,24 @@ export default function App() {
             <g transform="translate(70 590)" filter="url(#pixelShadow)">
               <rect x="0" y="16" width="76" height="30" rx="7" fill="#d5a84f" stroke="#544331" strokeWidth="5"/><circle cx="18" cy="49" r="9" fill="#292e31"/><circle cx="60" cy="49" r="9" fill="#292e31"/>
             </g>
-            <g transform="translate(1050 260)">
+            <g transform="translate(1050 260)" shapeRendering="crispEdges">
+              <rect x="-8" y="102" width="36" height="22" fill="#a77a4d" stroke="#694a35" strokeWidth="5"/>
               <rect x="0" y="0" width="18" height="120" fill="#8b6c4e"/><circle cx="8" cy="-12" r="42" fill="#4d8051" stroke="#356342" strokeWidth="8"/><circle cx="-18" cy="-25" r="19" fill="#63965b"/><circle cx="28" cy="-34" r="20" fill="#63965b"/>
             </g>
-            <g transform="translate(36 280)">
+            <g transform="translate(36 280)" shapeRendering="crispEdges">
+              <rect x="-8" y="72" width="34" height="20" fill="#a77a4d" stroke="#694a35" strokeWidth="5"/>
               <rect x="0" y="0" width="14" height="90" fill="#8b6c4e"/><circle cx="8" cy="-8" r="34" fill="#4e8153" stroke="#356342" strokeWidth="7"/><circle cx="-12" cy="-22" r="17" fill="#67985e"/><circle cx="26" cy="-27" r="17" fill="#67985e"/>
             </g>
             <g fill="#f6d88d" fontFamily="monospace" fontSize="16" fontWeight="bold">
               <text x="36" y="700">KHU PHỐ BÁN BÁNH TRÁNG · SÀI GÒN</text>
             </g>
           </svg>
-          <div className="absolute left-[2%] top-[2%] z-20 rounded-lg border-2 border-[#433c34] bg-[#17252a]/95 px-3 py-2 shadow-lg">
+          <div className="absolute left-[2%] top-[2%] z-20 border-[3px] border-[#35291f] bg-[#263b3b] px-4 py-3 font-mono shadow-[4px_4px_0_#172126] [image-rendering:pixelated]">
             <p className="text-[10px] font-black tracking-[.16em] text-amber-300">GÓC PHỐ BÁNH TRÁNG</p>
             <p className="text-sm font-extrabold">Ngày {hud.day} · {hud.money.toLocaleString('vi-VN')}đ</p>
             <p className="text-[10px] text-slate-200">Cấp {hud.playerLevel} · Đi bộ đến xe để bán hàng</p>
           </div>
-          <button type="button" onClick={() => { setWorldHubOpen(false); setWorldPanel(null); }} className="absolute right-3 top-3 z-30 border-2 border-[#e7d5b5] bg-[#27353a] px-3 py-2 text-xs font-black shadow-[3px_3px_0_#111]">ĐÓNG KHU PHỐ ✕</button>
+          <button type="button" onClick={() => { setWorldHubOpen(false); setWorldPanel(null); }} className="absolute right-3 top-3 z-30 border-[3px] border-[#35291f] bg-[#b95343] px-3 py-2 font-mono text-xs font-black text-[#fff0c7] shadow-[4px_4px_0_#172126]">ĐÓNG KHU PHỐ ✕</button>
           <div className="absolute left-[18%] top-[38%] z-10 flex items-end gap-2" style={{animation:"walkEast 24s linear infinite"}}>
             <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#d99b70"/><rect x="10" y="0" width="22" height="8" fill="#292b31"/><rect x="8" y="20" width="26" height="22" fill="#3d78a0"/><rect x="10" y="42" width="9" height="18" fill="#343d4c"/><rect x="23" y="42" width="9" height="18" fill="#343d4c"/></svg>
             <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#bd805d"/><rect x="9" y="0" width="24" height="8" fill="#4d332b"/><rect x="8" y="20" width="26" height="22" fill="#d16c4e"/><rect x="10" y="42" width="9" height="18" fill="#384b42"/><rect x="23" y="42" width="9" height="18" fill="#384b42"/></svg>
@@ -1127,7 +1160,7 @@ export default function App() {
           <div className="absolute left-[57%] top-[38%] z-10" style={{animation:"walkWest 29s linear infinite"}}>
             <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#e0aa82"/><rect x="8" y="0" width="26" height="8" fill="#47382c"/><rect x="8" y="20" width="26" height="22" fill="#e2b44e"/><rect x="10" y="42" width="9" height="18" fill="#34475a"/><rect x="23" y="42" width="9" height="18" fill="#34475a"/></svg>
           </div>
-          <div className="absolute z-20 -translate-x-1/2 -translate-y-1/2" style={{left:worldPlayer.x+"%",top:worldPlayer.y+"%",transition:"left 120ms linear, top 120ms linear"}}>
+          <div className="absolute z-20 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]" style={{left:worldPlayer.x+"%",top:worldPlayer.y+"%",transition:"left 120ms steps(3,end), top 120ms steps(3,end)"}}>
             <svg viewBox="0 0 48 72" className="h-14 w-10 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label="Nhân vật người chơi">
               <rect x="14" y="3" width="20" height="19" fill="#d99b76"/><rect x="11" y="0" width="26" height="9" fill="#292b31"/><rect x="8" y="22" width="32" height="25" fill="#2f83a0"/><rect x="1" y="25" width="8" height="21" fill="#d99b76"/><rect x="39" y="25" width="8" height="21" fill="#d99b76"/><rect x="11" y="47" width="10" height="21" fill="#303947"/><rect x="27" y="47" width="10" height="21" fill="#303947"/><rect x="9" y="66" width="13" height="5" fill="#392c27"/><rect x="26" y="66" width="13" height="5" fill="#392c27"/>
             </svg>
@@ -1147,10 +1180,10 @@ export default function App() {
               </p>
             </div>
           )}
-          <div className="absolute bottom-3 left-1/2 z-30 w-[min(94%,620px)] border-2 border-[#e7c77e] bg-[#172329]/95 p-3 shadow-[5px_5px_0_#111]">
+          <div className="absolute bottom-3 left-1/2 z-30 w-[min(94%,620px)] border-[4px] border-[#35291f] bg-[#263b3b]/[.97] p-3 font-mono shadow-[6px_6px_0_#172126]">
             <div className="mb-2 flex items-center justify-center gap-2">
               {([{id:'MAP',icon:'🗺️',label:'Bản đồ'},{id:'BAG',icon:'🎒',label:'Túi đồ'},{id:'JOURNAL',icon:'📖',label:'Nhiệm vụ'},{id:'PHONE',icon:'📱',label:'Điện thoại'}] as const).map((item) => (
-                <button key={item.id} type="button" onClick={() => setWorldPanel(item.id)} className={"flex min-w-[62px] flex-col items-center border px-3 py-2 text-[10px] font-bold " + (worldPanel === item.id ? "border-amber-300 bg-amber-300/20 text-amber-100" : "border-white/20 bg-white/5 text-slate-100 hover:bg-white/15")}>
+                <button key={item.id} type="button" onClick={() => setWorldPanel(item.id)} className={"flex min-w-[62px] flex-col items-center border-[3px] px-3 py-2 font-mono text-[10px] font-bold shadow-[3px_3px_0_#111] " + (worldPanel === item.id ? "border-[#f6cf70] bg-[#8d633e] text-[#fff2c7]" : "border-[#8c9a83] bg-[#405653] text-[#f8edcf] hover:bg-[#587268]")}>
                   <span className="text-xl">{item.icon}</span>{item.label}
                 </button>
               ))}
@@ -1163,8 +1196,8 @@ export default function App() {
               <button type="button" onClick={() => setWorldPlayer((p) => ({ ...p, x: Math.min(95, p.x + 3) }))} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi phải">→</button>
             </div>
             <div className="mt-2 flex justify-center gap-2">
-              <button type="button" onClick={handleWorldInteract} className="border-2 border-[#523d2e] bg-amber-400 px-4 py-2 text-sm font-black text-slate-950 shadow-[3px_3px_0_#111]">E · TƯƠNG TÁC XE BÁNH TRÁNG</button>
-              <button type="button" onClick={() => setWorldNotice('Bạn đang ở khu phố bán bánh tráng. Hãy đi dọc vỉa hè, gặp khách và đến xe bánh tráng để bắt đầu ca bán hàng.')} className="border border-white/30 px-3 py-2 text-xs font-bold">Hướng dẫn</button>
+              <button type="button" onClick={handleWorldInteract} className="border-[3px] border-[#543a25] bg-[#f1c65e] px-4 py-2 font-mono text-xs font-black text-[#392819] shadow-[4px_4px_0_#111] hover:bg-[#ffda79]">E · TƯƠNG TÁC XE BÁNH TRÁNG</button>
+              <button type="button" onClick={() => setWorldNotice('Bạn đang ở khu phố bán bánh tráng. Hãy đi dọc vỉa hè, gặp khách và đến xe bánh tráng để bắt đầu ca bán hàng.')} className="border-[3px] border-[#9cae91] bg-[#405653] px-3 py-2 font-mono text-[10px] font-bold text-[#fff2d1] shadow-[3px_3px_0_#111]">Hướng dẫn</button>
             </div>
           </div>
         </div>
