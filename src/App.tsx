@@ -1084,7 +1084,7 @@ export default function App() {
           <div className="absolute left-[43%] top-[10%] rounded-xl border-4 border-[#69452f] bg-[#e5a65e] px-3 py-2 text-center shadow-lg">
             <div className="text-2xl">🎟️</div><div className="text-[9px] font-black text-[#49352b]">QUẦY VÉ SỐ</div>
           </div>
-          <div className="absolute right-[3%] bottom-[18%] rounded-xl border-4 border-[#69452f] bg-[#a6c7b8] px-3 py-2 text-center shadow-lg">
+          <div className="absolute right-[3%] top-[50%] rounded-xl border-4 border-[#69452f] bg-[#a6c7b8] px-3 py-2 text-center shadow-lg">
             <div className="text-2xl">📈</div><div className="text-[9px] font-black text-[#23483c]">BẢNG TIN</div>
           </div>
           {/* Pedestrians continuously cross the street */}
@@ -1101,16 +1101,6 @@ export default function App() {
             <p className="text-[11px] text-slate-300">Cấp {hud.playerLevel} · Xe bánh tráng của bạn</p>
           </div>
           <button type="button" onClick={() => { setWorldHubOpen(false); setWorldPanel(null); }} className="absolute right-4 top-4 z-20 rounded-xl border-2 border-white/30 bg-slate-950/80 px-4 py-2 text-sm font-bold">Đóng khu phố ✕</button>
-          <div className="absolute left-[8%] top-[25%] h-[27%] w-[32%] min-w-[170px] -skew-y-6 rounded-2xl border-[5px] border-[#533d2c] bg-[#d79b54] shadow-[12px_16px_0_#392d2b]">
-            <div className="absolute -top-8 left-3 right-3 rounded-t-xl border-4 border-[#533d2c] bg-[#f5bd58] py-2 text-center text-sm font-black text-[#392d2b]">KHO NGUYÊN LIỆU</div>
-            <div className="flex h-full items-center justify-center text-5xl">📦 🥬</div>
-            <button type="button" onClick={() => setWorldNotice('Kho nguyên liệu sẽ mở rộng ở bản cập nhật quản lý kho. Hiện tại bạn nhập hàng tại Chợ Sớm.')} className="absolute inset-0" aria-label="Tương tác kho nguyên liệu" />
-          </div>
-          <div className="absolute right-[8%] top-[27%] h-[28%] w-[32%] min-w-[170px] -skew-y-6 rounded-2xl border-[5px] border-[#533d2c] bg-[#e7a64f] shadow-[12px_16px_0_#392d2b]">
-            <div className="absolute -top-8 left-3 right-3 rounded-t-xl border-4 border-[#533d2c] bg-[#ef6c42] py-2 text-center text-sm font-black">XE BÁNH TRÁNG</div>
-            <div className="flex h-full items-center justify-center text-6xl">🛒 🥣</div>
-            <button type="button" onClick={handleWorldInteract} className="absolute inset-0" aria-label="Đi đến và tương tác bàn chế biến" />
-          </div>
           <div className="absolute bottom-[13%] left-[8%] right-[8%] h-[16%] rounded-[50%] border-4 border-white/15 bg-[#78918d]/80" />
           <div className="absolute bottom-[19%] left-[17%] flex gap-10 text-3xl" style={{ animation: 'streetWalk 12s ease-in-out infinite' }}><span>🚶🏻</span><span>🧍🏻‍♀️</span><span>🚶🏽‍♂️</span></div>
           <div className="absolute bottom-[24%] right-[18%] text-3xl" style={{ animation: 'npcBob 1s ease-in-out infinite' }}>🧑🏻‍🍳</div>
