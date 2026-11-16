@@ -1017,7 +1017,7 @@ export default function App() {
 
       {worldHubOpen && (
         <div className="absolute inset-0 z-[80] overflow-hidden bg-[#26343a] text-white">
-          <style>{`@keyframes npcBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }`}</style>
+          <style>{`@keyframes npcBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } } @keyframes walkEast { from { transform: translateX(-24vw); } to { transform: translateX(42vw); } } @keyframes walkWest { from { transform: translateX(34vw); } to { transform: translateX(-26vw); } }`}</style>
           <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1200 720" preserveAspectRatio="none" role="img" aria-label="Khu phố bán bánh tráng trộn phong cách pixel art">
             <defs>
               <pattern id="sidewalkTiles" width="48" height="36" patternUnits="userSpaceOnUse">
@@ -1120,14 +1120,14 @@ export default function App() {
             <p className="text-[10px] text-slate-200">Cấp {hud.playerLevel} · Đi bộ đến xe để bán hàng</p>
           </div>
           <button type="button" onClick={() => { setWorldHubOpen(false); setWorldPanel(null); }} className="absolute right-3 top-3 z-30 border-2 border-[#e7d5b5] bg-[#27353a] px-3 py-2 text-xs font-black shadow-[3px_3px_0_#111]">ĐÓNG KHU PHỐ ✕</button>
-          <div className="absolute left-[18%] top-[38%] z-10 flex items-end gap-2" style={{animation:"npcBob 1.8s steps(2,end) infinite"}}>
+          <div className="absolute left-[18%] top-[38%] z-10 flex items-end gap-2" style={{animation:"walkEast 24s linear infinite"}}>
             <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#d99b70"/><rect x="10" y="0" width="22" height="8" fill="#292b31"/><rect x="8" y="20" width="26" height="22" fill="#3d78a0"/><rect x="10" y="42" width="9" height="18" fill="#343d4c"/><rect x="23" y="42" width="9" height="18" fill="#343d4c"/></svg>
             <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#bd805d"/><rect x="9" y="0" width="24" height="8" fill="#4d332b"/><rect x="8" y="20" width="26" height="22" fill="#d16c4e"/><rect x="10" y="42" width="9" height="18" fill="#384b42"/><rect x="23" y="42" width="9" height="18" fill="#384b42"/></svg>
           </div>
-          <div className="absolute left-[57%] top-[38%] z-10" style={{animation:"npcBob 2.2s steps(2,end) infinite"}}>
+          <div className="absolute left-[57%] top-[38%] z-10" style={{animation:"walkWest 29s linear infinite"}}>
             <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#e0aa82"/><rect x="8" y="0" width="26" height="8" fill="#47382c"/><rect x="8" y="20" width="26" height="22" fill="#e2b44e"/><rect x="10" y="42" width="9" height="18" fill="#34475a"/><rect x="23" y="42" width="9" height="18" fill="#34475a"/></svg>
           </div>
-          <div className="absolute z-20 -translate-x-1/2 -translate-y-1/2" style={{left:worldPlayer.x+"%",top:worldPlayer.y+"%"}}>
+          <div className="absolute z-20 -translate-x-1/2 -translate-y-1/2" style={{left:worldPlayer.x+"%",top:worldPlayer.y+"%",transition:"left 120ms linear, top 120ms linear"}}>
             <svg viewBox="0 0 48 72" className="h-14 w-10 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label="Nhân vật người chơi">
               <rect x="14" y="3" width="20" height="19" fill="#d99b76"/><rect x="11" y="0" width="26" height="9" fill="#292b31"/><rect x="8" y="22" width="32" height="25" fill="#2f83a0"/><rect x="1" y="25" width="8" height="21" fill="#d99b76"/><rect x="39" y="25" width="8" height="21" fill="#d99b76"/><rect x="11" y="47" width="10" height="21" fill="#303947"/><rect x="27" y="47" width="10" height="21" fill="#303947"/><rect x="9" y="66" width="13" height="5" fill="#392c27"/><rect x="26" y="66" width="13" height="5" fill="#392c27"/>
             </svg>
