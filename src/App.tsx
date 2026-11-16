@@ -3,7 +3,7 @@ import { Volume2, VolumeX, Pause, Play, RotateCcw, Home, Store, X, Check, Newspa
 import { GameEngine } from './game/engine';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
 import { DECORATIONS, getUnlockedSkills } from './game/progression';
-import { canUseWorldActivity, findNearbyWorldActivity, getVendorLocation, WORLD_ACTIVITIES, type WorldActivityId } from './game/world';
+import { canUseWorldActivity, findNearbyWorldActivity, getVendorLocation, PEDESTRIAN_ROUTES, WORLD_ACTIVITIES, type WorldActivityId } from './game/world';
 import type { BestRecord, CityDistrictId, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
 import heroBgUrl from './assets/images/saigon_sidewalk_hero_1794649926456.jpg';
 
@@ -1042,10 +1042,59 @@ export default function App() {
 
       {worldHubOpen && (
         <div className="absolute inset-0 z-[80] overflow-hidden bg-[#18232b] text-white">
-          <style>{`@keyframes streetWalk { 0% { transform: translateX(-35px); } 50% { transform: translateX(35px); } 100% { transform: translateX(-35px); } } @keyframes npcBob { 0%,100% { margin-top: 0; } 50% { margin-top: -5px; } }`}</style>
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#617b75_0%,#344b50_65%,#1d2b35_100%)]" />
-          <div className="absolute inset-x-[-15%] top-[18%] h-[75%] rotate-[-12deg] bg-[#aab7bd] border-y-[18px] border-[#667985] shadow-2xl" />
-          <div className="absolute inset-x-[-10%] top-[49%] h-[15%] rotate-[-12deg] bg-[#d5dfe0] opacity-90" />
+          <style>{`
+            @keyframes walk-east { 0% { transform: translateX(-12vw) scaleX(1); } 48% { transform: translateX(48vw) scaleX(1); } 50% { transform: translateX(48vw) scaleX(-1); } 98% { transform: translateX(-12vw) scaleX(-1); } 100% { transform: translateX(-12vw) scaleX(1); } }
+            @keyframes walk-west { 0% { transform: translateX(48vw) scaleX(-1); } 48% { transform: translateX(-12vw) scaleX(-1); } 50% { transform: translateX(-12vw) scaleX(1); } 98% { transform: translateX(48vw) scaleX(1); } 100% { transform: translateX(48vw) scaleX(-1); } }
+            @keyframes walk-short { 0%,100% { transform: translateX(-5vw); } 50% { transform: translateX(16vw); } }
+            @keyframes npcBob { 0%,100% { translate: 0 0; } 50% { translate: 0 -5px; } }
+            @keyframes signGlow { 0%,100% { box-shadow: 0 0 8px #f59e0b55; } 50% { box-shadow: 0 0 20px #f59e0b99; } }
+          `}</style>
+          <div className="absolute inset-0 bg-[#6c8d7a]" />
+          <div className="absolute inset-0 opacity-20" style={{backgroundImage:'radial-gradient(#e4f3d4 1px, transparent 1px)',backgroundSize:'24px 24px'}} />
+          {/* Park and shop-front blocks */}
+          <div className="absolute left-[2%] top-[8%] h-[27%] w-[25%] overflow-hidden rounded-2xl border-[5px] border-[#4e654d] bg-[#91b77b] shadow-xl">
+            <div className="absolute inset-x-0 top-0 h-5 bg-[#557b55]" />
+            <div className="absolute left-[12%] top-[25%] text-3xl">🌳</div><div className="absolute right-[14%] top-[30%] text-3xl">🌴</div>
+            <div className="absolute bottom-[18%] left-[12%] right-[12%] h-3 rounded-full bg-[#d7c69a]" />
+            <div className="absolute bottom-2 left-2 rounded bg-[#36543d]/85 px-2 py-1 text-[9px] font-black text-white">CÔNG VIÊN</div>
+          </div>
+          <div className="absolute left-[31%] top-[7%] h-[25%] w-[37%] overflow-hidden rounded-xl border-[5px] border-[#68452f] bg-[#e4bd83] shadow-xl">
+            <div className="absolute inset-x-0 top-0 h-8 bg-[#9b583b]" />
+            <div className="absolute left-[8%] top-[35%] h-[48%] w-[36%] rounded border-4 border-[#704a35] bg-[#b8d7d0]"><div className="mt-1 text-center text-[9px] font-black text-[#49372b]">TẠP HÓA</div></div>
+            <div className="absolute right-[8%] top-[35%] h-[48%] w-[36%] rounded border-4 border-[#704a35] bg-[#f4d39a]"><div className="mt-1 text-center text-[9px] font-black text-[#49372b]">QUÁN ĂN</div></div>
+            <div className="absolute bottom-1 left-1/2 -translate-x-1/2 rounded bg-[#694a35] px-2 py-0.5 text-[9px] font-black text-white">DÃY PHỐ</div>
+          </div>
+          {/* Sidewalk and main road */}
+          <div className="absolute inset-x-0 top-[35%] h-[10%] border-y-4 border-[#a88e69] bg-[#d8c8a5]" />
+          <div className="absolute inset-x-0 top-[46%] h-[35%] border-y-4 border-[#49545b] bg-[#626d72] shadow-inner">
+            <div className="absolute inset-x-0 top-1/2 border-t-2 border-dashed border-[#f5e6a7]/80" />
+            <div className="absolute left-[8%] top-[16%] text-lg opacity-60">🚲</div>
+            <div className="absolute right-[12%] bottom-[12%] text-lg opacity-60">🛵</div>
+          </div>
+          <div className="absolute inset-x-0 bottom-[7%] h-[12%] border-y-4 border-[#a88e69] bg-[#d8c8a5]" />
+          {/* Food cart and activity corners */}
+          <div className="absolute right-[7%] top-[27%] h-[29%] w-[29%] min-w-[170px] -skew-y-3 rounded-2xl border-[5px] border-[#68452f] bg-[#e7a64f] shadow-[10px_14px_0_#49352b]">
+            <div className="absolute -top-7 left-2 right-2 rounded-t-lg border-4 border-[#68452f] bg-[#ef6c42] py-1.5 text-center text-xs font-black">XE BÁNH TRÁNG CỦA BẠN</div>
+            <div className="flex h-full items-center justify-center text-5xl">🛒 🥣</div>
+            <div className="absolute bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-[#49352b] px-2 py-1 text-[9px] font-black text-white">BÀN CHẾ BIẾN · E</div>
+          </div>
+          <div className="absolute left-[5%] top-[52%] rounded-xl border-4 border-[#69452f] bg-[#f0c27c] px-3 py-2 text-center shadow-lg">
+            <div className="text-2xl">🔮</div><div className="text-[9px] font-black text-[#49352b]">GÓC TÂM LINH</div>
+          </div>
+          <div className="absolute left-[43%] top-[10%] rounded-xl border-4 border-[#69452f] bg-[#e5a65e] px-3 py-2 text-center shadow-lg">
+            <div className="text-2xl">🎟️</div><div className="text-[9px] font-black text-[#49352b]">QUẦY VÉ SỐ</div>
+          </div>
+          <div className="absolute right-[3%] bottom-[18%] rounded-xl border-4 border-[#69452f] bg-[#a6c7b8] px-3 py-2 text-center shadow-lg">
+            <div className="text-2xl">📈</div><div className="text-[9px] font-black text-[#23483c]">BẢNG TIN</div>
+          </div>
+          {/* Pedestrians continuously cross the street */}
+          {PEDESTRIAN_ROUTES.map((pedestrian) => (
+            <div key={pedestrian.id} title={pedestrian.label} className="pointer-events-none absolute left-0 z-[5] text-2xl drop-shadow-md"
+              style={{top:pedestrian.top,animation:`${pedestrian.animation} ${pedestrian.animation==='walk-short'?'13s':'22s'} linear infinite`,animationDelay:pedestrian.delay}}>
+              {pedestrian.emoji}
+            </div>
+          ))}
+
           <div className="absolute left-[4%] top-[8%] rounded-xl border-2 border-white/20 bg-slate-950/75 px-4 py-2 shadow-xl">
             <p className="text-[10px] font-black tracking-[.2em] text-amber-300">KHU PHỐ SÀI GÒN</p>
             <p className="text-sm font-extrabold">Ngày {hud.day} · {hud.money.toLocaleString('vi-VN')}đ</p>
@@ -1079,7 +1128,11 @@ export default function App() {
             );
           })}
 
-          <div className="absolute z-10 -translate-x-1/2 -translate-y-1/2 text-4xl drop-shadow-[0_5px_2px_rgba(0,0,0,.7)] transition-all duration-100" style={{ left: worldPlayer.x + '%', top: worldPlayer.y + '%' }}>🧑🏻‍🦱</div>
+          <div className="absolute z-10 -translate-x-1/2 -translate-y-1/2 text-4xl drop-shadow-[0_5px_2px_rgba(0,0,0,.7)] transition-all duration-150" style={{ left: worldPlayer.x + '%', top: worldPlayer.y + '%' }}>
+            🧑🏻‍🦱
+            <span className="absolute -bottom-2 left-1/2 h-2 w-7 -translate-x-1/2 rounded-full bg-black/35 blur-[2px]" />
+            <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-emerald-400 px-2 py-0.5 text-[8px] font-black text-slate-950">BẠN</span>
+          </div>
           {worldPanel && (
             <div className="absolute bottom-[19%] left-1/2 z-30 w-[min(92%,520px)] -translate-x-1/2 rounded-2xl border-2 border-emerald-300 bg-slate-950/95 p-4 shadow-2xl">
               <div className="flex items-center justify-between gap-3">
