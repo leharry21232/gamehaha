@@ -1017,7 +1017,8 @@ export default function App() {
 
       {worldHubOpen && (
         <div className="absolute inset-0 z-[80] overflow-hidden bg-[#26343a] text-white">
-          <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Khu phố bán bánh tráng trộn phong cách pixel art">
+          <style>{`@keyframes npcBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }`}</style>
+          <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1200 720" preserveAspectRatio="none" role="img" aria-label="Khu phố bán bánh tráng trộn phong cách pixel art">
             <defs>
               <pattern id="sidewalkTiles" width="48" height="36" patternUnits="userSpaceOnUse">
                 <rect width="48" height="36" fill="#c8b99b"/>
