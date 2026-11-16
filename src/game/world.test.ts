@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canChangeVendorLocation, getVendorLocation, isSystemUnlocked, VENDOR_LOCATIONS } from './world';
+import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, getVendorLocation, isSystemUnlocked, VENDOR_LOCATIONS, WORLD_ACTIVITIES } from './world';
 
 test('all five vendor locations have distinct grounded costs and valid multipliers', () => {
   assert.equal(VENDOR_LOCATIONS.length, 5);
@@ -27,4 +27,18 @@ test('side activities require level 5 and at least one staff member', () => {
   assert.equal(isSystemUnlocked('SIDE_ACTIVITIES', 5, false), false);
   assert.equal(isSystemUnlocked('SIDE_ACTIVITIES', 5, true), true);
   assert.equal(isSystemUnlocked('STAFF', 5, false), true);
+});
+
+test('minigame locations unlock only at level 5 with a hired staff member', () => {
+  for (const activity of WORLD_ACTIVITIES) {
+    assert.equal(canUseWorldActivity(activity, 4, 2), false);
+    assert.equal(canUseWorldActivity(activity, 5, 0), false);
+    assert.equal(canUseWorldActivity(activity, 5, 1), true);
+  }
+});
+
+test('minigame interaction requires the player to walk within the activity radius', () => {
+  const activity = WORLD_ACTIVITIES[0];
+  assert.equal(findNearbyWorldActivity(activity.x, activity.y)?.id, activity.id);
+  assert.equal(findNearbyWorldActivity(90, 90), null);
 });
