@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, getVendorLocation, isSystemUnlocked, VENDOR_LOCATIONS, WORLD_ACTIVITIES } from './world';
+import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, getVendorLocation, isSystemUnlocked, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES } from './world';
 
 test('all five vendor locations have distinct grounded costs and valid multipliers', () => {
   assert.equal(VENDOR_LOCATIONS.length, 5);
@@ -41,4 +41,21 @@ test('minigame interaction requires the player to walk within the activity radiu
   const activity = WORLD_ACTIVITIES[0];
   assert.equal(findNearbyWorldActivity(activity.x, activity.y)?.id, activity.id);
   assert.equal(findNearbyWorldActivity(90, 90), null);
+});
+
+test('street scene includes distinct park, shops, food stall, sidewalk and road areas', () => {
+  const kinds = new Set(WORLD_LANDMARKS.map((landmark) => landmark.kind));
+  for (const kind of ['PARK', 'MARKET', 'FOOD_STALL', 'SIDEWALK', 'ROAD']) {
+    assert.ok(kinds.has(kind as (typeof WORLD_LANDMARKS)[number]['kind']));
+  }
+});
+
+test('pedestrian routes have unique ids and movement animations', () => {
+  assert.ok(PEDESTRIAN_ROUTES.length >= 3);
+  assert.equal(new Set(PEDESTRIAN_ROUTES.map((route) => route.id)).size, PEDESTRIAN_ROUTES.length);
+  for (const route of PEDESTRIAN_ROUTES) {
+    assert.ok(route.emoji.length > 0);
+    assert.ok(route.top.endsWith('%'));
+    assert.ok(route.delay.length > 0);
+  }
 });
