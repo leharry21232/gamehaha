@@ -1104,6 +1104,12 @@ export default function App() {
               ))}
             </div>
             <p className="text-center text-xs text-slate-200">{worldNotice || 'WASD / phím mũi tên để di chuyển · Đến gần điểm tương tác rồi nhấn E'}</p>
+            <div className="mt-2 flex items-center justify-center gap-2">
+              <button type="button" onClick={() => setWorldPlayer((p) => ({ ...p, y: Math.max(18, p.y - 4) }))} className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi lên">↑</button>
+              <button type="button" onClick={() => setWorldPlayer((p) => ({ ...p, x: Math.max(8, p.x - 4) }))} className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi trái">←</button>
+              <button type="button" onClick={() => setWorldPlayer((p) => ({ ...p, y: Math.min(88, p.y + 4) }))} className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi xuống">↓</button>
+              <button type="button" onClick={() => setWorldPlayer((p) => ({ ...p, x: Math.min(92, p.x + 4) }))} className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi phải">→</button>
+            </div>
             <div className="mt-2 flex flex-wrap justify-center gap-2">
               <button type="button" onClick={handleWorldInteract} className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-black text-slate-950">E · TƯƠNG TÁC BÀN CHẾ BIẾN</button>
               <button type="button" onClick={() => setWorldNotice('Đi bộ đến các quầy có biểu tượng để tương tác. Minigame chỉ mở khi đạt cấp 5 và đã thuê nhân viên.')} className="rounded-lg border border-white/30 px-3 py-2 text-xs font-bold">Các điểm minigame</button>
@@ -1346,7 +1352,7 @@ export default function App() {
                   <h2 className="font-display font-extrabold text-2xl text-[#111318]">
                     Chợ Sớm Ngày {hud.day} · Nhập Nguyên Liệu
                   </h2>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-600"><span>📍 Điểm bán: <strong className="text-emerald-800">{getVendorLocation(selectedVendorSpot).name}</strong></span><button type="button" onClick={() => engineRef.current?.returnToTitle()} className="rounded-md border border-slate-500 px-2 py-1 font-bold text-slate-700">← Quay lại menu</button></div>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-600"><span>📍 Điểm bán: <strong className="text-emerald-800">{getVendorLocation(selectedVendorSpot).name}</strong></span><button type="button" onClick={() => { setWorldPlayer({ x: 50, y: 76 }); setWorldHubOpen(true); }} className="rounded-md border border-emerald-700 bg-emerald-50 px-2 py-1 font-bold text-emerald-800">🚶 Đi dạo khu phố</button><button type="button" onClick={() => engineRef.current?.returnToTitle()} className="rounded-md border border-slate-500 px-2 py-1 font-bold text-slate-700">← Quay lại menu</button></div>
                   <p className="text-xs text-slate-600 mt-0.5">
                     Phương tiện: <strong className="text-[#111318]">{vehicleMeta.name}</strong> (Tối đa{' '}
                     <span className="font-mono-tabular font-bold">{hud.maxStockPerItem}</span> phần/món) ·{' '}
