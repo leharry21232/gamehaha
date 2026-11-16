@@ -591,7 +591,7 @@ export default function App() {
         if (cartDistance <= 16) { setWorldHubOpen(false); setWorldPanel(null); setWorldNotice(''); return; }
         const activity = findNearbyWorldActivity(worldPlayer.x, worldPlayer.y);
         if (activity) {
-          if (canUseWorldActivity(activity, hud.playerLevel, hud.totalStaff)) {
+          if (canUseWorldActivity(activity, hud.playerLevel, hud.cityTycoon.totalStaff)) {
             setWorldPanel(activity.id);
             setWorldNotice('');
           } else {
@@ -611,7 +611,7 @@ export default function App() {
     };
     window.addEventListener('keydown', move);
     return () => window.removeEventListener('keydown', move);
-  }, [worldHubOpen, worldPlayer, hud.playerLevel, hud.totalStaff]);
+  }, [worldHubOpen, worldPlayer, hud.playerLevel, hud.cityTycoon.totalStaff]);
 
   // Persist high scores cleanly whenever money or ordersServed increases
   useEffect(() => {
@@ -682,7 +682,7 @@ export default function App() {
       setWorldNotice(`Hãy đi đến gần ${activity.name} rồi nhấn E để sử dụng.`);
       return;
     }
-    if (!canUseWorldActivity(activity, hud.playerLevel, hud.totalStaff)) {
+    if (!canUseWorldActivity(activity, hud.playerLevel, hud.cityTycoon.totalStaff)) {
       setWorldNotice(`${activity.name} chỉ mở từ cấp ${activity.unlockLevel} và khi bạn đã thuê nhân viên.`);
       return;
     }
@@ -1066,7 +1066,7 @@ export default function App() {
           <div className="absolute bottom-[19%] left-[17%] flex gap-10 text-3xl" style={{ animation: 'streetWalk 12s ease-in-out infinite' }}><span>🚶🏻</span><span>🧍🏻‍♀️</span><span>🚶🏽‍♂️</span></div>
           <div className="absolute bottom-[24%] right-[18%] text-3xl" style={{ animation: 'npcBob 1s ease-in-out infinite' }}>🧑🏻‍🍳</div>
           {WORLD_ACTIVITIES.map((activity) => {
-            const unlocked = canUseWorldActivity(activity, hud.playerLevel, hud.totalStaff);
+            const unlocked = canUseWorldActivity(activity, hud.playerLevel, hud.cityTycoon.totalStaff);
             const near = Math.hypot(worldPlayer.x - activity.x, worldPlayer.y - activity.y) <= 14;
             return (
               <button key={activity.id} type="button" onClick={() => handleWorldActivityInteract(activity.id)}
