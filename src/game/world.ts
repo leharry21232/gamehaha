@@ -55,3 +55,35 @@ export function isSystemUnlocked(system: MajorGameSystem, level: number, hasStaf
   const rule = SYSTEM_UNLOCKS.find((item) => item.system === system);
   return Boolean(rule && level >= rule.minimumLevel && (!rule.requiresStaff || hasStaff));
 }
+
+export type WorldActivityId = 'TAROT' | 'LOTTERY' | 'STOCKS';
+
+export interface WorldActivity {
+  id: WorldActivityId;
+  name: string;
+  icon: string;
+  x: number;
+  y: number;
+  description: string;
+  unlockLevel: number;
+  requiresStaff: boolean;
+}
+
+export const WORLD_ACTIVITIES: readonly WorldActivity[] = [
+  { id: 'TAROT', name: 'Góc bói Tarot', icon: '🔮', x: 18, y: 49, description: 'Gặp cô bói bài và thử vận may.', unlockLevel: 5, requiresStaff: true },
+  { id: 'LOTTERY', name: 'Quầy vé số', icon: '🎟️', x: 50, y: 25, description: 'Thử vận may với những tấm vé số.', unlockLevel: 5, requiresStaff: true },
+  { id: 'STOCKS', name: 'Bảng chứng khoán', icon: '📈', x: 84, y: 54, description: 'Theo dõi thị trường và thử đầu tư.', unlockLevel: 5, requiresStaff: true },
+] as const;
+
+export function canUseWorldActivity(activity: WorldActivity, level: number, totalStaff: number): boolean {
+  return level >= activity.unlockLevel && (!activity.requiresStaff || totalStaff > 0);
+}
+
+export function findNearbyWorldActivity(
+  x: number,
+  y: number,
+  activities: readonly WorldActivity[] = WORLD_ACTIVITIES,
+  radius = 14,
+): WorldActivity | null {
+  return activities.find((activity) => Math.hypot(x - activity.x, y - activity.y) <= radius) ?? null;
+}
