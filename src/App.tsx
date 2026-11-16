@@ -3,7 +3,7 @@ import { Volume2, VolumeX, Pause, Play, RotateCcw, Home, Store, X, Check, Newspa
 import { GameEngine } from './game/engine';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
 import { DECORATIONS, getUnlockedSkills } from './game/progression';
-import { getVendorLocation } from './game/world';
+import { canUseWorldActivity, findNearbyWorldActivity, getVendorLocation, WORLD_ACTIVITIES, type WorldActivityId } from './game/world';
 import type { BestRecord, CityDistrictId, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
 import heroBgUrl from './assets/images/saigon_sidewalk_hero_1794649926456.jpg';
 
@@ -494,6 +494,7 @@ export default function App() {
   const [hud, setHud] = useState<GameHudSnapshot>(INITIAL_HUD);
   const [onboardingStep, setOnboardingStep] = useState<'STORY' | 'MAP' | null>(null);
   const [worldHubOpen, setWorldHubOpen] = useState(false);
+  const [worldPanel, setWorldPanel] = useState<'MAP' | 'BAG' | 'JOURNAL' | 'PHONE' | WorldActivityId | null>(null);
   const [worldPlayer, setWorldPlayer] = useState({ x: 50, y: 76 });
   const [worldNotice, setWorldNotice] = useState('Dùng WASD hoặc phím mũi tên để đi lại. Đến gần bàn chế biến rồi nhấn E.');
   const [tutorialDismissed, setTutorialDismissed] = useState(() => {
@@ -586,9 +587,19 @@ export default function App() {
       const key = event.key.toLowerCase();
       if (key === 'e') {
         event.preventDefault();
-        const distance = Math.hypot(worldPlayer.x - 75, worldPlayer.y - 42);
-        if (distance <= 16) { setWorldHubOpen(false); setWorldNotice(''); }
-        else setWorldNotice('Đi đến gần xe bánh tráng phía bên phải rồi nhấn E để vào bàn chế biến.');
+        const cartDistance = Math.hypot(worldPlayer.x - 75, worldPlayer.y - 42);
+        if (cartDistance <= 16) { setWorldHubOpen(false); setWorldPanel(null); setWorldNotice(''); return; }
+        const activity = findNearbyWorldActivity(worldPlayer.x, worldPlayer.y);
+        if (activity) {
+          if (canUseWorldActivity(activity, hud.playerLevel, hud.totalStaff)) {
+            setWorldPanel(activity.id);
+            setWorldNotice('');
+          } else {
+            setWorldNotice(`${activity.name} mở ở cấp ${activity.unlockLevel} và cần có ít nhất 1 nhân viên.`);
+          }
+          return;
+        }
+        setWorldNotice('Đi đến gần một điểm tương tác rồi nhấn E. Xe bánh tráng nằm phía bên phải.');
         return;
       }
       if (!['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) return;
@@ -660,6 +671,22 @@ export default function App() {
       return;
     }
     setWorldHubOpen(false);
+    setWorldNotice('');
+  };
+
+  const handleWorldActivityInteract = (activityId: WorldActivityId) => {
+    const activity = WORLD_ACTIVITIES.find((item) => item.id === activityId);
+    if (!activity) return;
+    const distance = Math.hypot(worldPlayer.x - activity.x, worldPlayer.y - activity.y);
+    if (distance > 14) {
+      setWorldNotice(`Hãy đi đến gần ${activity.name} rồi nhấn E để sử dụng.`);
+      return;
+    }
+    if (!canUseWorldActivity(activity, hud.playerLevel, hud.totalStaff)) {
+      setWorldNotice(`${activity.name} chỉ mở từ cấp ${activity.unlockLevel} và khi bạn đã thuê nhân viên.`);
+      return;
+    }
+    setWorldPanel(activity.id);
     setWorldNotice('');
   };
 
@@ -1024,7 +1051,7 @@ export default function App() {
             <p className="text-sm font-extrabold">Ngày {hud.day} · {hud.money.toLocaleString('vi-VN')}đ</p>
             <p className="text-[11px] text-slate-300">Cấp {hud.playerLevel} · Xe bánh tráng của bạn</p>
           </div>
-          <button type="button" onClick={() => { setWorldHubOpen(false); }} className="absolute right-4 top-4 z-20 rounded-xl border-2 border-white/30 bg-slate-950/80 px-4 py-2 text-sm font-bold">Đóng khu phố ✕</button>
+          <button type="button" onClick={() => { setWorldHubOpen(false); setWorldPanel(null); }} className="absolute right-4 top-4 z-20 rounded-xl border-2 border-white/30 bg-slate-950/80 px-4 py-2 text-sm font-bold">Đóng khu phố ✕</button>
           <div className="absolute left-[8%] top-[25%] h-[27%] w-[32%] min-w-[170px] -skew-y-6 rounded-2xl border-[5px] border-[#533d2c] bg-[#d79b54] shadow-[12px_16px_0_#392d2b]">
             <div className="absolute -top-8 left-3 right-3 rounded-t-xl border-4 border-[#533d2c] bg-[#f5bd58] py-2 text-center text-sm font-black text-[#392d2b]">KHO NGUYÊN LIỆU</div>
             <div className="flex h-full items-center justify-center text-5xl">📦 🥬</div>
@@ -1038,11 +1065,48 @@ export default function App() {
           <div className="absolute bottom-[13%] left-[8%] right-[8%] h-[16%] rounded-[50%] border-4 border-white/15 bg-[#78918d]/80" />
           <div className="absolute bottom-[19%] left-[17%] flex gap-10 text-3xl" style={{ animation: 'streetWalk 12s ease-in-out infinite' }}><span>🚶🏻</span><span>🧍🏻‍♀️</span><span>🚶🏽‍♂️</span></div>
           <div className="absolute bottom-[24%] right-[18%] text-3xl" style={{ animation: 'npcBob 1s ease-in-out infinite' }}>🧑🏻‍🍳</div>
+          {WORLD_ACTIVITIES.map((activity) => {
+            const unlocked = canUseWorldActivity(activity, hud.playerLevel, hud.totalStaff);
+            const near = Math.hypot(worldPlayer.x - activity.x, worldPlayer.y - activity.y) <= 14;
+            return (
+              <button key={activity.id} type="button" onClick={() => handleWorldActivityInteract(activity.id)}
+                style={{ left: `${activity.x}%`, top: `${activity.y}%` }}
+                className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-xl border-2 px-3 py-2 shadow-xl ${unlocked ? 'border-amber-300 bg-slate-950/90 text-amber-100' : 'border-slate-400 bg-slate-900/80 text-slate-300 opacity-80'} ${near ? 'ring-4 ring-emerald-300/70' : ''}`}>
+                <span className="block text-xl">{activity.icon}</span>
+                <span className="block whitespace-nowrap text-[10px] font-black">{activity.name}</span>
+                <span className="block text-[9px]">{unlocked ? (near ? 'NHẤN E ĐỂ CHƠI' : 'ĐI ĐẾN ĐÂY') : '🔒 LV.5 + NHÂN VIÊN'}</span>
+              </button>
+            );
+          })}
+
           <div className="absolute z-10 -translate-x-1/2 -translate-y-1/2 text-4xl drop-shadow-[0_5px_2px_rgba(0,0,0,.7)] transition-all duration-100" style={{ left: worldPlayer.x + '%', top: worldPlayer.y + '%' }}>🧑🏻‍🦱</div>
-          <div className="absolute bottom-3 left-1/2 z-20 w-[min(92%,620px)] -translate-x-1/2 rounded-2xl border-2 border-amber-300/70 bg-slate-950/90 p-3 shadow-2xl">
-            <p className="text-center text-xs text-slate-200">{worldNotice}</p>
+          {worldPanel && (
+            <div className="absolute bottom-[19%] left-1/2 z-30 w-[min(92%,520px)] -translate-x-1/2 rounded-2xl border-2 border-emerald-300 bg-slate-950/95 p-4 shadow-2xl">
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-black text-amber-200">{worldPanel === 'MAP' ? '🗺 BẢN ĐỒ KHU PHỐ' : worldPanel === 'BAG' ? '🎒 TÚI ĐỒ' : worldPanel === 'JOURNAL' ? '📖 NHẬT KÝ' : worldPanel === 'PHONE' ? '📱 ĐIỆN THOẠI' : WORLD_ACTIVITIES.find((item) => item.id === worldPanel)?.name}</p>
+                <button type="button" onClick={() => setWorldPanel(null)} className="rounded-lg border border-white/30 px-2 py-1 text-xs">Đóng ✕</button>
+              </div>
+              <p className="mt-2 text-xs leading-relaxed text-slate-200">
+                {worldPanel === 'MAP' ? 'Bạn đang kinh doanh tại ' + getVendorLocation(selectedVendorSpot).name + '. Chỉ được đổi điểm bán ở màn hình tổng kết cuối ngày.' :
+                  worldPanel === 'BAG' ? 'Tiền mặt: ' + hud.money.toLocaleString('vi-VN') + 'đ · Cấp độ: ' + hud.playerLevel + '. Kho nguyên liệu sẽ được mở rộng trong hệ thống quản lý kho.' :
+                  worldPanel === 'JOURNAL' ? 'Nhiệm vụ hiện tại: ' + (hud.storyMission?.title ?? 'Tiếp tục hành trình khởi nghiệp và phục vụ khách đầu tiên.') :
+                  worldPanel === 'PHONE' ? 'Điện thoại khu phố: các liên hệ, tin nhắn và thông báo kinh doanh sẽ được tích hợp tại đây.' :
+                  'Bạn đã đến đúng địa điểm. Khu minigame này chỉ có thể mở khi đạt cấp 5 và đã thuê ít nhất một nhân viên. Phần trò chơi bên trong sẽ được hoàn thiện theo từng khu.'}
+              </p>
+            </div>
+          )}
+          <div className="absolute bottom-3 left-1/2 z-20 w-[min(94%,680px)] -translate-x-1/2 rounded-2xl border-2 border-amber-300/70 bg-slate-950/95 p-3 shadow-2xl">
+            <div className="mb-2 flex items-center justify-center gap-2">
+              {([{id:'MAP',icon:'🗺️',label:'Bản đồ'},{id:'BAG',icon:'🎒',label:'Túi đồ'},{id:'JOURNAL',icon:'📖',label:'Nhiệm vụ'},{id:'PHONE',icon:'📱',label:'Điện thoại'}] as const).map((item) => (
+                <button key={item.id} type="button" onClick={() => setWorldPanel(item.id)} className={`flex min-w-[64px] flex-col items-center rounded-xl border px-3 py-2 text-[10px] font-bold ${worldPanel === item.id ? 'border-amber-300 bg-amber-300/20 text-amber-100' : 'border-white/20 bg-white/5 text-slate-100 hover:bg-white/15'}`}>
+                  <span className="text-xl">{item.icon}</span>{item.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-center text-xs text-slate-200">{worldNotice || 'WASD / phím mũi tên để di chuyển · Đến gần điểm tương tác rồi nhấn E'}</p>
             <div className="mt-2 flex flex-wrap justify-center gap-2">
               <button type="button" onClick={handleWorldInteract} className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-black text-slate-950">E · TƯƠNG TÁC BÀN CHẾ BIẾN</button>
+              <button type="button" onClick={() => setWorldNotice('Đi bộ đến các quầy có biểu tượng để tương tác. Minigame chỉ mở khi đạt cấp 5 và đã thuê nhân viên.')} className="rounded-lg border border-white/30 px-3 py-2 text-xs font-bold">Các điểm minigame</button>
               <button type="button" onClick={() => setWorldNotice('Bạn đang đứng trong khu phố. Di chuyển bằng WASD / phím mũi tên. Những khu vực nâng cao sẽ mở khi đạt cấp 5 và thuê nhân viên.')} className="rounded-lg border border-white/30 px-3 py-2 text-xs font-bold">Hướng dẫn</button>
               <button type="button" disabled={hud.playerLevel < 5} onClick={() => setWorldNotice('Khu tuyển dụng đang mở! Hệ thống thuê NPC sẽ được kích hoạt ở mốc phát triển này.')} className="rounded-lg border border-white/30 px-3 py-2 text-xs font-bold disabled:opacity-40">👥 Tuyển NPC {hud.playerLevel < 5 ? '🔒 Lv.5' : ''}</button>
             </div>
