@@ -611,7 +611,7 @@ export default function App() {
     };
     window.addEventListener('keydown', move);
     return () => window.removeEventListener('keydown', move);
-  }, [worldHubOpen, worldPlayer]);
+  }, [worldHubOpen, worldPlayer, hud.playerLevel, hud.totalStaff]);
 
   // Persist high scores cleanly whenever money or ordersServed increases
   useEffect(() => {
