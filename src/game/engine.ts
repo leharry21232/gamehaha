@@ -432,6 +432,7 @@ interface SessionSaveSnapshot {
   savedAt: number;
   screen: 'MORNING_PREP' | 'PLAYING' | 'PAUSED' | 'END_OF_DAY';
   resumeDayShift: boolean;
+  tutorialMode: boolean;
   money: number;
   xu: number;
   score: number;
@@ -500,6 +501,7 @@ export class GameEngine {
   private dayTimeLeft = 600;
   private dayElapsedTime = 0;
   private resumeDayShift = false;
+  private tutorialMode = false;
   private inventory: InventoryState = emptyInventory();
   private newspaper: NewspaperEvent = rollNewspaperEvent(1);
   private marketPrices: MarketPrices = computeMarketPrices(this.newspaper);
@@ -690,6 +692,7 @@ export class GameEngine {
       savedAt: Date.now(),
       screen: this.screen === 'END_OF_DAY' ? 'END_OF_DAY' : this.screen === 'MORNING_PREP' ? 'MORNING_PREP' : this.screen,
       resumeDayShift: this.resumeDayShift || this.screen === 'PLAYING' || this.screen === 'PAUSED',
+      tutorialMode: this.tutorialMode,
       money: this.money,
       xu: this.xu,
       score: this.score,
@@ -729,6 +732,11 @@ export class GameEngine {
     } catch {
       return false;
     }
+  }
+
+  public dismissTutorial(): void {
+    this.tutorialMode = false;
+    this.emitHud(true);
   }
 
   public clearSavedGame(): void {
@@ -775,6 +783,7 @@ export class GameEngine {
       if (save.dayPnl && typeof save.dayPnl === 'object') this.dayPnl = { ...freshDayPnl(this.day), ...save.dayPnl };
       this.dayManager.recalculate(this.day);
       this.resumeDayShift = save.resumeDayShift === true;
+      this.tutorialMode = save.tutorialMode === true;
       this.screen = save.screen === 'END_OF_DAY' ? 'END_OF_DAY' : 'MORNING_PREP';
       this.phase = 'COOKING';
       this.shopOpen = false;
@@ -921,6 +930,7 @@ export class GameEngine {
   public startNewGame(): void {
     this.clearSavedGame();
     this.resumeDayShift = false;
+    this.tutorialMode = true;
     this.audio.unlock();
     this.screen = 'MORNING_PREP';
     this.phase = 'COOKING';
@@ -4310,6 +4320,7 @@ export class GameEngine {
     this.ordersServed += 1;
     this.dayOrdersCompleted += 1;
     this.ordersSinceRaid += 1;
+    if (this.tutorialMode && this.ordersServed >= 3) this.tutorialMode = false;
 
     // Mechanic 5: Cursed Menu 50% Food Poisoning Risk -> Green Sick Face + 1-Star Review (-20% spawn next day!)
     let poisoned = false;
@@ -5191,6 +5202,7 @@ export class GameEngine {
 
     // Periodic Police Raid Frequency check scaled by DayManager (<= 40% per minute)
     if (
+      !this.tutorialMode &&
       this.ordersServed >= 2 &&
       !this.checkout.active &&
       !this.bossFight.active &&
@@ -5249,6 +5261,7 @@ export class GameEngine {
         if (this.shouldTriggerRaidAfterOrder()) {
           this.triggerRaidWarning();
         } else if (
+          !this.tutorialMode &&
           this.ordersServed >= 1 &&
           !this.endOfDayPending &&
           !this.landlady.active &&
@@ -5379,6 +5392,7 @@ export class GameEngine {
         : this.dayOrdersCompleted >= 6;
     if (
       !this.bossFight.active &&
+      !this.tutorialMode &&
       !this.bossFightRolledToday &&
       bossTimeWindow &&
       !this.rainEvent.active &&
@@ -5412,7 +5426,7 @@ export class GameEngine {
         this.landlady.active = false;
         this.landlady.sweeping = false;
       }
-    } else if (!this.landlady.bribed && this.order && this.ordersServed >= 1 && !this.lotterySeller.active && !this.rainEvent.active) {
+    } else if (!this.tutorialMode && !this.landlady.bribed && this.order && this.ordersServed >= 1 && !this.lotterySeller.active && !this.rainEvent.active) {
       this.landladyCooldown -= dt;
       if (this.landladyCooldown <= 0) {
         this.landladyCooldown = 22 + Math.random() * 14;
@@ -5436,7 +5450,7 @@ export class GameEngine {
       ) {
         this.lotterySeller.active = false;
       }
-    } else if (this.order && !this.landlady.active && !this.rainEvent.active) {
+    } else if (!this.tutorialMode && this.order && !this.landlady.active && !this.rainEvent.active) {
       this.lotteryCooldown -= dt;
       if (this.lotteryCooldown <= 0) {
         this.lotteryCooldown = 16 + Math.random() * 14;
@@ -5491,7 +5505,7 @@ export class GameEngine {
         }
         this.emitHud(true);
       }
-    } else if (this.order && this.ordersServed >= 1 && !this.landlady.active && !this.lotterySeller.active) {
+    } else if (!this.tutorialMode && this.order && this.ordersServed >= 1 && !this.landlady.active && !this.lotterySeller.active) {
       this.rainCooldownTimer -= dt;
       if (this.rainCooldownTimer <= 0) {
         this.rainCooldownTimer = 18 + Math.random() * 14;
