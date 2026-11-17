@@ -425,6 +425,37 @@ const SHOP_COSTS: Record<ShopItemId, number> = {
   led_rgb: 1500,
 };
 
+const SESSION_SAVE_KEY = 'banh_trang_session_save_v1';
+
+interface SessionSaveSnapshot {
+  version: 1;
+  savedAt: number;
+  screen: 'MORNING_PREP' | 'PLAYING' | 'PAUSED' | 'END_OF_DAY';
+  resumeDayShift: boolean;
+  money: number;
+  xu: number;
+  score: number;
+  ordersServed: number;
+  perfectOrders: number;
+  raidsSurvived: number;
+  redChairs: number;
+  maxRedChairs: number;
+  day: number;
+  dayDuration: number;
+  dayTimeLeft: number;
+  dayElapsedTime: number;
+  inventory: InventoryState;
+  vehicleLevel: VehicleLevel;
+  upgrades: ShopUpgrades;
+  dayRevenue: number;
+  dayIngredientSpend: number;
+  dayFinesCost: number;
+  dayOrdersCompleted: number;
+  dayRentCost: number;
+  loanDebt: number;
+  dayPnl: DayPnlSummary;
+}
+
 export class GameEngine {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -468,6 +499,7 @@ export class GameEngine {
   private dayDuration = 600; // Fixed 10-minute business day; long-term wallet persists between sessions.
   private dayTimeLeft = 600;
   private dayElapsedTime = 0;
+  private resumeDayShift = false;
   private inventory: InventoryState = emptyInventory();
   private newspaper: NewspaperEvent = rollNewspaperEvent(1);
   private marketPrices: MarketPrices = computeMarketPrices(this.newspaper);
@@ -650,6 +682,128 @@ export class GameEngine {
     this.startLoop();
   }
 
+  private persistSession(): void {
+    if (typeof window === 'undefined' || !window.localStorage) return;
+    if (this.screen === 'TITLE_MENU' || this.screen === 'CITY_TYCOON') return;
+    const snapshot: SessionSaveSnapshot = {
+      version: 1,
+      savedAt: Date.now(),
+      screen: this.screen === 'END_OF_DAY' ? 'END_OF_DAY' : this.screen === 'MORNING_PREP' ? 'MORNING_PREP' : this.screen,
+      resumeDayShift: this.resumeDayShift || this.screen === 'PLAYING' || this.screen === 'PAUSED',
+      money: this.money,
+      xu: this.xu,
+      score: this.score,
+      ordersServed: this.ordersServed,
+      perfectOrders: this.perfectOrders,
+      raidsSurvived: this.raidsSurvived,
+      redChairs: this.redChairs,
+      maxRedChairs: this.maxRedChairs,
+      day: this.day,
+      dayDuration: this.dayDuration,
+      dayTimeLeft: this.dayTimeLeft,
+      dayElapsedTime: this.dayElapsedTime,
+      inventory: { ...this.inventory },
+      vehicleLevel: this.vehicleLevel,
+      upgrades: { ...this.upgrades },
+      dayRevenue: this.dayRevenue,
+      dayIngredientSpend: this.dayIngredientSpend,
+      dayFinesCost: this.dayFinesCost,
+      dayOrdersCompleted: this.dayOrdersCompleted,
+      dayRentCost: this.dayRentCost,
+      loanDebt: this.loanDebt,
+      dayPnl: { ...this.dayPnl },
+    };
+    try {
+      window.localStorage.setItem(SESSION_SAVE_KEY, JSON.stringify(snapshot));
+    } catch {
+      // Keep playing if browser storage is unavailable or full.
+    }
+  }
+
+  public hasSavedGame(): boolean {
+    try {
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem(SESSION_SAVE_KEY) : null;
+      if (!raw) return false;
+      const save = JSON.parse(raw) as Partial<SessionSaveSnapshot>;
+      return save.version === 1 && Number.isFinite(save.day) && Number.isFinite(save.money) && !!save.inventory;
+    } catch {
+      return false;
+    }
+  }
+
+  public clearSavedGame(): void {
+    try {
+      if (typeof window !== 'undefined') window.localStorage.removeItem(SESSION_SAVE_KEY);
+    } catch {
+      // Storage may be unavailable.
+    }
+  }
+
+  public continueGame(): boolean {
+    try {
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem(SESSION_SAVE_KEY) : null;
+      if (!raw) return false;
+      const save = JSON.parse(raw) as Partial<SessionSaveSnapshot>;
+      if (save.version !== 1 || !Number.isFinite(save.day) || !Number.isFinite(save.money) || !save.inventory) return false;
+      const inventory = save.inventory as InventoryState;
+      const ingredientIds: RawIngredientId[] = ['banh_trang', 'kho_bo', 'trung_cut', 'xoai', 'rau_ram', 'tac'];
+      if (!ingredientIds.every((id) => Number.isFinite(inventory[id]) && inventory[id] >= 0)) return false;
+
+      this.audio.unlock();
+      this.money = Math.max(0, Math.floor(save.money!));
+      this.playerProgress = { ...this.playerProgress, wallet: this.money };
+      this.xu = Math.max(0, Math.floor(save.xu ?? 0));
+      this.score = Math.max(0, Math.floor(save.score ?? 0));
+      this.ordersServed = Math.max(0, Math.floor(save.ordersServed ?? 0));
+      this.perfectOrders = Math.max(0, Math.floor(save.perfectOrders ?? 0));
+      this.raidsSurvived = Math.max(0, Math.floor(save.raidsSurvived ?? 0));
+      this.redChairs = Math.max(0, Math.floor(save.redChairs ?? 3));
+      this.maxRedChairs = Math.max(1, Math.floor(save.maxRedChairs ?? 4));
+      this.day = Math.max(1, Math.floor(save.day!));
+      this.dayDuration = Math.max(0, Math.floor(save.dayDuration ?? 600));
+      this.dayTimeLeft = Math.max(0, Math.floor(save.dayTimeLeft ?? this.dayDuration));
+      this.dayElapsedTime = Math.max(0, Number(save.dayElapsedTime ?? 0));
+      this.inventory = { ...inventory };
+      this.vehicleLevel = save.vehicleLevel === 2 || save.vehicleLevel === 3 ? save.vehicleLevel : 1;
+      this.upgrades = { ...freshUpgrades(), ...(save.upgrades ?? {}) };
+      this.dayRevenue = Math.max(0, Math.floor(save.dayRevenue ?? 0));
+      this.dayIngredientSpend = Math.max(0, Math.floor(save.dayIngredientSpend ?? 0));
+      this.dayFinesCost = Math.max(0, Math.floor(save.dayFinesCost ?? 0));
+      this.dayOrdersCompleted = Math.max(0, Math.floor(save.dayOrdersCompleted ?? 0));
+      this.dayRentCost = Math.max(0, Math.floor(save.dayRentCost ?? 25000));
+      this.loanDebt = Math.max(0, Math.floor(save.loanDebt ?? 0));
+      if (save.dayPnl && typeof save.dayPnl === 'object') this.dayPnl = { ...freshDayPnl(this.day), ...save.dayPnl };
+      this.dayManager.recalculate(this.day);
+      this.resumeDayShift = save.resumeDayShift === true;
+      this.screen = save.screen === 'END_OF_DAY' ? 'END_OF_DAY' : 'MORNING_PREP';
+      this.phase = 'COOKING';
+      this.shopOpen = false;
+      this.loanModalOpen = false;
+      this.order = null;
+      this.waitingCustomers = [];
+      this.checkout = freshCheckout();
+      this.tiktokQte = freshQte();
+      this.flowRhythm = freshFlowRhythm();
+      this.rippedBag = freshRippedBag();
+      this.bossFight = freshBossFight();
+      this.rainEvent = freshRain();
+      this.baziReading = freshBaziReading();
+      this.tarot = freshTarot();
+      this.diyMalfunction = freshDiyMalfunction();
+      this.heldKeys.clear();
+      this.lastTimestamp = performance.now();
+      savePlayerProgress(this.playerProgress, window.localStorage);
+      this.emitHud(true);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private handlePageHide = (): void => {
+    this.persistSession();
+  };
+
   private nextId = (): number => {
     this.idSeq += 1;
     return this.idSeq;
@@ -660,6 +814,7 @@ export class GameEngine {
     window.addEventListener('orientationchange', this.handleResize);
     window.visualViewport?.addEventListener('resize', this.handleResize);
     window.addEventListener('blur', this.handleWindowBlur);
+    window.addEventListener('pagehide', this.handlePageHide);
     window.addEventListener('keydown', this.handleKeyDown);
     window.addEventListener('keyup', this.handleKeyUp);
 
@@ -692,6 +847,7 @@ export class GameEngine {
     window.removeEventListener('orientationchange', this.handleResize);
     window.visualViewport?.removeEventListener('resize', this.handleResize);
     window.removeEventListener('blur', this.handleWindowBlur);
+    window.removeEventListener('pagehide', this.handlePageHide);
     window.removeEventListener('keydown', this.handleKeyDown);
     window.removeEventListener('keyup', this.handleKeyUp);
 
@@ -763,6 +919,8 @@ export class GameEngine {
   };
 
   public startNewGame(): void {
+    this.clearSavedGame();
+    this.resumeDayShift = false;
     this.audio.unlock();
     this.screen = 'MORNING_PREP';
     this.phase = 'COOKING';
@@ -958,8 +1116,12 @@ export class GameEngine {
     this.dayBannerTimer = 2.8;
     this.dayBannerText = this.dayManager.getDayFlashText();
     this.perMinuteRaidCheckTimer = 15;
-    this.dayTimeLeft = this.dayDuration;
-    this.dayElapsedTime = 0;
+    if (this.resumeDayShift) {
+      this.resumeDayShift = false;
+    } else {
+      this.dayTimeLeft = this.dayDuration;
+      this.dayElapsedTime = 0;
+    }
     this.endOfDayPending = false;
     this.dailyBuffs = freshDailyBuffs();
     this.freeDodgesLeft = this.vehicleLevel >= 3 ? 1 : 0;
@@ -1182,6 +1344,7 @@ export class GameEngine {
   }
 
   public returnToTitle(): void {
+    this.persistSession();
     this.screen = 'TITLE_MENU';
     this.shopOpen = false;
     this.loanModalOpen = false;
@@ -5857,6 +6020,8 @@ export class GameEngine {
       this.playerProgress = { ...this.playerProgress, wallet: Math.max(0, Math.floor(this.money)) };
       savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
     }
+
+    this.persistSession();
 
     const loanDailyInterest =
       this.loanDebt > 0 ? Math.max(5000, Math.round((this.loanDebt * 0.25) / 1000) * 1000) : 0;
