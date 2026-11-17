@@ -492,6 +492,9 @@ export default function App() {
   const engineRef = useRef<GameEngine | null>(null);
 
   const [hud, setHud] = useState<GameHudSnapshot>(INITIAL_HUD);
+  const [hasSavedGame, setHasSavedGame] = useState(() => {
+    try { return Boolean(localStorage.getItem('banh_trang_session_save_v1')); } catch { return false; }
+  });
   const [onboardingStep, setOnboardingStep] = useState<'STORY' | 'MAP' | null>(null);
   const [worldHubOpen, setWorldHubOpen] = useState(false);
   const [worldPanel, setWorldPanel] = useState<'MAP' | 'BAG' | 'JOURNAL' | 'PHONE' | null>(null);
@@ -620,7 +623,7 @@ export default function App() {
     const onKey = (e: KeyboardEvent) => {
       if (hud.screen === 'TITLE_MENU' && (e.code === 'Enter' || e.code === 'Space')) {
         e.preventDefault();
-        setOnboardingStep('STORY');
+        handleStart();
         return;
       }
       if (hud.screen === 'PLAYING' && hud.checkout.active && !hud.shopOpen) {
@@ -666,7 +669,19 @@ export default function App() {
   };
 
   const handleStart = () => {
+    if (hasSavedGame && !window.confirm('Bạn đang có một hành trình đã lưu. Bắt đầu trò chơi mới sẽ thay thế bản lưu này. Bạn có chắc chắn muốn tiếp tục?')) return;
     setOnboardingStep('STORY');
+  };
+
+  const handleContinue = () => {
+    const resumed = engineRef.current?.continueGame() ?? false;
+    if (resumed) {
+      setOnboardingStep(null);
+      setWorldHubOpen(false);
+      setHasSavedGame(true);
+    } else {
+      setHasSavedGame(false);
+    }
   };
 
   const handleTogglePause = () => {
@@ -1008,7 +1023,7 @@ export default function App() {
               })()}
               <div className="mt-5 flex flex-wrap justify-between gap-3">
                 <button type="button" onClick={() => setOnboardingStep(hud.screen === 'TITLE_MENU' ? 'STORY' : null)} className="rounded-xl border-2 border-slate-500 px-5 py-3 font-bold text-slate-200 hover:bg-slate-700">← Quay lại</button>
-                <button type="button" onClick={() => { const location = getVendorLocation(selectedVendorSpot); try { localStorage.setItem('banhtrang_vendor_spot_v1', selectedVendorSpot); } catch {} if (hud.screen === 'TITLE_MENU') { engineRef.current?.startNewGame(); engineRef.current?.setVendorLocationRent(location.rentPerDay); setWorldPlayer({ x: 48, y: 45 }); setWorldHubOpen(true); } else { engineRef.current?.setVendorLocationRent(location.rentPerDay); } setOnboardingStep(null); }} className="rounded-xl border-[3px] border-[#111318] bg-emerald-400 px-6 py-3 font-extrabold text-slate-950 hover:bg-emerald-300">{hud.screen === 'TITLE_MENU' ? 'Xác nhận địa điểm & vào chợ →' : 'Lưu địa điểm này'}</button>
+                <button type="button" onClick={() => { const location = getVendorLocation(selectedVendorSpot); try { localStorage.setItem('banhtrang_vendor_spot_v1', selectedVendorSpot); } catch {} if (hud.screen === 'TITLE_MENU') { engineRef.current?.startNewGame(); setHasSavedGame(true); engineRef.current?.setVendorLocationRent(location.rentPerDay); setWorldPlayer({ x: 48, y: 45 }); setWorldHubOpen(true); } else { engineRef.current?.setVendorLocationRent(location.rentPerDay); } setOnboardingStep(null); }} className="rounded-xl border-[3px] border-[#111318] bg-emerald-400 px-6 py-3 font-extrabold text-slate-950 hover:bg-emerald-300">{hud.screen === 'TITLE_MENU' ? 'Xác nhận địa điểm & vào chợ →' : 'Lưu địa điểm này'}</button>
               </div>
             </div>
           )}
@@ -1378,16 +1393,28 @@ export default function App() {
 
             {/* Primary CTA */}
             <div className="flex flex-wrap items-center gap-3">
+              {hasSavedGame && (
+                <button
+                  type="button"
+                  onClick={handleContinue}
+                  className="px-6 py-3.5 rounded-xl bg-[#10B981] hover:bg-[#34D399] text-white font-display font-extrabold text-lg border-[3px] border-[#111318] comic-shadow transition-transform hover:-translate-y-0.5 active:translate-y-0.5 whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  Tiếp Tục Hành Trình
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handleStart}
                 className="px-7 py-3.5 rounded-xl bg-[#F59E0B] hover:bg-[#FBBF24] text-[#111318] font-display font-extrabold text-lg border-[3px] border-[#111318] comic-shadow transition-transform hover:-translate-y-0.5 active:translate-y-0.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
-                Bắt Đầu Bán (Enter)
+                Chơi Mới (Enter)
               </button>
               <button
                 type="button"
-                onClick={() => setOnboardingStep('MAP')}
+                onClick={() => {
+                  if (hasSavedGame && !window.confirm('Bắt đầu trò chơi mới sẽ thay thế bản lưu hiện tại. Bạn có chắc chắn muốn tiếp tục?')) return;
+                  setOnboardingStep('MAP');
+                }}
                 className="flex items-center gap-2 px-5 py-3.5 rounded-xl bg-[#10B981] hover:bg-[#34D399] text-white font-display font-extrabold text-base border-[3px] border-[#111318] comic-shadow transition-transform hover:-translate-y-0.5 active:translate-y-0.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <MapIcon className="w-5 h-5" />
