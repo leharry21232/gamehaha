@@ -5251,6 +5251,9 @@ export class GameEngine {
         } else if (
           this.ordersServed >= 1 &&
           !this.endOfDayPending &&
+          !this.landlady.active &&
+          !this.lotterySeller.active &&
+          !this.rainEvent.active &&
           this.money >= 25000 &&
           Math.random() < 0.14
         ) {
@@ -5379,6 +5382,8 @@ export class GameEngine {
       !this.bossFightRolledToday &&
       bossTimeWindow &&
       !this.rainEvent.active &&
+      !this.landlady.active &&
+      !this.lotterySeller.active &&
       this.order
     ) {
       this.bossFightRolledToday = true;
@@ -5407,7 +5412,7 @@ export class GameEngine {
         this.landlady.active = false;
         this.landlady.sweeping = false;
       }
-    } else if (!this.landlady.bribed && this.order && this.ordersServed >= 1) {
+    } else if (!this.landlady.bribed && this.order && this.ordersServed >= 1 && !this.lotterySeller.active && !this.rainEvent.active) {
       this.landladyCooldown -= dt;
       if (this.landladyCooldown <= 0) {
         this.landladyCooldown = 22 + Math.random() * 14;
@@ -5431,7 +5436,7 @@ export class GameEngine {
       ) {
         this.lotterySeller.active = false;
       }
-    } else if (this.order) {
+    } else if (this.order && !this.landlady.active && !this.rainEvent.active) {
       this.lotteryCooldown -= dt;
       if (this.lotteryCooldown <= 0) {
         this.lotteryCooldown = 16 + Math.random() * 14;
@@ -5486,7 +5491,7 @@ export class GameEngine {
         }
         this.emitHud(true);
       }
-    } else if (this.order && this.ordersServed >= 1) {
+    } else if (this.order && this.ordersServed >= 1 && !this.landlady.active && !this.lotterySeller.active) {
       this.rainCooldownTimer -= dt;
       if (this.rainCooldownTimer <= 0) {
         this.rainCooldownTimer = 18 + Math.random() * 14;
