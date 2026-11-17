@@ -1975,11 +1975,12 @@ export class GameEngine {
     this.baziReading = freshBaziReading();
     this.tarot = freshTarot();
 
-    const vipType = forceFortuneType ? undefined : this.shouldSpawnVipType();
+    const vipType = this.tutorialMode || forceFortuneType ? undefined : this.shouldSpawnVipType();
     const isFlowOrder = !forceFortuneType && this.flowPerfectCount >= 5;
     const rollFortuneType: 'BUSINESS_BAZI' | 'HEARTBROKEN_GENZ' | undefined =
       forceFortuneType ??
-      (!vipType &&
+      (!this.tutorialMode &&
+      !vipType &&
       !isFlowOrder &&
       this.ordersServed >= 1 &&
       !this.rainEvent.active &&
@@ -1994,6 +1995,7 @@ export class GameEngine {
     }
 
     const rollRoomHunters =
+      !this.tutorialMode &&
       !vipType &&
       !isFlowOrder &&
       !rollFortuneType &&
@@ -2115,6 +2117,7 @@ export class GameEngine {
     // Event 1: 10% chance when a regular customer spawns -> Chiến thần Tóp Tóp QTE
     if (
       allowQte &&
+      !this.tutorialMode &&
       this.ordersServed >= 1 &&
       !this.rainEvent.active &&
       !this.tiktokQte.active &&
@@ -2129,6 +2132,7 @@ export class GameEngine {
 
   public summonFortuneCustomer(kind?: 'BAZI' | 'TAROT'): boolean {
     if (
+      this.tutorialMode ||
       this.screen !== 'PLAYING' ||
       this.phase !== 'COOKING' ||
       this.flowRhythm.active ||
