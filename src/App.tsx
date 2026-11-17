@@ -1437,6 +1437,19 @@ export default function App() {
         </div>
       )}
 
+      {!tutorialDismissed && hud.screen === 'PLAYING' && hud.day === 1 && hud.ordersServed < 3 && (
+        <div className="pointer-events-auto absolute left-1/2 top-20 z-20 w-[min(92%,680px)] -translate-x-1/2 rounded-xl border-2 border-sky-300 bg-[#102b3c]/95 px-4 py-3 text-white shadow-[3px_3px_0_#111318]">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black tracking-widest text-sky-200">HƯỚNG DẪN NGƯỜI MỚI · BƯỚC 3/3</p>
+              <p className="mt-1 text-sm font-extrabold">{hud.ordersServed === 0 ? 'Phục vụ vị khách đầu tiên' : 'Bạn đang làm rất tốt!'}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-200">{hud.ordersServed === 0 ? 'Quan sát bong bóng yêu cầu của khách, chuẩn bị đúng bánh tráng và topping, sau đó hoàn tất thanh toán. Không cần vội — sự kiện ngẫu nhiên đang được tạm hoãn trong 3 đơn đầu.' : 'Đã hoàn thành ' + hud.ordersServed + '/3 đơn đầu tiên. Cứ tập trung làm đúng yêu cầu và thanh toán; các sự kiện sẽ mở lại sau đơn thứ ba.'}</p>
+            </div>
+            <button type="button" onClick={() => { setTutorialDismissed(true); engineRef.current?.dismissTutorial(); try { localStorage.setItem('banhtrang_tutorial_v1','done'); } catch {} }} className="shrink-0 rounded-lg border border-slate-400 px-2 py-1 text-[10px] font-bold">Ẩn</button>
+          </div>
+        </div>
+      )}
+
       {/* MORNING PREP: DAILY NEWSPAPER & WHOLESALE INVENTORY MARKET */}
       {hud.screen === 'MORNING_PREP' && (() => {
         const totalToppings =
@@ -1452,8 +1465,12 @@ export default function App() {
               {!tutorialDismissed && hud.day === 1 && (
                 <div className="rounded-xl border-2 border-sky-400 bg-sky-50 p-4 text-slate-900">
                   <div className="flex items-start justify-between gap-3">
-                    <div><p className="text-xs font-black tracking-widest text-sky-700">HƯỚNG DẪN NGƯỜI MỚI · BƯỚC 1/3</p><p className="mt-1 font-extrabold">Nhập nguyên liệu cho mẻ bánh đầu tiên</p><p className="mt-1 text-xs leading-relaxed">Mua bánh tráng, tắc và ít nhất 2 phần topping. Dùng nút −1 / −5 để trả bớt hàng. Chưa có khách hay sự kiện gây gián đoạn trong phần hướng dẫn.</p></div>
-                    <button type="button" onClick={() => { setTutorialDismissed(true); try { localStorage.setItem('banhtrang_tutorial_v1','done'); } catch {} }} className="rounded-lg border border-slate-400 px-2 py-1 text-xs font-bold">Ẩn</button>
+                    <div>
+                      <p className="text-xs font-black tracking-widest text-sky-700">HƯỚNG DẪN NGƯỜI MỚI · {canOpenShop ? 'BƯỚC 2/3' : 'BƯỚC 1/3'}</p>
+                      <p className="mt-1 font-extrabold">{canOpenShop ? 'Nguyên liệu đã sẵn sàng — chuẩn bị mở quán' : 'Nhập nguyên liệu cho mẻ bánh đầu tiên'}</p>
+                      <p className="mt-1 text-xs leading-relaxed">{canOpenShop ? 'Bạn đã có đủ bánh tráng, tắc và topping. Nhấn “Mở Quán” để gặp vị khách đầu tiên. Ba đơn hàng đầu sẽ không bị các sự kiện ngẫu nhiên làm gián đoạn.' : 'Mua bánh tráng, tắc và ít nhất 2 phần topping. Có thể mua từng phần hoặc dùng nút mua nhanh; tiền còn lại luôn hiển thị phía trên.'}</p>
+                    </div>
+                    <button type="button" onClick={() => { setTutorialDismissed(true); engineRef.current?.dismissTutorial(); try { localStorage.setItem('banhtrang_tutorial_v1','done'); } catch {} }} className="rounded-lg border border-slate-400 px-2 py-1 text-xs font-bold">Ẩn hướng dẫn</button>
                   </div>
                 </div>
               )}
