@@ -686,7 +686,7 @@ export class GameEngine {
 
   private persistSession(): void {
     if (typeof window === 'undefined' || !window.localStorage) return;
-    if (this.screen === 'TITLE_MENU' || this.screen === 'CITY_TYCOON') return;
+    if (this.screen === 'TITLE_MENU' || this.screen === 'CITY_TYCOON' || this.screen === 'GAME_OVER') return;
     const snapshot: SessionSaveSnapshot = {
       version: 1,
       savedAt: Date.now(),
