@@ -4328,7 +4328,14 @@ export class GameEngine {
     this.ordersServed += 1;
     this.dayOrdersCompleted += 1;
     this.ordersSinceRaid += 1;
-    if (this.tutorialMode && this.ordersServed >= 3) this.tutorialMode = false;
+    if (this.tutorialMode && this.ordersServed >= 3) {
+      this.tutorialMode = false;
+      try {
+        if (typeof window !== 'undefined') window.localStorage.setItem('banhtrang_tutorial_v1', 'done');
+      } catch {
+        // Tutorial completion should never block order service.
+      }
+    }
 
     // Mechanic 5: Cursed Menu 50% Food Poisoning Risk -> Green Sick Face + 1-Star Review (-20% spawn next day!)
     let poisoned = false;
