@@ -694,6 +694,7 @@ export default function App() {
 
   const handleReturnTitle = () => {
     engineRef.current?.returnToTitle();
+    setHasSavedGame(engineRef.current?.hasSavedGame() ?? false);
   };
 
   const handleOpenShop = () => {
