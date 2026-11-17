@@ -930,7 +930,11 @@ export class GameEngine {
   public startNewGame(): void {
     this.clearSavedGame();
     this.resumeDayShift = false;
-    this.tutorialMode = true;
+    try {
+      this.tutorialMode = typeof window === 'undefined' || window.localStorage.getItem('banhtrang_tutorial_v1') !== 'done';
+    } catch {
+      this.tutorialMode = true;
+    }
     this.audio.unlock();
     this.screen = 'MORNING_PREP';
     this.phase = 'COOKING';
