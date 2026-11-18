@@ -14,6 +14,7 @@ import {
   getFlowLaneRects,
   getLandladyRect,
   getLotterySellerRect,
+  getToppingUndoRect,
   getQteArrowRects,
   getWaitingCustomerRects,
   pointInRect,
@@ -3538,7 +3539,7 @@ export class GameEngine {
       this.lastSwipePoint = pt;
       this.swipeTrail = [pt];
     } else if (this.prepStep === 'TOPPINGS') {
-      if (pointInRect(pt.x, pt.y, layout.secondaryBtn)) {
+      if (pointInRect(pt.x, pt.y, getToppingUndoRect(layout))) {
         this.undoLastTopping();
         return;
       }
@@ -6296,7 +6297,7 @@ export class GameEngine {
       hoverTrayId,
       hoverPrimary: Boolean(this.order) && pointInRect(this.hoverPos.x, this.hoverPos.y, activePrimary),
       hoverSecondary:
-        Boolean(this.order) && (this.prepStep === 'CUTTING' || (this.prepStep === 'TOPPINGS' && this.toppingHistory.length > 0)) && pointInRect(this.hoverPos.x, this.hoverPos.y, layout.secondaryBtn),
+        Boolean(this.order) && (this.prepStep === 'CUTTING' || (this.prepStep === 'TOPPINGS' && this.toppingHistory.length > 0)) && pointInRect(this.hoverPos.x, this.hoverPos.y, getToppingUndoRect(layout)),
       hoverShake:
         Boolean(this.order) && this.prepStep === 'SHAKING' && pointInRect(this.hoverPos.x, this.hoverPos.y, layout.shakeBtn),
       hoverRoll:
