@@ -553,6 +553,7 @@ export class GameEngine {
   private rollSoundCooldown = 0;
 
   private addedToppings: Record<ToppingId, number> = emptyToppings();
+  private toppingHistory: ToppingId[] = [];
   private bowlIngredients: BowlIngredient[] = [];
   private flyingToppings: FlyingTopping[] = [];
   private flyingCash: FlyingCashItem[] = [];
@@ -2820,6 +2821,7 @@ export class GameEngine {
     this.rollProgress = 0;
     this.isRollingDrag = false;
     this.addedToppings = emptyToppings();
+    this.toppingHistory = [];
     this.bowlIngredients = [];
     this.flyingToppings = [];
     this.limeMeter = freshMeter();
@@ -3056,6 +3058,17 @@ export class GameEngine {
       (this.baziReading.active && !this.baziReading.acknowledged)
     )
       return;
+
+    if (
+      this.phase === 'COOKING' &&
+      this.prepStep === 'TOPPINGS' &&
+      !e.repeat &&
+      (e.code === 'Backspace' || (e.ctrlKey && e.code === 'KeyZ'))
+    ) {
+      e.preventDefault();
+      this.undoLastTopping();
+      return;
+    }
 
     this.heldKeys.add(e.code);
 
@@ -3525,6 +3538,10 @@ export class GameEngine {
       this.lastSwipePoint = pt;
       this.swipeTrail = [pt];
     } else if (this.prepStep === 'TOPPINGS') {
+      if (pointInRect(pt.x, pt.y, layout.secondaryBtn)) {
+        this.undoLastTopping();
+        return;
+      }
       const primRect = { ...layout.primaryBtn, x: this.width * 0.5 - layout.primaryBtn.w * 0.5 };
       if (pointInRect(pt.x, pt.y, primRect)) {
         this.prepStep = 'SEASONING';
@@ -3868,6 +3885,7 @@ export class GameEngine {
     }
 
     this.addedToppings[id] = (this.addedToppings[id] || 0) + 1;
+    this.toppingHistory.push(id);
     const targetX =
       this.dishType === 'CUON'
         ? layout.matRect.x + layout.matRect.w * (0.25 + Math.random() * 0.5)
@@ -3889,6 +3907,30 @@ export class GameEngine {
     this.audio.playDropTopping();
     Haptics.addIngredient();
     this.spawnCallout(`+${def.shortName}`, undefined, startX, startY - 10, def.accentColor);
+    this.emitHud(true);
+  }
+
+  private undoLastTopping(): void {
+    if (this.prepStep !== 'TOPPINGS' || this.toppingHistory.length === 0) return;
+
+    const id = this.toppingHistory.pop();
+    if (!id) return;
+
+    this.addedToppings[id] = Math.max(0, (this.addedToppings[id] || 0) - 1);
+    if (id === 'kho_bo' || id === 'trung_cut' || id === 'xoai' || id === 'rau_ram') {
+      this.inventory[id] += 1;
+    }
+
+    const flyingIndex = this.flyingToppings.map((item) => item.id).lastIndexOf(id);
+    if (flyingIndex >= 0) {
+      this.flyingToppings.splice(flyingIndex, 1);
+    } else {
+      const ingredientIndex = this.bowlIngredients.map((item) => item.id).lastIndexOf(id);
+      if (ingredientIndex >= 0) this.bowlIngredients.splice(ingredientIndex, 1);
+    }
+
+    this.audio.playPickup();
+    this.spawnCallout(`↶ Đã rút ${TOPPING_MAP[id].shortName}`, 'Nguyên liệu đã được trả về kho.', this.width * 0.5, this.height * 0.34, '#0D9488');
     this.emitHud(true);
   }
 
@@ -6254,7 +6296,7 @@ export class GameEngine {
       hoverTrayId,
       hoverPrimary: Boolean(this.order) && pointInRect(this.hoverPos.x, this.hoverPos.y, activePrimary),
       hoverSecondary:
-        Boolean(this.order) && this.prepStep === 'CUTTING' && pointInRect(this.hoverPos.x, this.hoverPos.y, layout.secondaryBtn),
+        Boolean(this.order) && (this.prepStep === 'CUTTING' || (this.prepStep === 'TOPPINGS' && this.toppingHistory.length > 0)) && pointInRect(this.hoverPos.x, this.hoverPos.y, layout.secondaryBtn),
       hoverShake:
         Boolean(this.order) && this.prepStep === 'SHAKING' && pointInRect(this.hoverPos.x, this.hoverPos.y, layout.shakeBtn),
       hoverRoll:
