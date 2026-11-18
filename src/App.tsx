@@ -501,7 +501,7 @@ export default function App() {
   const [worldHubOpen, setWorldHubOpen] = useState(false);
   const [worldPanel, setWorldPanel] = useState<'MAP' | 'BAG' | 'JOURNAL' | 'PHONE' | null>(null);
   const [worldPlayer, setWorldPlayer] = useState({ x: 48, y: 45 });
-  const [worldNotice, setWorldNotice] = useState('Dùng WASD hoặc phím mũi tên để đi lại. Đến gần bàn chế biến rồi nhấn E.');
+  const [worldNotice, setWorldNotice] = useState('');
   const [tutorialDismissed, setTutorialDismissed] = useState(() => {
     try { return localStorage.getItem('banhtrang_tutorial_v1') === 'done'; } catch { return false; }
   });
@@ -612,6 +612,7 @@ export default function App() {
       const deltaX = key === 'a' || key === 'arrowleft' ? -2.5 : key === 'd' || key === 'arrowright' ? 2.5 : 0;
       const deltaY = key === 'w' || key === 'arrowup' ? -1.5 : key === 's' || key === 'arrowdown' ? 1.5 : 0;
       setWorldPanel(null);
+      setWorldNotice('');
       setWorldPlayer((p) => moveWorldPlayer(p, deltaX, deltaY));
     };
     window.addEventListener('keydown', move);
@@ -1246,12 +1247,12 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <p className="text-center text-xs text-slate-200">{nearbyWorldLocation ? 'Đang ở gần: ' + nearbyWorldLocation.name + ' · Nhấn E để tương tác' : worldNotice || 'Dùng WASD / phím mũi tên để đi trên vỉa hè · Đến gần các địa điểm rồi nhấn E'}</p>
+            <p className="text-center text-xs leading-relaxed text-slate-200">{worldNotice || (nearbyWorldLocation ? 'Đang ở gần: ' + nearbyWorldLocation.name + ' · Nhấn E để tương tác' : 'Dùng WASD / phím mũi tên để đi trên vỉa hè · Đến gần các địa điểm rồi nhấn E')}</p>
             <div className="mt-2 flex items-center justify-center gap-2">
-              <button type="button" onClick={() => { setWorldPanel(null); setWorldPlayer((p) => moveWorldPlayer(p, 0, -2)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi lên">↑</button>
-              <button type="button" onClick={() => { setWorldPanel(null); setWorldPlayer((p) => moveWorldPlayer(p, -3, 0)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi trái">←</button>
-              <button type="button" onClick={() => { setWorldPanel(null); setWorldPlayer((p) => moveWorldPlayer(p, 0, 2)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi xuống">↓</button>
-              <button type="button" onClick={() => { setWorldPanel(null); setWorldPlayer((p) => moveWorldPlayer(p, 3, 0)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi phải">→</button>
+              <button type="button" onClick={() => { setWorldPanel(null); setWorldNotice(''); setWorldPlayer((p) => moveWorldPlayer(p, 0, -2)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi lên">↑</button>
+              <button type="button" onClick={() => { setWorldPanel(null); setWorldNotice(''); setWorldPlayer((p) => moveWorldPlayer(p, -3, 0)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi trái">←</button>
+              <button type="button" onClick={() => { setWorldPanel(null); setWorldNotice(''); setWorldPlayer((p) => moveWorldPlayer(p, 0, 2)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi xuống">↓</button>
+              <button type="button" onClick={() => { setWorldPanel(null); setWorldNotice(''); setWorldPlayer((p) => moveWorldPlayer(p, 3, 0)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi phải">→</button>
             </div>
             <div className="mt-2 flex justify-center gap-2">
               <button type="button" onClick={handleWorldInteract} className="border-[3px] border-[#543a25] bg-[#f1c65e] px-4 py-2 font-mono text-xs font-black text-[#392819] shadow-[4px_4px_0_#111] hover:bg-[#ffda79]">E · {nearbyWorldLocation ? nearbyWorldLocation.name.toUpperCase() : 'TƯƠNG TÁC'}</button>
