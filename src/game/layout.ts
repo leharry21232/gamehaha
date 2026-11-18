@@ -389,6 +389,17 @@ export function computePrepLayout(w: number, h: number): PrepLayout {
   };
 }
 
+export function getToppingRemoveRect(layout: PrepLayout, id: ToppingId): Rect {
+  const tray = layout.trayRects[id];
+  const size = Math.min(28, Math.max(22, tray.w * 0.2));
+  return {
+    x: tray.x + tray.w - size - 5,
+    y: tray.y + 5,
+    w: size,
+    h: size,
+  };
+}
+
 export function getToppingUndoRect(layout: PrepLayout): Rect {
   const centeredPrimaryX = layout.width * 0.5 - layout.primaryBtn.w * 0.5;
   return {
