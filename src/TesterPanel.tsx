@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react';
-import type { GameHudSnapshot } from './game/types';
+import type { CustomerType, GameHudSnapshot } from './game/types';
 
-type TesterTab = 'OVERVIEW' | 'CONTROL' | 'SAVE';
+type TesterTab = 'OVERVIEW' | 'CONTROL' | 'GAMEPLAY' | 'INVENTORY' | 'SAVE';
 
 interface TesterPanelProps {
   hud: GameHudSnapshot;
   onClose: () => void;
   onSetMoney: (value: number) => void;
   onSetProgress: (level: number, xp: number) => void;
-  onSetDayTime: (seconds: number) => void;
+  onSetDayTime: (seconds: number) => void;\n  onQueueCustomer: (type: CustomerType) => boolean;\n  onTriggerRain: () => boolean;
 }
 
 const SESSION_SAVE_KEY = 'banh_trang_session_save_v1';
@@ -31,12 +31,12 @@ function readSaveBundle(): Record<string, string | null> {
   }
 }
 
-export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetDayTime }: TesterPanelProps) {
+export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetDayTime, onQueueCustomer, onTriggerRain }: TesterPanelProps) {
   const [tab, setTab] = useState<TesterTab>('OVERVIEW');
   const [moneyInput, setMoneyInput] = useState(String(hud.money));
   const [levelInput, setLevelInput] = useState(String(hud.playerLevel));
   const [xpInput, setXpInput] = useState(String(hud.playerXp));
-  const [timeInput, setTimeInput] = useState(String(Math.floor(hud.dayTimeLeft)));
+  const [timeInput, setTimeInput] = useState(String(Math.floor(hud.dayTimeLeft)));\n  const [customerType, setCustomerType] = useState<CustomerType>('STUDENT');\n  const [actionMessage, setActionMessage] = useState('');
   const saveBundle = useMemo(() => readSaveBundle(), [hud.screen, hud.day, hud.money, hud.ordersServed]);
   const saveText = JSON.stringify(saveBundle, null, 2);
   const hasSessionSave = Boolean(saveBundle.session);
@@ -73,6 +73,8 @@ export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetDayT
         <nav className="flex gap-2 border-b-2 border-[#111318] bg-[#f0e5c7] p-3">
           <button type="button" onClick={() => setTab('OVERVIEW')} className={`border-2 border-[#111318] px-3 py-2 text-xs font-black ${tab === 'OVERVIEW' ? 'bg-[#243b35] text-white' : 'bg-white'}`}>TỔNG QUAN</button>
           <button type="button" onClick={() => setTab('CONTROL')} className={`border-2 border-[#111318] px-3 py-2 text-xs font-black ${tab === 'CONTROL' ? 'bg-[#243b35] text-white' : 'bg-white'}`}>ĐIỀU KHIỂN</button>
+          <button type="button" onClick={() => setTab('GAMEPLAY')} className={`border-2 border-[#111318] px-3 py-2 text-xs font-black ${tab === 'GAMEPLAY' ? 'bg-[#243b35] text-white' : 'bg-white'}`}>GAMEPLAY</button>
+          <button type="button" onClick={() => setTab('INVENTORY')} className={`border-2 border-[#111318] px-3 py-2 text-xs font-black ${tab === 'INVENTORY' ? 'bg-[#243b35] text-white' : 'bg-white'}`}>KHO HÀNG</button>
           <button type="button" onClick={() => setTab('SAVE')} className={`border-2 border-[#111318] px-3 py-2 text-xs font-black ${tab === 'SAVE' ? 'bg-[#243b35] text-white' : 'bg-white'}`}>SAVE & DỮ LIỆU</button>
         </nav>
 
@@ -113,7 +115,7 @@ export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetDayT
                 </div>
               </div>
 
-              <p className="text-[11px] leading-relaxed text-[#625a4b]">Bản đầu chỉ đọc trạng thái game, chưa có nút thay đổi tiền, level hoặc sinh sự kiện. Các nút can thiệp sẽ được thêm sau khi có API debug an toàn trong GameEngine.</p>
+              <p className="text-[11px] leading-relaxed text-[#625a4b]">Bảng tổng quan phản ánh HUD trực tiếp từ GameEngine. Các thao tác can thiệp được giới hạn bằng API debug riêng.</p>
             </div>
           ) : tab === 'CONTROL' ? (
             <div className="space-y-4">
@@ -140,6 +142,54 @@ export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetDayT
                 <label className="block text-xs font-bold">Giây còn lại (0–{hud.dayDuration})<input aria-label="Thời gian còn lại" type="number" min="0" max={hud.dayDuration} value={timeInput} onChange={(event) => setTimeInput(event.target.value)} className="mt-1 w-full border-2 border-[#26231d] px-3 py-2 font-mono" /></label>
                 <button type="button" onClick={() => onSetDayTime(Number(timeInput))} className="border-2 border-[#111318] bg-[#f5b942] px-3 py-2 text-xs font-black shadow-[2px_2px_0_#111318]">ĐẶT THỜI GIAN</button>
               </section>
+            </div>
+          ) : tab === 'GAMEPLAY' ? (
+            <div className="space-y-4">
+              <div className="border-2 border-[#26231d] bg-amber-100 p-3 text-xs leading-relaxed">
+                <strong>CÔNG CỤ KIỂM THỬ GAMEPLAY</strong>
+                <p className="mt-1">Chỉ hoạt động trong ca bán hàng khi game đang ở trạng thái nấu bình thường. Công cụ không bỏ qua giới hạn hàng chờ và không chen ngang mini-game hoặc sự kiện đang chạy.</p>
+              </div>
+              <section className="space-y-2 border-2 border-[#26231d] bg-white p-3">
+                <h3 className="text-xs font-black">THÊM KHÁCH VÀO HÀNG CHỜ</h3>
+                <select aria-label="Loại khách kiểm thử" value={customerType} onChange={(event) => setCustomerType(event.target.value as CustomerType)} className="w-full border-2 border-[#26231d] bg-white px-3 py-2 text-sm font-bold">
+                  <option value="STUDENT">Sinh viên</option>
+                  <option value="NINJA_LEAD">Ninja Lead</option>
+                  <option value="OFFICE">Dân văn phòng</option>
+                  <option value="APP_SHIPPER">Shipper</option>
+                  {(hud.upgrades.ledRgb || hud.upgrades.cursedMenu) && <option value="GEN_Z">Khách Gen Z (đã mở khóa)</option>}
+                </select>
+                <button type="button" onClick={() => setActionMessage(onQueueCustomer(customerType) ? 'Đã thay khách cuối hàng chờ bằng khách kiểm thử.' : 'Không thể thêm khách lúc này. Hãy vào ca bán hàng và kết thúc sự kiện đang chạy.')} className="border-2 border-[#111318] bg-[#f5b942] px-3 py-2 text-xs font-black shadow-[2px_2px_0_#111318]">ĐƯA KHÁCH VÀO HÀNG CHỜ</button>
+              </section>
+              <section className="space-y-2 border-2 border-[#26231d] bg-white p-3">
+                <h3 className="text-xs font-black">SỰ KIỆN THỜI TIẾT</h3>
+                <p className="text-xs text-[#625a4b]">Kích hoạt sự kiện Mưa Sài Gòn 3 giây bằng đúng cơ chế gốc để kiểm tra thao tác mặc áo mưa cho khách.</p>
+                <button type="button" onClick={() => setActionMessage(onTriggerRain() ? 'Đã kích hoạt Mưa Sài Gòn.' : 'Không thể kích hoạt mưa khi đang ở ngoài ca hoặc có sự kiện/mini-game khác.')} className="border-2 border-[#111318] bg-sky-200 px-3 py-2 text-xs font-black shadow-[2px_2px_0_#111318]">KÍCH HOẠT MƯA SÀI GÒN</button>
+              </section>
+              {actionMessage && <p role="status" className="border-2 border-[#26231d] bg-white p-3 text-xs font-bold">{actionMessage}</p>}
+            </div>
+          ) : tab === 'INVENTORY' ? (
+            <div className="space-y-3">
+              <div className="border-2 border-[#26231d] bg-white p-3">
+                <h3 className="text-xs font-black">TỒN KHO HIỆN TẠI</h3>
+                <p className="mt-1 text-[10px] text-[#756b58]">Chỉ xem dữ liệu thực tế từ GameEngine, không chỉnh sửa số lượng.</p>
+                <div className="mt-3 space-y-2">
+                  {([
+                    ['banh_trang', 'Bánh tráng'],
+                    ['kho_bo', 'Khô bò'],
+                    ['trung_cut', 'Trứng cút'],
+                    ['xoai', 'Xoài'],
+                    ['rau_ram', 'Rau răm'],
+                    ['tac', 'Tắc'],
+                  ] as const).map(([key, label]) => {
+                    const amount = hud.inventory[key];
+                    const percent = hud.maxStockPerItem > 0 ? Math.min(100, (amount / hud.maxStockPerItem) * 100) : 0;
+                    return <div key={key} className="border-2 border-[#26231d] bg-[#fffdf5] p-2">
+                      <div className="flex items-center justify-between gap-2 text-xs font-bold"><span>{label}</span><span className="font-mono">{amount} / {hud.maxStockPerItem}</span></div>
+                      <div className="mt-1 h-2 border border-[#26231d] bg-[#eee5d2]"><div className={`h-full ${amount <= 2 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${percent}%` }} /></div>
+                    </div>;
+                  })}
+                </div>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
