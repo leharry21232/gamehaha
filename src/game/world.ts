@@ -150,9 +150,8 @@ export const WORLD_WALKABLE_BOUNDS = {
 // Percent-based collision rectangles match the neighborhood SVG's viewBox.
 export const WORLD_COLLISION_RECTS = [
   { id: 'left_tree', x: 0, y: 34, width: 7, height: 15 },
-  { id: 'cart_upper', x: 14, y: 33, width: 20, height: 9 },
-  { id: 'cart_lower', x: 14, y: 51, width: 20, height: 7 },
-  { id: 'drink_stall', x: 57, y: 38, width: 16, height: 12 },
+  { id: 'cart', x: 14, y: 32, width: 20, height: 22 },
+  { id: 'drink_stall', x: 57, y: 31, width: 15, height: 21 },
   { id: 'right_tree', x: 86, y: 33, width: 7, height: 15 },
 ] as const;
 
@@ -160,8 +159,8 @@ export const WORLD_INTERACTABLES: readonly WorldInteractable[] = [
   {
     id: 'cart',
     name: 'Xe bánh tráng',
-    x: 28,
-    y: 46,
+    x: 36,
+    y: 48,
     radius: 9,
     kind: 'BUSINESS',
     description: 'Chiếc xe bánh tráng của bạn. Đây là nơi bắt đầu một ca bán hàng.',
@@ -171,7 +170,7 @@ export const WORLD_INTERACTABLES: readonly WorldInteractable[] = [
     id: 'grocery',
     name: 'Tạp hóa cô Năm',
     x: 12,
-    y: 35,
+    y: 33,
     radius: 7,
     kind: 'BUSINESS',
     description: 'Tiệm tạp hóa nhỏ ở đầu dãy phố. Cô Năm luôn biết chỗ mua đồ dùng rẻ.',
@@ -180,8 +179,8 @@ export const WORLD_INTERACTABLES: readonly WorldInteractable[] = [
   {
     id: 'snack_shop',
     name: 'Sạp ăn vặt',
-    x: 35,
-    y: 35,
+    x: 38,
+    y: 33,
     radius: 7,
     kind: 'BUSINESS',
     description: 'Sạp đồ ăn vặt thơm mùi bánh nướng và đồ ăn buổi sáng.',
@@ -190,8 +189,8 @@ export const WORLD_INTERACTABLES: readonly WorldInteractable[] = [
   {
     id: 'drink_stall',
     name: 'Quán nước chú Ba',
-    x: 65,
-    y: 53,
+    x: 74,
+    y: 48,
     radius: 8,
     kind: 'BUSINESS',
     description: 'Quán nước nhỏ cạnh vỉa hè, nơi người trong xóm thường dừng chân trò chuyện.',
@@ -201,7 +200,7 @@ export const WORLD_INTERACTABLES: readonly WorldInteractable[] = [
     id: 'market_stall',
     name: 'Cổng chợ',
     x: 84,
-    y: 35,
+    y: 33,
     radius: 8,
     kind: 'BUSINESS',
     description: 'Lối vào dãy sạp chợ. Người mua bán bắt đầu nhộn nhịp từ sáng sớm.',
