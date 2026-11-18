@@ -82,12 +82,26 @@ test('movement slides along obstacles instead of freezing both axes', () => {
 });
 
 test('all neighborhood businesses and the neighbor have interaction dialogue', () => {
-  assert.equal(WORLD_INTERACTABLES.length, 6);
+  assert.equal(WORLD_INTERACTABLES.length, 10);
   for (const location of WORLD_INTERACTABLES) {
     assert.ok(location.name.length > 0);
     assert.ok(location.description.length > 0);
     assert.ok(location.interactionText.length > 0);
     assert.ok(location.radius > 0);
+  }
+});
+
+test('four new neighborhood NPCs have distinct dialogue and reachable positions', () => {
+  const npcIds = ['co_nam', 'co_sau', 'shipper_ti', 'chu_bay', 'ba_tu'];
+  const npcs = WORLD_INTERACTABLES.filter((location) => location.kind === 'NPC');
+
+  assert.equal(npcs.length, 5);
+  for (const id of npcIds) {
+    const npc = WORLD_INTERACTABLES.find((location) => location.id === id);
+    assert.ok(npc, `missing NPC: ${id}`);
+    assert.ok(npc.interactionText.length > 20, `missing dialogue: ${id}`);
+    assert.equal(isWorldPositionWalkable({ x: npc.x, y: npc.y }), true, id);
+    assert.equal(findNearbyWorldLocation(npc.x, npc.y)?.id, id);
   }
 });
 
