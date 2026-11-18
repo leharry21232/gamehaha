@@ -130,7 +130,7 @@ export interface WorldPosition {
 }
 
 export interface WorldInteractable {
-  id: 'cart' | 'grocery' | 'snack_shop' | 'drink_stall' | 'market_stall' | 'co_nam';
+  id: 'cart' | 'grocery' | 'snack_shop' | 'drink_stall' | 'market_stall' | 'co_nam' | 'co_sau' | 'shipper_ti' | 'chu_bay' | 'ba_tu';
   name: string;
   x: number;
   y: number;
@@ -215,6 +215,46 @@ export const WORLD_INTERACTABLES: readonly WorldInteractable[] = [
     kind: 'NPC',
     description: 'Một người hàng xóm thân thiện đang quan sát xe bánh tráng mới mở.',
     interactionText: 'Cô Năm: “Xe mới nhìn sạch sẽ đó. Nhớ chào khách và đừng để người ta phải chờ lâu nghe con!”',
+  },
+  {
+    id: 'co_sau',
+    name: 'Cô Sáu bán hoa',
+    x: 10,
+    y: 52,
+    radius: 7,
+    kind: 'NPC',
+    description: 'Cô Sáu bán hoa ở góc vỉa hè, lúc nào cũng vui vẻ và hay để ý chuyện trong xóm.',
+    interactionText: 'Cô Sáu: “Sáng nay hoa cúc đẹp lắm con. Mở hàng nhớ cười tươi, người ta thấy vui thì dễ ghé lại lắm!”',
+  },
+  {
+    id: 'shipper_ti',
+    name: 'Tí giao hàng',
+    x: 52,
+    y: 34,
+    radius: 7,
+    kind: 'NPC',
+    description: 'Tí là shipper trẻ thường dừng lại đầu phố để xem đơn giao trong ngày.',
+    interactionText: 'Tí: “Em chạy đơn quanh mấy con hẻm này suốt. Quán nào làm nhanh, gói gọn là khách đặt lại liền anh ơi!”',
+  },
+  {
+    id: 'chu_bay',
+    name: 'Chú Bảy sửa xe',
+    x: 77,
+    y: 53,
+    radius: 7,
+    kind: 'NPC',
+    description: 'Chú Bảy sửa xe lâu năm, thường ngồi trước tiệm nhìn dòng người qua lại.',
+    interactionText: 'Chú Bảy: “Xe cộ chạy ngoài đường đông lắm. Con kê xe gọn vào lề, chừa lối cho bà con đi nghen!”',
+  },
+  {
+    id: 'ba_tu',
+    name: 'Bà Tư hàng xóm',
+    x: 94,
+    y: 52,
+    radius: 7,
+    kind: 'NPC',
+    description: 'Bà Tư sống ở cuối dãy phố, thích trò chuyện và cập nhật tin tức khu xóm.',
+    interactionText: 'Bà Tư: “Ở xóm này người ta quý nhau cái tình. Con bán đàng hoàng, giữ vệ sinh là bà con thương thôi!”',
   },
 ] as const;
 
