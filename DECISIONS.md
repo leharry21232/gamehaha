@@ -8,3 +8,9 @@
 
 ## Tester Panel controls
 - Tester Panel mutating actions must call explicit clamped `GameEngine.debug*` methods. Never expose direct writes to engine internals or raw localStorage editing. Save import/reset and customer/event spawning remain separate milestones requiring validation and regression tests.
+
+
+## Tester Panel gameplay tools
+- Customer test actions replace only the last waiting-line entry; they do not increase queue capacity or bypass the normal order-spawn flow.
+- Forced rain reuses the existing Saigon-rain event implementation and is blocked during other interruptions, checkout, non-cooking phases, and outside an active order.
+- Inventory inspection is read-only and uses the live HUD inventory snapshot.
