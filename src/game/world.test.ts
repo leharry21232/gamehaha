@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, isWorldPositionWalkable, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES } from './world';
+import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, isWorldPositionWalkable, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES, getNeighborhoodEvent } from './world';
 
 test('all five vendor locations have distinct grounded costs and valid multipliers', () => {
   assert.equal(VENDOR_LOCATIONS.length, 5);
@@ -48,6 +48,29 @@ test('street scene includes distinct park, shops, food stall, sidewalk and road 
   for (const kind of ['PARK', 'MARKET', 'FOOD_STALL', 'SIDEWALK', 'ROAD']) {
     assert.ok(kinds.has(kind as (typeof WORLD_LANDMARKS)[number]['kind']));
   }
+});
+
+test('neighborhood event schedule follows morning, noon, and afternoon game-time thirds', () => {
+  const morning = getNeighborhoodEvent(1, 90, 90);
+  const noon = getNeighborhoodEvent(1, 45, 90);
+  const afternoon = getNeighborhoodEvent(1, 0, 90);
+
+  assert.equal(morning.dayPart, 'MORNING');
+  assert.equal(noon.dayPart, 'NOON');
+  assert.equal(afternoon.dayPart, 'AFTERNOON');
+  assert.ok(morning.description.length > 20);
+  assert.ok(noon.description.length > 20);
+  assert.ok(afternoon.description.length > 20);
+});
+
+test('neighborhood events rotate by in-game day without random or economy side effects', () => {
+  const dayOne = getNeighborhoodEvent(1, 90, 90);
+  const dayTwo = getNeighborhoodEvent(2, 90, 90);
+
+  assert.notEqual(dayOne.title, dayTwo.title);
+  assert.equal(getNeighborhoodEvent(0, 90, 90).dayPart, 'MORNING');
+  assert.equal(getNeighborhoodEvent(1, Number.NaN, 90).dayPart, 'MORNING');
+  assert.equal(getNeighborhoodEvent(1, 45, 0).dayPart, 'MORNING');
 });
 
 test('pedestrian routes have unique ids and movement animations', () => {
