@@ -51,3 +51,11 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] GitHub Actions: TypeScript check passes.
 - [ ] GitHub Actions: production build passes.
 - [ ] Manual browser checklist completed on the latest deployed commit.
+
+
+## Neighborhood ambience (M6)
+- [ ] Open the neighborhood map with an in-game morning state; confirm the morning event card appears.
+- [ ] Use Tester Panel to adjust day time (or test a day with midday/afternoon state) and confirm the card changes to the matching day part.
+- [ ] Confirm events rotate on a later in-game day.
+- [ ] Confirm the event card does not block walking, NPC interaction, map controls, or the hide-controls button.
+- [ ] Confirm event display does not change cash, inventory, mission progress, save data, or cooking behavior.
