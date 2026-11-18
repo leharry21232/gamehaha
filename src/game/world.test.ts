@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, isWorldPositionWalkable, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES, getNeighborhoodEvent } from './world';
+import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, isWorldPositionWalkable, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES, getNeighborhoodEvent, CURIOUS_CART_VISITOR_EVENT } from './world';
 
 test('all five vendor locations have distinct grounded costs and valid multipliers', () => {
   assert.equal(VENDOR_LOCATIONS.length, 5);
@@ -151,4 +151,11 @@ test('player can reach the grocery shop by walking around the cart along the low
   assert.deepEqual(position, { x: 12, y: 33 });
   assert.equal(isWorldPositionWalkable(position), true);
   assert.equal(findNearbyWorldLocation(position.x, position.y)?.id, 'grocery');
+});
+
+
+test('curious cart visitor is a narrative-only optional interaction', () => {
+  assert.equal(CURIOUS_CART_VISITOR_EVENT.id, 'curious_cart_visitor');
+  assert.match(CURIOUS_CART_VISITOR_EVENT.dialogue, /xe bánh tráng mới mở/i);
+  assert.equal(Object.keys(CURIOUS_CART_VISITOR_EVENT).sort().join(','), 'dialogue,id,title');
 });

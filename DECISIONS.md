@@ -56,3 +56,9 @@
 - Sự kiện khu phố trong lát cắt đầu tiên là sự kiện không gây gián đoạn, chỉ hiển thị bối cảnh và không thay đổi tiền, kho, nhiệm vụ, save hoặc trạng thái bán hàng.
 - Thời điểm sáng/trưa/chiều lấy từ `hud.dayTimeLeft` và `hud.dayDuration`, không dùng đồng hồ máy tính hoặc timer độc lập.
 - Sự kiện được chọn xác định theo ngày trong game và khung thời gian để kết quả ổn định, dễ kiểm thử; chưa tạo sự kiện ngẫu nhiên có gameplay effect.
+
+
+## M6 – Sự kiện khách tò mò ghé xe
+- Sự kiện đầu tiên được mở bằng nút tùy chọn khi người chơi đứng gần xe bánh tráng; không tự bật popup và không chiếm phím E.
+- Hội thoại là nội dung kể chuyện thuần túy, không tạo đơn hàng, không thay đổi tiền, kho, nhiệm vụ, thời gian, save hoặc trạng thái ca bán.
+- Chỉ đánh dấu đã xem trong state của phiên ứng dụng hiện tại; không thêm trường vào save schema. Tương tác xe bánh tráng hiện hữu luôn giữ nguyên.

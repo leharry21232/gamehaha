@@ -352,3 +352,11 @@ export function findNearbyWorldLocation(
 
   return nearest;
 }
+
+
+// One-time, optional neighborhood conversation. This is presentation-only: it has no gameplay payload.
+export const CURIOUS_CART_VISITOR_EVENT = {
+  id: 'curious_cart_visitor',
+  title: 'Một vị khách tò mò',
+  dialogue: 'Một bạn trẻ dừng xe trước quầy: “Ủa, xe bánh tráng mới mở hả? Nhìn topping hấp dẫn ghê! Bạn mới bán ở khu này phải không?” Bạn mỉm cười: “Ừ, mình mới bắt đầu. Khi nào thèm thì ghé ủng hộ nha!” Người khách gật đầu rồi tiếp tục đi dạo quanh phố.',
+} as const;

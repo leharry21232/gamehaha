@@ -60,3 +60,12 @@
 - [ ] Kiểm tra thủ công thẻ sự kiện ở các giai đoạn sáng/trưa/chiều trên bản đồ.
 - [ ] Xác nhận sự kiện không che NPC, không chặn thao tác di chuyển/tương tác và không thay đổi kinh tế/save.
 - [ ] Hoàn tất CI, TypeScript và production build.
+
+
+### M6 – Phần 4: Tương tác sự kiện khu phố (lát cắt đầu tiên)
+- [x] Thêm lời mời trò chuyện tùy chọn với một vị khách tò mò khi người chơi đứng gần xe bánh tráng.
+- [x] Giữ tương tác E hiện tại: nhấn E tại xe vẫn quay về khu chuẩn bị ngay như trước.
+- [x] Sự kiện chỉ hiển thị hội thoại, chỉ xuất hiện một lần trong phiên chạy ứng dụng và không ghi vào save.
+- [x] Bổ sung regression test xác nhận dữ liệu sự kiện chỉ chứa nội dung hội thoại.
+- [ ] Kiểm tra thủ công nút khách tò mò trên desktop/mobile và xác nhận có thể bỏ qua.
+- [ ] Xác nhận sau hội thoại, nhấn E tại xe vẫn mở khu chuẩn bị; tiền, kho, nhiệm vụ và save không đổi.

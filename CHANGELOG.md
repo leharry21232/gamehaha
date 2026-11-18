@@ -28,3 +28,7 @@
 ## M6 – Neighborhood ambience
 - Added non-blocking neighborhood ambience events that change across in-game morning, noon, and afternoon and rotate by game day.
 - Added a compact map card for current neighborhood activity; events are narrative-only and do not alter economy, inventory, missions, saves, or the cooking loop.
+
+
+## M6 – Interactive neighborhood event
+- Added an optional, one-time curious visitor conversation near the bánh tráng cart. It is narrative-only and leaves the existing E-to-cart flow untouched.

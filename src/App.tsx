@@ -4,7 +4,7 @@ import { GameEngine } from './game/engine';
 import { TesterPanel } from './TesterPanel';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
 import { DECORATIONS, getUnlockedSkills } from './game/progression';
-import { findNearbyWorldLocation, getNeighborhoodEvent, getVendorLocation, moveWorldPlayer, WORLD_INTERACTABLES, type WorldInteractable } from './game/world';
+import { findNearbyWorldLocation, getNeighborhoodEvent, getVendorLocation, CURIOUS_CART_VISITOR_EVENT, moveWorldPlayer, WORLD_INTERACTABLES, type WorldInteractable } from './game/world';
 import type { BestRecord, CityDistrictId, CustomerType, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
 import heroBgUrl from './assets/images/saigon_sidewalk_hero_1794649926456.jpg';
 
@@ -533,6 +533,7 @@ export default function App() {
   const [worldPanel, setWorldPanel] = useState<'MAP' | 'BAG' | 'JOURNAL' | 'PHONE' | null>(null);
   const [worldPlayer, setWorldPlayer] = useState({ x: 48, y: 45 });
   const [worldNotice, setWorldNotice] = useState('');
+  const [cartVisitorEventSeen, setCartVisitorEventSeen] = useState(false);
   const [tutorialDismissed, setTutorialDismissed] = useState(() => {
     try { return localStorage.getItem('banhtrang_tutorial_v1') === 'done'; } catch { return false; }
   });
@@ -1314,6 +1315,7 @@ export default function App() {
               <button type="button" onClick={() => { setWorldPanel(null); setWorldNotice(''); setWorldPlayer((p) => moveWorldPlayer(p, 3, 0)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi phải">→</button>
             </div>
             <div className="mt-2 flex justify-center gap-2">
+              {nearbyWorldLocation?.id === 'cart' && !cartVisitorEventSeen && <button type="button" onClick={() => { setCartVisitorEventSeen(true); setWorldNotice(CURIOUS_CART_VISITOR_EVENT.dialogue); setWorldPanel(null); }} className="border-[3px] border-[#6b5430] bg-[#f6dfa0] px-3 py-2 font-mono text-[10px] font-black text-[#392819] shadow-[3px_3px_0_#111] hover:bg-[#ffe9b2]">💬 KHÁCH TÒ MÒ</button>}
               <button type="button" onClick={handleWorldInteract} className="border-[3px] border-[#543a25] bg-[#f1c65e] px-4 py-2 font-mono text-xs font-black text-[#392819] shadow-[4px_4px_0_#111] hover:bg-[#ffda79]">E · {nearbyWorldLocation ? nearbyWorldLocation.name.toUpperCase() : 'TƯƠNG TÁC'}</button>
               <button type="button" onClick={() => { setWorldPanel((current) => current === 'MAP' ? null : 'MAP'); setWorldNotice('Bạn đang ở khu phố bán bánh tráng. Hãy đi dọc vỉa hè, gặp khách và đến xe bánh tráng để bắt đầu ca bán hàng.'); }} className="border-[3px] border-[#9cae91] bg-[#405653] px-3 py-2 font-mono text-[10px] font-bold text-[#fff2d1] shadow-[3px_3px_0_#111]">Hướng dẫn</button>
             </div>

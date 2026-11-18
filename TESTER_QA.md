@@ -59,3 +59,12 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] Confirm events rotate on a later in-game day.
 - [ ] Confirm the event card does not block walking, NPC interaction, map controls, or the hide-controls button.
 - [ ] Confirm event display does not change cash, inventory, mission progress, save data, or cooking behavior.
+
+
+## M6 – Sự kiện khách tò mò ghé xe
+- [ ] Đi bộ đến gần xe bánh tráng; xác nhận nút “KHÁCH TÒ MÒ” xuất hiện.
+- [ ] Bấm nút và đọc hội thoại; xác nhận bản đồ vẫn mở và không có popup ép buộc.
+- [ ] Xác nhận nút sự kiện không xuất hiện lại trong cùng phiên ứng dụng.
+- [ ] Bỏ qua sự kiện và nhấn E; xác nhận quay về khu chuẩn bị như trước.
+- [ ] So sánh tiền, kho, tiến độ nhiệm vụ và save trước/sau; tất cả phải giữ nguyên.
+- [ ] Kiểm tra responsive desktop/mobile, bảo đảm nút không làm tràn bảng điều khiển.
