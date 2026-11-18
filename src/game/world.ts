@@ -228,6 +228,14 @@ function isInsideWorldCollision(position: WorldPosition, padding = 1.2): boolean
   );
 }
 
+export function isWorldPositionWalkable(position: WorldPosition): boolean {
+  return position.x >= WORLD_WALKABLE_BOUNDS.minX &&
+    position.x <= WORLD_WALKABLE_BOUNDS.maxX &&
+    position.y >= WORLD_WALKABLE_BOUNDS.minY &&
+    position.y <= WORLD_WALKABLE_BOUNDS.maxY &&
+    !isInsideWorldCollision(position);
+}
+
 export function moveWorldPlayer(
   position: WorldPosition,
   deltaX: number,
