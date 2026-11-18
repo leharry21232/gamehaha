@@ -123,6 +123,49 @@ export const PEDESTRIAN_ROUTES: readonly PedestrianRoute[] = [
   { id: 'local', emoji: '🧍🏻‍♀️', label: 'Người đi đường', animation: 'walk-east', top: '88%', delay: '-8s' },
 ] as const;
 
+export type NeighborhoodDayPart = 'MORNING' | 'NOON' | 'AFTERNOON';
+
+export interface NeighborhoodEvent {
+  dayPart: NeighborhoodDayPart;
+  dayPartLabel: string;
+  title: string;
+  description: string;
+  trafficLabel: string;
+}
+
+const NEIGHBORHOOD_EVENTS: Record<NeighborhoodDayPart, readonly Pick<NeighborhoodEvent, 'title' | 'description'>[]> = {
+  MORNING: [
+    { title: 'Phố bắt đầu thức giấc', description: 'Cô Sáu đang bày hoa, Tí tranh thủ nhận những đơn giao đầu tiên trong ngày.' },
+    { title: 'Tiếng rao đầu ngõ', description: 'Các sạp hàng vừa mở cửa. Người đi làm và sinh viên bắt đầu qua lại đông hơn.' },
+  ],
+  NOON: [
+    { title: 'Giờ nghỉ trưa', description: 'Quán nước chú Ba có thêm khách ghé nghỉ chân, tiếng trò chuyện rộn ràng bên vỉa hè.' },
+    { title: 'Chợ trưa nhộn nhịp', description: 'Cổng chợ đông người mua bán. Chú Bảy nhắc mọi người chừa lối cho xe qua.' },
+  ],
+  AFTERNOON: [
+    { title: 'Phố dịu lại', description: 'Bà Tư ngồi hóng mát trước hiên, vài người hàng xóm dừng lại hỏi thăm nhau.' },
+    { title: 'Chuẩn bị tan tầm', description: 'Tí kiểm tra chuyến giao cuối buổi, các cửa tiệm bắt đầu chuẩn bị cho giờ đông khách.' },
+  ],
+};
+
+export function getNeighborhoodEvent(day: number, dayTimeLeft: number, dayDuration: number): NeighborhoodEvent {
+  const safeDuration = Math.max(1, Number.isFinite(dayDuration) ? dayDuration : 1);
+  const safeTimeLeft = Math.min(safeDuration, Math.max(0, Number.isFinite(dayTimeLeft) ? dayTimeLeft : safeDuration));
+  const elapsedRatio = 1 - safeTimeLeft / safeDuration;
+  const dayPart: NeighborhoodDayPart = elapsedRatio < 1 / 3
+    ? 'MORNING'
+    : elapsedRatio < 2 / 3
+      ? 'NOON'
+      : 'AFTERNOON';
+  const events = NEIGHBORHOOD_EVENTS[dayPart];
+  const dayIndex = Math.max(1, Math.floor(Number.isFinite(day) ? day : 1)) - 1;
+  const event = events[dayIndex % events.length];
+  const dayPartLabel = dayPart === 'MORNING' ? 'BUỔI SÁNG' : dayPart === 'NOON' ? 'BUỔI TRƯA' : 'BUỔI CHIỀU';
+  const trafficLabel = dayPart === 'MORNING' ? 'Phố đang đông dần' : dayPart === 'NOON' ? 'Nhộn nhịp giờ trưa' : 'Nhịp phố chậm lại';
+
+  return { dayPart, dayPartLabel, title: event.title, description: event.description, trafficLabel };
+}
+
 
 export interface WorldPosition {
   x: number;
