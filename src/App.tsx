@@ -3744,6 +3744,7 @@ export default function App() {
         onClose={() => setTesterPanelOpen(false)}
         onSetMoney={(value) => engineRef.current?.debugSetMoney(value)}
         onSetProgress={(level, xp) => engineRef.current?.debugSetProgress(level, xp)}
+        onSetStoryStats={(orders, earnings) => engineRef.current?.debugSetStoryStats(orders, earnings)}
         onSetDayTime={(seconds) => engineRef.current?.debugSetDayTime(seconds)}
         onQueueCustomer={(type: CustomerType) => engineRef.current?.debugQueueCustomer(type) ?? false}
         onTriggerRain={() => engineRef.current?.debugTriggerRain() ?? false}
