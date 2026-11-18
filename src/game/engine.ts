@@ -945,7 +945,11 @@ export class GameEngine {
     this.screen = 'MORNING_PREP';
     this.phase = 'COOKING';
     this.shopOpen = false;
-    this.money = this.playerProgress.wallet; // Giữ lại số dư giữa các phiên chơi
+    // A deliberate New Game starts a fresh run with the configured starter cash.
+    // Long-term progression (level, XP, lifetime earnings, decorations) remains intact.
+    this.playerProgress = { ...this.playerProgress, wallet: INITIAL_PLAYER_PROGRESS.wallet };
+    this.money = INITIAL_PLAYER_PROGRESS.wallet;
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
     this.xu = 0;
     this.score = 0;
     this.ordersServed = 0;
