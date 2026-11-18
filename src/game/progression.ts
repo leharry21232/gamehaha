@@ -79,6 +79,10 @@ export const INITIAL_PLAYER_PROGRESS: PlayerProgress = {
   difficulty: 'NORMAL',
 };
 
+export function resetWalletForNewGame(progress: PlayerProgress): PlayerProgress {
+  return { ...progress, wallet: INITIAL_PLAYER_PROGRESS.wallet };
+}
+
 export function xpRequiredForLevel(level: number): number {
   return 100 + Math.max(0, level - 1) * 50;
 }
