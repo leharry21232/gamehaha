@@ -31,3 +31,11 @@
 - Interactions are narrative-only for now. They must not change cash, inventory, save schema, mission progress, or cooking behavior.
 - The player may return to the existing morning-preparation screen only by interacting with the bánh tráng cart.
 - This approved M4.x exploration slice does not replace official Spec Kit M5 (decorations, skins, difficulty, and audio).
+
+
+## Neighborhood map exploration
+- Reuse the current pixel-art SVG map and normalized viewport-percent coordinates; do not replace the scene or create a city-wide map in M5.
+- Keep world movement and interaction lookup as pure functions in `src/game/world.ts` so collision and reachability can be regression-tested.
+- Map interactions in M5 are informational only. They must not modify money, inventory, staff, missions, vendor location, or save data.
+- The bánh tráng cart remains the only map interaction that closes the neighborhood overlay and returns to the existing morning-preparation flow.
+- Keyboard and touch controls must share the same collision-aware movement function.
