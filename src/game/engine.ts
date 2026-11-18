@@ -14,6 +14,7 @@ import {
   getFlowLaneRects,
   getLandladyRect,
   getLotterySellerRect,
+  getToppingRemoveRect,
   getToppingUndoRect,
   getQteArrowRects,
   getWaitingCustomerRects,
@@ -3543,6 +3544,12 @@ export class GameEngine {
       this.lastSwipePoint = pt;
       this.swipeTrail = [pt];
     } else if (this.prepStep === 'TOPPINGS') {
+      for (const topping of TOPPINGS) {
+        if ((this.addedToppings[topping.id] || 0) > 0 && pointInRect(pt.x, pt.y, getToppingRemoveRect(layout, topping.id))) {
+          this.removeTopping(topping.id);
+          return;
+        }
+      }
       if (pointInRect(pt.x, pt.y, getToppingUndoRect(layout))) {
         this.undoLastTopping();
         return;
@@ -3912,6 +3919,31 @@ export class GameEngine {
     this.audio.playDropTopping();
     Haptics.addIngredient();
     this.spawnCallout(`+${def.shortName}`, undefined, startX, startY - 10, def.accentColor);
+    this.emitHud(true);
+  }
+
+  private removeTopping(id: ToppingId): void {
+    if (this.prepStep !== 'TOPPINGS' || (this.addedToppings[id] || 0) <= 0) return;
+
+    const historyIndex = this.toppingHistory.lastIndexOf(id);
+    if (historyIndex < 0) return;
+    this.toppingHistory.splice(historyIndex, 1);
+    this.addedToppings[id] -= 1;
+
+    if (id === 'kho_bo' || id === 'trung_cut' || id === 'xoai' || id === 'rau_ram') {
+      this.inventory[id] += 1;
+    }
+
+    const flyingIndex = this.flyingToppings.map((item) => item.id).lastIndexOf(id);
+    if (flyingIndex >= 0) {
+      this.flyingToppings.splice(flyingIndex, 1);
+    } else {
+      const ingredientIndex = this.bowlIngredients.map((item) => item.id).lastIndexOf(id);
+      if (ingredientIndex >= 0) this.bowlIngredients.splice(ingredientIndex, 1);
+    }
+
+    this.audio.playPickup();
+    this.spawnCallout(`− Đã bỏ ${TOPPING_MAP[id].shortName}`, 'Nguyên liệu đã được trả về kho.', this.width * 0.5, this.height * 0.34, '#0D9488');
     this.emitHud(true);
   }
 
