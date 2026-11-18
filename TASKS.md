@@ -31,3 +31,12 @@
 - Cloud save synchronization, account-based saves, and cross-device transfer.
 - Save import/reset tools and sample-save management. Keep the Tester Panel's save view read-only.
 - Changing the existing bánh tráng preparation mechanics, timing, or scoring as part of the story milestone.
+
+
+## M6 – Kết nối bản đồ với Chương 1 (đang triển khai)
+- [x] Hiển thị nhiệm vụ Chương 1 trực tiếp trong tab Nhật ký trên bản đồ.
+- [x] Hiển thị tiến độ, trạng thái, phần thưởng và nút nhận thưởng khi đủ điều kiện.
+- [x] Kết nối lời thoại Cô Năm với nhiệm vụ hiện tại và tiến độ của người chơi.
+- [ ] Kiểm tra hội thoại bằng phím E và nút tương tác trên thiết bị cảm ứng.
+- [ ] Kiểm tra nhận thưởng từ Nhật ký và xác nhận số dư được lưu sau khi tải lại.
+- [ ] Hoàn tất kiểm thử regression, TypeScript và production build.
