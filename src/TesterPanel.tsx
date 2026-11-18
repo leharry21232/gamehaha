@@ -198,8 +198,9 @@ export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetDayT
           ) : (
             <div className="space-y-3">
               <div className="border-2 border-[#26231d] bg-white p-3">
-                <p className="text-xs font-black">BẢN LƯU PHIÊN CHƠI</p>
-                <p className="mt-1 text-sm">{hasSessionSave ? 'Đã tìm thấy dữ liệu save.' : 'Chưa tìm thấy dữ liệu save phiên chơi.'}</p>
+                <p className="text-xs font-black">BẢN LƯU TRÊN TRÌNH DUYỆT NÀY</p>
+                <p className="mt-1 text-sm">{hasSessionSave ? 'Đã tìm thấy dữ liệu save cục bộ.' : 'Chưa tìm thấy dữ liệu save trên trình duyệt này.'}</p>
+                <p className="mt-2 text-[11px] leading-relaxed text-[#625a4b]">Game tự lưu trong bộ nhớ của trình duyệt hiện tại. Máy hoặc trình duyệt khác sẽ có tiến trình riêng; không cần đăng nhập và không đồng bộ qua GitHub.</p>
                 <p className="mt-1 break-all font-mono text-[10px] text-[#756b58]">{SESSION_SAVE_KEY}</p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -207,7 +208,7 @@ export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetDayT
                 <button type="button" onClick={() => void copySave()} className="border-2 border-[#111318] bg-white px-3 py-2 text-xs font-black shadow-[2px_2px_0_#111318]">COPY JSON</button>
               </div>
               <pre className="max-h-72 overflow-auto border-2 border-[#26231d] bg-[#1f2933] p-3 text-[10px] leading-relaxed text-emerald-100">{saveText}</pre>
-              <p className="text-[11px] leading-relaxed text-[#625a4b]">Xuất/copy chỉ đọc các khóa save của game và vị trí bán hàng. Chưa hỗ trợ import hoặc xóa save để tránh ghi đè nhầm dữ liệu đang chơi.</p>
+              <p className="text-[11px] leading-relaxed text-[#625a4b]">Xuất/copy chỉ đọc dữ liệu cục bộ trên trình duyệt này. Game không tải save lên máy chủ; xóa dữ liệu trang web hoặc đổi trình duyệt có thể khiến save không còn truy cập được.</p>
             </div>
           )}
         </div>
