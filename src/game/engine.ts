@@ -747,6 +747,58 @@ export class GameEngine {
   }
 
   /** Debug-only controls called by the Tester Panel; all values are clamped. */
+  /** Queue a selected customer into the waiting line for controlled gameplay tests. */
+  public debugQueueCustomer(type: CustomerType): boolean {
+    if (
+      this.screen !== 'PLAYING' ||
+      this.phase !== 'COOKING' ||
+      this.shopOpen ||
+      this.checkout.active ||
+      this.rainEvent.active ||
+      this.bossFight.active ||
+      this.wuxiaCombat.active ||
+      this.tiktokQte.active ||
+      this.flowRhythm.active ||
+      this.diyMalfunction.active ||
+      this.baziReading.active ||
+      this.tarot.active ||
+      this.waitingCustomers.length === 0
+    ) return false;
+
+    const basicTypes: CustomerType[] = ['STUDENT', 'NINJA_LEAD', 'OFFICE', 'APP_SHIPPER'];
+    if (!basicTypes.includes(type) && !(type === 'GEN_Z' && (this.upgrades.ledRgb || this.upgrades.cursedMenu))) {
+      return false;
+    }
+
+    // Replace the last queued customer rather than growing the queue or bypassing spawn pacing.
+    this.waitingCustomers[this.waitingCustomers.length - 1] = this.createWaitingCustomer(type);
+    this.emitHud(true);
+    return true;
+  }
+
+  /** Trigger the existing short Saigon-rain event only during an uninterrupted cooking phase. */
+  public debugTriggerRain(): boolean {
+    if (
+      this.screen !== 'PLAYING' ||
+      this.phase !== 'COOKING' ||
+      this.shopOpen ||
+      this.checkout.active ||
+      this.rainEvent.active ||
+      this.bossFight.active ||
+      this.wuxiaCombat.active ||
+      this.tiktokQte.active ||
+      this.flowRhythm.active ||
+      this.diyMalfunction.active ||
+      this.baziReading.active ||
+      this.tarot.active ||
+      !this.order
+    ) return false;
+
+    this.startSaigonRain();
+    this.emitHud(true);
+    return true;
+  }
+
   public debugSetMoney(value: number): void {
     if (!Number.isFinite(value)) return;
     this.money = Math.max(0, Math.min(999999999, Math.floor(value)));
