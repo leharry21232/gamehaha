@@ -23,3 +23,8 @@
 ## M6 – Neighborhood NPCs
 - Added four named neighborhood NPCs (Cô Sáu, Tí giao hàng, chú Bảy, bà Tư) with distinct pixel-art sprites, map labels, interaction ranges, and dialogue.
 - Kept all NPC interactions narrative-only and reused the existing keyboard/touch interaction flow.
+
+
+## M6 – Neighborhood ambience
+- Added non-blocking neighborhood ambience events that change across in-game morning, noon, and afternoon and rotate by game day.
+- Added a compact map card for current neighborhood activity; events are narrative-only and do not alter economy, inventory, missions, saves, or the cooking loop.
