@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, getVendorLocation, isSystemUnlocked, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES } from './world';
+import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES } from './world';
 
 test('all five vendor locations have distinct grounded costs and valid multipliers', () => {
   assert.equal(VENDOR_LOCATIONS.length, 5);
@@ -58,4 +58,41 @@ test('pedestrian routes have unique ids and movement animations', () => {
     assert.ok(route.top.endsWith('%'));
     assert.ok(route.delay.length > 0);
   }
+});
+
+
+test('neighborhood movement stays inside the walkable sidewalk bounds', () => {
+  const moved = moveWorldPlayer({ x: 48, y: 45 }, 100, -100);
+  assert.equal(moved.x, 96);
+  assert.equal(moved.y, 33);
+});
+
+test('neighborhood movement collides with solid map objects', () => {
+  const blockedByCart = moveWorldPlayer({ x: 40, y: 38 }, -15, 0);
+  assert.equal(blockedByCart.x, 40);
+
+  const blockedByDrinkStall = moveWorldPlayer({ x: 50, y: 45 }, 20, 0);
+  assert.equal(blockedByDrinkStall.x, 50);
+});
+
+test('movement slides along obstacles instead of freezing both axes', () => {
+  const moved = moveWorldPlayer({ x: 40, y: 38 }, -15, 5);
+  assert.equal(moved.x, 40);
+  assert.equal(moved.y, 43);
+});
+
+test('all neighborhood businesses and the neighbor have interaction dialogue', () => {
+  assert.equal(WORLD_INTERACTABLES.length, 6);
+  for (const location of WORLD_INTERACTABLES) {
+    assert.ok(location.name.length > 0);
+    assert.ok(location.description.length > 0);
+    assert.ok(location.interactionText.length > 0);
+    assert.ok(location.radius > 0);
+  }
+});
+
+test('nearby interaction selects the closest location within its own radius', () => {
+  assert.equal(findNearbyWorldLocation(28, 46)?.id, 'cart');
+  assert.equal(findNearbyWorldLocation(65, 53)?.id, 'drink_stall');
+  assert.equal(findNearbyWorldLocation(50, 50), null);
 });
