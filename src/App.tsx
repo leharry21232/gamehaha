@@ -618,7 +618,7 @@ export default function App() {
     };
     window.addEventListener('keydown', move);
     return () => window.removeEventListener('keydown', move);
-  }, [worldHubOpen, worldPlayer, hud.playerLevel, hud.cityTycoon.totalStaff]);
+  }, [worldHubOpen, worldPlayer, hud.playerLevel, hud.cityTycoon.totalStaff, hud.storyMission]);
 
   // Persist high scores cleanly whenever money or ordersServed increases
   useEffect(() => {
@@ -694,7 +694,7 @@ export default function App() {
       setWorldNotice('Chưa có địa điểm nào đủ gần. Hãy đi đến gần cửa tiệm, hàng xóm hoặc xe bánh tráng rồi nhấn E.');
       return;
     }
-    setWorldNotice(nearby.interactionText);
+    setWorldNotice(getWorldDialogue(nearby));
     if (nearby.id === 'cart') {
       setWorldHubOpen(false);
       setWorldPanel(null);
@@ -1246,7 +1246,7 @@ export default function App() {
                 </div>
               ) : (
                 <p className="mt-2 text-xs leading-relaxed text-slate-200">{worldPanel === 'MAP' ? (nearbyWorldLocation
-                  ? nearbyWorldLocation.name + ': ' + nearbyWorldLocation.description + ' ' + nearbyWorldLocation.interactionText
+                  ? nearbyWorldLocation.name + ': ' + nearbyWorldLocation.description + ' ' + getWorldDialogue(nearbyWorldLocation)
                   : 'Bạn đang bán bánh tráng tại ' + getVendorLocation(selectedVendorSpot).name + '. Đi đến gần một địa điểm rồi nhấn E để trò chuyện hoặc tương tác.') :
                   worldPanel === 'BAG' ? 'Tiền mặt: ' + hud.money.toLocaleString('vi-VN') + 'đ · Cấp độ: ' + hud.playerLevel + '. Kho nguyên liệu được quản lý trong hệ thống kinh doanh.' :
                   'Điện thoại khu phố: các liên hệ và thông báo kinh doanh sẽ được tích hợp tại đây.'}</p>
