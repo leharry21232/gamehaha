@@ -3739,7 +3739,13 @@ export default function App() {
           </div>
         </div>
       )}
-      {testerPanelOpen && <TesterPanel hud={hud} onClose={() => setTesterPanelOpen(false)} />}
+      {testerPanelOpen && <TesterPanel
+        hud={hud}
+        onClose={() => setTesterPanelOpen(false)}
+        onSetMoney={(value) => engineRef.current?.debugSetMoney(value)}
+        onSetProgress={(level, xp) => engineRef.current?.debugSetProgress(level, xp)}
+        onSetDayTime={(seconds) => engineRef.current?.debugSetDayTime(seconds)}
+      />}
     </div>
   );
 }
