@@ -3773,7 +3773,7 @@ export default function App() {
         onQueueCustomer={(type: CustomerType) => engineRef.current?.debugQueueCustomer(type) ?? false}
         onTriggerRain={() => engineRef.current?.debugTriggerRain() ?? false}
         worldPosition={worldPlayer}
-        onOpenWorld={() => { setWorldHubOpen(true); setWorldPanel(null); }}
+        onOpenWorld={() => { setTesterPanelOpen(false); setWorldHubOpen(true); setWorldPanel(null); }}
         onTeleportWorld={(x, y) => setWorldPlayer({ x, y })}
       />}
     </div>
