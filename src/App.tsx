@@ -4,7 +4,7 @@ import { GameEngine } from './game/engine';
 import { TesterPanel } from './TesterPanel';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
 import { DECORATIONS, getUnlockedSkills } from './game/progression';
-import { findNearbyWorldLocation, getVendorLocation, moveWorldPlayer, WORLD_INTERACTABLES, type WorldInteractable } from './game/world';
+import { findNearbyWorldLocation, getNeighborhoodEvent, getVendorLocation, moveWorldPlayer, WORLD_INTERACTABLES, type WorldInteractable } from './game/world';
 import type { BestRecord, CityDistrictId, CustomerType, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
 import heroBgUrl from './assets/images/saigon_sidewalk_hero_1794649926456.jpg';
 
@@ -714,6 +714,7 @@ export default function App() {
   }, [hud.screen, hud.checkout.active, hud.shopOpen]);
 
   const nearbyWorldLocation = findNearbyWorldLocation(worldPlayer.x, worldPlayer.y);
+  const neighborhoodEvent = getNeighborhoodEvent(hud.day, hud.dayTimeLeft, hud.dayDuration);
   const getWorldDialogue = (location: NonNullable<typeof nearbyWorldLocation>) => location.id === 'co_nam'
     ? `Cô Năm: “${hud.storyMission.allCompleted ? 'Chương đầu con làm tốt lắm, cả xóm đều biết xe bánh tráng của con rồi!' : `Cứ tập trung nhiệm vụ “${hud.storyMission.title}” nha. ${hud.storyMission.storyText.replace(/[“”]/g, '')} Tiến độ hiện tại ${hud.storyMission.progress}/${hud.storyMission.target}.`}”`
     : location.interactionText;
@@ -1227,6 +1228,15 @@ export default function App() {
             <p className="text-[10px] font-black tracking-[.16em] text-amber-300">GÓC PHỐ BÁNH TRÁNG</p>
             <p className="text-sm font-extrabold">Ngày {hud.day} · {hud.money.toLocaleString('vi-VN')}đ</p>
             <p className="text-[10px] text-slate-200">Cấp {hud.playerLevel} · Đi bộ đến xe để bán hàng</p>
+          </div>
+          <div className="absolute right-3 top-16 z-20 w-[min(68%,270px)] border-[3px] border-[#35291f] bg-[#263b3b]/95 p-2.5 font-mono shadow-[4px_4px_0_#172126] sm:right-5 sm:top-16 sm:w-[270px]">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[9px] font-black tracking-[.12em] text-amber-300">NHỊP SỐNG KHU PHỐ</p>
+              <span className="shrink-0 border border-amber-200/40 bg-amber-100/10 px-1.5 py-0.5 text-[8px] font-bold text-amber-100">{neighborhoodEvent.dayPartLabel}</span>
+            </div>
+            <p className="mt-1 text-[11px] font-extrabold text-white">{neighborhoodEvent.title}</p>
+            <p className="mt-1 text-[9px] leading-relaxed text-slate-200">{neighborhoodEvent.description}</p>
+            <p className="mt-1 text-[8px] font-bold text-emerald-200">● {neighborhoodEvent.trafficLabel}</p>
           </div>
           <button type="button" onClick={() => { setWorldHubOpen(false); setWorldPanel(null); }} className="absolute right-3 top-3 z-30 border-[3px] border-[#35291f] bg-[#b95343] px-3 py-2 font-mono text-xs font-black text-[#fff0c7] shadow-[4px_4px_0_#172126]">ĐÓNG KHU PHỐ ✕</button>
           <div className="absolute left-[18%] top-[38%] z-10 flex items-end gap-2" style={{animation:"walkEast 24s linear infinite"}}>
