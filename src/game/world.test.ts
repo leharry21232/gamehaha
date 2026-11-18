@@ -92,9 +92,9 @@ test('all neighborhood businesses and the neighbor have interaction dialogue', (
 });
 
 test('nearby interaction selects the closest location within its own radius', () => {
-  assert.equal(findNearbyWorldLocation(28, 46)?.id, 'cart');
-  assert.equal(findNearbyWorldLocation(65, 53)?.id, 'drink_stall');
-  assert.equal(findNearbyWorldLocation(50, 50), null);
+  assert.equal(findNearbyWorldLocation(36, 48)?.id, 'cart');
+  assert.equal(findNearbyWorldLocation(74, 48)?.id, 'drink_stall');
+  assert.equal(findNearbyWorldLocation(50, 40), null);
 });
 
 test('all authored interaction points are on reachable sidewalk tiles', () => {
