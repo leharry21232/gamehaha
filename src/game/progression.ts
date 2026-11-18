@@ -186,7 +186,15 @@ export function loadPlayerProgress(storage?: Pick<Storage, 'getItem'>): PlayerPr
       ...parsed,
       lifetimeEarnings: Number.isFinite(parsed.lifetimeEarnings) ? Math.max(0, Math.floor(parsed.lifetimeEarnings ?? 0)) : 0,
       completedOrders: Number.isFinite(parsed.completedOrders) ? Math.max(0, Math.floor(parsed.completedOrders ?? 0)) : 0,
-      wallet: Number.isFinite(parsed.wallet) ? Math.max(0, Math.floor(parsed.wallet ?? 120000)) : 120000,
+      wallet: Number.isFinite(parsed.wallet)
+        ? (
+          Math.max(0, Math.floor(parsed.wallet ?? 120000)) === 0 &&
+          (parsed.lifetimeEarnings ?? 0) === 0 &&
+          (parsed.completedOrders ?? 0) === 0
+            ? INITIAL_PLAYER_PROGRESS.wallet
+            : Math.max(0, Math.floor(parsed.wallet ?? 120000))
+        )
+        : INITIAL_PLAYER_PROGRESS.wallet,
       ownedDecorations,
       equippedDecorations,
       difficulty: parsed.difficulty === 'EASY' || parsed.difficulty === 'HARD'
