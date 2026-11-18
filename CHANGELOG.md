@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Tester Panel adds a live inventory inspector, a guarded customer-queue test action, and a guarded Saigon-rain trigger using existing gameplay logic.
 - Tester Panel now includes safe controls to set cash, player level/XP, and remaining day time; changes persist through the existing save systems.
 
 
