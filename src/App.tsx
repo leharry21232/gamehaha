@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Volume2, VolumeX, Pause, Play, RotateCcw, Home, Store, X, Check, Newspaper, TrendingUp, TrendingDown, Truck, Zap, Wrench, Scissors, Clock, LogOut, Map as MapIcon, Swords, Shield, Sparkles, Users, AlertTriangle, Trash2, Megaphone, Smartphone } from 'lucide-react';
 import { GameEngine } from './game/engine';
+import { TesterPanel } from './TesterPanel';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
 import { DECORATIONS, getUnlockedSkills } from './game/progression';
 import { getVendorLocation } from './game/world';
@@ -492,6 +493,7 @@ export default function App() {
   const engineRef = useRef<GameEngine | null>(null);
 
   const [hud, setHud] = useState<GameHudSnapshot>(INITIAL_HUD);
+  const [testerPanelOpen, setTesterPanelOpen] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === '1');
   const [hasSavedGame, setHasSavedGame] = useState(() => {
     try { return Boolean(localStorage.getItem('banh_trang_session_save_v1')); } catch { return false; }
   });
@@ -617,6 +619,18 @@ export default function App() {
       saveBestRecord(next);
     }
   }, [hud.money, hud.ordersServed, bestRecord.bestMoney, bestRecord.bestOrders]);
+
+  // Toggle Tester Panel with F2. Query string ?debug=1 opens it on load.
+  useEffect(() => {
+    const onDebugKey = (event: KeyboardEvent) => {
+      if (event.code !== 'F2') return;
+      event.preventDefault();
+      event.stopPropagation();
+      setTesterPanelOpen((open) => !open);
+    };
+    window.addEventListener('keydown', onDebugKey);
+    return () => window.removeEventListener('keydown', onDebugKey);
+  }, []);
 
   // Enter / Space starts game on Title Screen; Checkout modal keyboard shortcuts
   useEffect(() => {
@@ -3725,6 +3739,7 @@ export default function App() {
           </div>
         </div>
       )}
+      {testerPanelOpen && <TesterPanel hud={hud} onClose={() => setTesterPanelOpen(false)} />}
     </div>
   );
 }
