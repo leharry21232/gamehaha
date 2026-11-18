@@ -33,6 +33,19 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] Refresh/reopen the game and verify the existing Continue/save flow remains intact.
 - [ ] Confirm the game works normally after closing Tester Panel.
 
+
+## Neighborhood map (M5)
+- [ ] Start a fresh game and confirm the neighborhood opens without covering or breaking the onboarding flow.
+- [ ] Walk with WASD and arrow keys; confirm the player stays on the sidewalk and cannot pass through the cart, drink stall, or trees.
+- [ ] Walk around the lower edge of the cart to reach the grocery shop; confirm the route is not blocked.
+- [ ] Visit the grocery shop, snack stall, drink stall, market entrance, neighbor NPC, and bánh tráng cart.
+- [ ] At each point, press E and the on-screen interaction button; confirm the correct contextual text appears.
+- [ ] Interact with the bánh tráng cart and confirm the existing morning-preparation screen opens.
+- [ ] Use the Tester Panel > BẢN ĐỒ tab to open the map and teleport to each interaction point.
+- [ ] Confirm informational interactions do not change cash, inventory, missions, vendor location, or save data.
+- [ ] On a touch device or responsive emulator, verify the directional buttons and interaction button are usable and do not overlap important content.
+- [ ] Close the map from both new-game onboarding and morning preparation; complete a normal cooking order to confirm the original gameplay loop is unchanged.
+
 ## Release gate
 - [ ] GitHub Actions: progression tests pass.
 - [ ] GitHub Actions: TypeScript check passes.
