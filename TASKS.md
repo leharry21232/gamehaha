@@ -11,6 +11,6 @@
 - [x] Show read-only gameplay diagnostics and export/copy current save data.
 - [x] Add safe GameEngine debug actions for money, level/XP, and day time.
 - [x] Add safe customer queue replacement and controlled Saigon-rain event trigger to Tester Panel.
-- [ ] Add save import/reset and sample saves after validation safeguards are designed.
+- [x] Confirm save data remains local to each browser profile/device; no cloud sync or account dependency.
 - [x] Add read-only inventory inspector and gameplay QA entry points.
-- [ ] Complete manual QA checklist across customer, rain, inventory, and save flows.
+- [ ] Complete manual QA checklist across customer, rain, inventory, and per-browser save isolation.
