@@ -13,3 +13,8 @@
 
 - 2026-11-18: Added an isolated, read-only Tester Panel foundation (F2 / ?debug=1) with live HUD diagnostics and save export/copy.
 - 2026-11-18: Added per-ingredient topping removal controls so players can remove a specific selected topping and refund its stock; retained global undo.
+
+
+## M6 – Chapter 1 neighborhood integration
+- Connected the map Journal tab to the live Chapter 1 mission snapshot, including progress, status, reward, and the existing reward-claim API.
+- Made Cô Năm's neighborhood dialogue reflect the current story mission and progress.
