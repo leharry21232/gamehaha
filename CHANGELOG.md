@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- Added collision-aware neighborhood exploration using the existing pixel-art SVG map, with six walkable interaction points and contextual NPC/store dialogue.
+- Added keyboard and touch movement through shared world rules, plus Tester Panel map teleport/QA controls and regression tests.
+- Map interactions are informational only in this slice; they do not alter cash, inventory, mission progress, or the cooking loop.
 - Expanded Chapter 1 into a four-step story mission chain ending at level 5, while preserving existing mission IDs for old browser saves.
 - Added Tester Panel controls for lifetime order count and earnings to test story progression, and ensured claimed mission rewards persist across reloads.
 - Confirmed the intended save model: game progress and the active session stay in the current browser profile's localStorage; no account or cloud sync. Added isolation regression coverage.
