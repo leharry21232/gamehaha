@@ -604,13 +604,14 @@ export default function App() {
           setWorldNotice('');
           return;
         }
-        setWorldPanel('MAP');
+        setWorldPanel(null);
         return;
       }
       if (!['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) return;
       event.preventDefault();
       const deltaX = key === 'a' || key === 'arrowleft' ? -2.5 : key === 'd' || key === 'arrowright' ? 2.5 : 0;
       const deltaY = key === 'w' || key === 'arrowup' ? -1.5 : key === 's' || key === 'arrowdown' ? 1.5 : 0;
+      setWorldPanel(null);
       setWorldPlayer((p) => moveWorldPlayer(p, deltaX, deltaY));
     };
     window.addEventListener('keydown', move);
@@ -695,7 +696,7 @@ export default function App() {
       setWorldNotice('');
       return;
     }
-    setWorldPanel('MAP');
+    setWorldPanel(null);
   };
 
   const handleStart = () => {
@@ -1063,7 +1064,7 @@ export default function App() {
 
       {worldHubOpen && (
         <div className="absolute inset-0 z-[80] overflow-hidden bg-[#26343a] text-white">
-          <style>{`@keyframes npcBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } } @keyframes walkEast { from { transform: translateX(-24vw); } to { transform: translateX(42vw); } } @keyframes walkWest { from { transform: translateX(34vw); } to { transform: translateX(-26vw); } }`}</style>
+          <style>{`@keyframes npcBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } } @keyframes walkEast { from { transform: translateX(-24vw); } to { transform: translateX(42vw); } } @keyframes walkWest { from { transform: translateX(34vw); } to { transform: translateX(-26vw); } } @keyframes trafficEast { from { transform: translateX(-180px); } to { transform: translateX(calc(100vw + 180px)); } } @keyframes trafficWest { from { transform: translateX(calc(100vw + 180px)); } to { transform: translateX(-180px); } }`}</style>
           <svg className="absolute inset-0 h-full w-full [image-rendering:pixelated]" viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid slice" shapeRendering="crispEdges" role="img" aria-label="Khu phố bán bánh tráng trộn phong cách pixel art">
             <defs>
               <pattern id="sidewalkTiles" width="32" height="32" patternUnits="userSpaceOnUse">
@@ -1175,12 +1176,6 @@ export default function App() {
               <rect x="560" y="418" width="80" height="260" fill="#e5d7b9" opacity=".2"/>
               <path d="M600 418V678" stroke="#f8e9bd" strokeWidth="4" strokeDasharray="16 12" opacity=".65"/>
             </g>
-            <g transform="translate(920 474)" filter="url(#pixelShadow)">
-              <rect x="0" y="18" width="112" height="42" rx="8" fill="#2c83b9" stroke="#203f56" strokeWidth="6"/><rect x="14" y="4" width="72" height="30" fill="#9cc9d5" stroke="#203f56" strokeWidth="5"/><circle cx="24" cy="62" r="12" fill="#242a2e"/><circle cx="88" cy="62" r="12" fill="#242a2e"/>
-            </g>
-            <g transform="translate(70 590)" filter="url(#pixelShadow)">
-              <rect x="0" y="16" width="76" height="30" rx="7" fill="#d5a84f" stroke="#544331" strokeWidth="5"/><circle cx="18" cy="49" r="9" fill="#292e31"/><circle cx="60" cy="49" r="9" fill="#292e31"/>
-            </g>
             <g transform="translate(1050 260)" shapeRendering="crispEdges">
               <rect x="-8" y="102" width="36" height="22" fill="#a77a4d" stroke="#694a35" strokeWidth="5"/>
               <rect x="0" y="0" width="18" height="120" fill="#8b6c4e"/><circle cx="8" cy="-12" r="42" fill="#4d8051" stroke="#356342" strokeWidth="8"/><circle cx="-18" cy="-25" r="19" fill="#63965b"/><circle cx="28" cy="-34" r="20" fill="#63965b"/>
@@ -1206,6 +1201,15 @@ export default function App() {
           <div className="absolute left-[57%] top-[38%] z-10" style={{animation:"walkWest 29s linear infinite"}}>
             <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#e0aa82"/><rect x="8" y="0" width="26" height="8" fill="#47382c"/><rect x="8" y="20" width="26" height="22" fill="#e2b44e"/><rect x="10" y="42" width="9" height="18" fill="#34475a"/><rect x="23" y="42" width="9" height="18" fill="#34475a"/></svg>
           </div>
+          <div className="pointer-events-none absolute left-0 top-[66%] z-[5]" style={{animation:"trafficEast 20s linear infinite"} } aria-hidden="true">
+            <svg viewBox="0 0 150 72" className="h-12 w-28 sm:h-14 sm:w-36" shapeRendering="crispEdges"><rect x="8" y="25" width="132" height="30" fill="#2c83b9" stroke="#203f56" strokeWidth="5"/><path d="M34 25L48 8H105L124 25Z" fill="#d5e8e6" stroke="#203f56" strokeWidth="5"/><rect x="54" y="13" width="22" height="10" fill="#77aeb8"/><rect x="81" y="13" width="20" height="10" fill="#77aeb8"/><circle cx="36" cy="57" r="10" fill="#242a2e" stroke="#bcae8c" strokeWidth="3"/><circle cx="113" cy="57" r="10" fill="#242a2e" stroke="#bcae8c" strokeWidth="3"/><rect x="5" y="34" width="8" height="8" fill="#f7df91"/></svg>
+          </div>
+          <div className="pointer-events-none absolute right-0 top-[81%] z-[5]" style={{animation:"trafficWest 16s linear infinite",animationDelay:"-7s"}} aria-hidden="true">
+            <svg viewBox="0 0 112 62" className="h-10 w-20 sm:h-12 sm:w-24" shapeRendering="crispEdges"><path d="M12 38L22 18H76L96 38V48H12Z" fill="#d5a84f" stroke="#544331" strokeWidth="5"/><rect x="31" y="22" width="34" height="12" fill="#b8d7d4" stroke="#544331" strokeWidth="3"/><circle cx="30" cy="49" r="8" fill="#292e31"/><circle cx="80" cy="49" r="8" fill="#292e31"/><rect x="4" y="36" width="9" height="7" fill="#f7e5ad"/></svg>
+          </div>
+          <div className="pointer-events-none absolute left-0 top-[73%] z-[5]" style={{animation:"trafficEast 13s linear infinite",animationDelay:"-4s"}} aria-hidden="true">
+            <svg viewBox="0 0 110 64" className="h-9 w-16 sm:h-10 sm:w-20" shapeRendering="crispEdges"><circle cx="23" cy="49" r="9" fill="#242a2e"/><circle cx="83" cy="49" r="9" fill="#242a2e"/><path d="M20 42L32 26H69L85 42Z" fill="#d65a45" stroke="#593b31" strokeWidth="4"/><rect x="40" y="29" width="23" height="10" fill="#b8d7d4" stroke="#593b31" strokeWidth="3"/><path d="M12 40H95" stroke="#593b31" strokeWidth="4"/></svg>
+          </div>
           <div className="absolute z-10 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]" style={{left:"46%",top:"52%"}} title="Cô Năm hàng xóm">
             <svg viewBox="0 0 42 64" className="h-11 w-8 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label="Cô Năm hàng xóm">
               <rect x="12" y="3" width="18" height="18" fill="#c98f70"/><path d="M7 13Q21 -3 35 13L31 19H11Z" fill="#8b3f35"/><rect x="8" y="22" width="26" height="22" fill="#d65f4c"/><rect x="10" y="44" width="9" height="16" fill="#344b3d"/><rect x="23" y="44" width="9" height="16" fill="#344b3d"/><rect x="9" y="59" width="12" height="5" fill="#49352b"/><rect x="22" y="59" width="12" height="5" fill="#49352b"/>
@@ -1222,7 +1226,7 @@ export default function App() {
             <div className="absolute bottom-[17%] left-1/2 z-30 w-[min(92%,520px)] -translate-x-1/2 border-2 border-[#e7c77e] bg-[#18262b]/95 p-4 shadow-[6px_6px_0_#111]">
               <div className="flex items-center justify-between gap-3">
                 <p className="font-black text-amber-200">{worldPanel === 'MAP' ? '🗺 BẢN ĐỒ KHU PHỐ' : worldPanel === 'BAG' ? '🎒 TÚI ĐỒ' : worldPanel === 'JOURNAL' ? '📖 NHẬT KÝ' : '📱 ĐIỆN THOẠI'}</p>
-                <button type="button" onClick={() => setWorldPanel(null)} className="border border-white/30 px-2 py-1 text-xs">Đóng ✕</button>
+                <button type="button" onClick={() => setWorldPanel(null)} aria-label="Đóng khung thông tin" title="Đóng khung thông tin" className="flex h-9 w-9 shrink-0 items-center justify-center border-[3px] border-[#5b2d25] bg-[#b95343] text-lg font-black text-white shadow-[2px_2px_0_#111] hover:bg-[#d46654]">×</button>
               </div>
               <p className="mt-2 text-xs leading-relaxed text-slate-200">
                 {worldPanel === 'MAP' ? (nearbyWorldLocation
@@ -1237,21 +1241,21 @@ export default function App() {
           <div className="absolute bottom-3 left-1/2 z-30 w-[min(94%,620px)] border-[4px] border-[#35291f] bg-[#263b3b]/[.97] p-3 font-mono shadow-[6px_6px_0_#172126]">
             <div className="mb-2 flex items-center justify-center gap-2">
               {([{id:'MAP',icon:'🗺️',label:'Bản đồ'},{id:'BAG',icon:'🎒',label:'Túi đồ'},{id:'JOURNAL',icon:'📖',label:'Nhiệm vụ'},{id:'PHONE',icon:'📱',label:'Điện thoại'}] as const).map((item) => (
-                <button key={item.id} type="button" onClick={() => setWorldPanel(item.id)} className={"flex min-w-[62px] flex-col items-center border-[3px] px-3 py-2 font-mono text-[10px] font-bold shadow-[3px_3px_0_#111] " + (worldPanel === item.id ? "border-[#f6cf70] bg-[#8d633e] text-[#fff2c7]" : "border-[#8c9a83] bg-[#405653] text-[#f8edcf] hover:bg-[#587268]")}>
+                <button key={item.id} type="button" onClick={() => setWorldPanel((current) => current === item.id ? null : item.id)} className={"flex min-w-[62px] flex-col items-center border-[3px] px-3 py-2 font-mono text-[10px] font-bold shadow-[3px_3px_0_#111] " + (worldPanel === item.id ? "border-[#f6cf70] bg-[#8d633e] text-[#fff2c7]" : "border-[#8c9a83] bg-[#405653] text-[#f8edcf] hover:bg-[#587268]")}>
                   <span className="text-xl">{item.icon}</span>{item.label}
                 </button>
               ))}
             </div>
             <p className="text-center text-xs text-slate-200">{nearbyWorldLocation ? 'Đang ở gần: ' + nearbyWorldLocation.name + ' · Nhấn E để tương tác' : worldNotice || 'Dùng WASD / phím mũi tên để đi trên vỉa hè · Đến gần các địa điểm rồi nhấn E'}</p>
             <div className="mt-2 flex items-center justify-center gap-2">
-              <button type="button" onClick={() => setWorldPlayer((p) => moveWorldPlayer(p, 0, -2))} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi lên">↑</button>
-              <button type="button" onClick={() => setWorldPlayer((p) => moveWorldPlayer(p, -3, 0))} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi trái">←</button>
-              <button type="button" onClick={() => setWorldPlayer((p) => moveWorldPlayer(p, 0, 2))} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi xuống">↓</button>
-              <button type="button" onClick={() => setWorldPlayer((p) => moveWorldPlayer(p, 3, 0))} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi phải">→</button>
+              <button type="button" onClick={() => { setWorldPanel(null); setWorldPlayer((p) => moveWorldPlayer(p, 0, -2)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi lên">↑</button>
+              <button type="button" onClick={() => { setWorldPanel(null); setWorldPlayer((p) => moveWorldPlayer(p, -3, 0)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi trái">←</button>
+              <button type="button" onClick={() => { setWorldPanel(null); setWorldPlayer((p) => moveWorldPlayer(p, 0, 2)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi xuống">↓</button>
+              <button type="button" onClick={() => { setWorldPanel(null); setWorldPlayer((p) => moveWorldPlayer(p, 3, 0)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi phải">→</button>
             </div>
             <div className="mt-2 flex justify-center gap-2">
               <button type="button" onClick={handleWorldInteract} className="border-[3px] border-[#543a25] bg-[#f1c65e] px-4 py-2 font-mono text-xs font-black text-[#392819] shadow-[4px_4px_0_#111] hover:bg-[#ffda79]">E · {nearbyWorldLocation ? nearbyWorldLocation.name.toUpperCase() : 'TƯƠNG TÁC'}</button>
-              <button type="button" onClick={() => setWorldNotice('Bạn đang ở khu phố bán bánh tráng. Hãy đi dọc vỉa hè, gặp khách và đến xe bánh tráng để bắt đầu ca bán hàng.')} className="border-[3px] border-[#9cae91] bg-[#405653] px-3 py-2 font-mono text-[10px] font-bold text-[#fff2d1] shadow-[3px_3px_0_#111]">Hướng dẫn</button>
+              <button type="button" onClick={() => { setWorldPanel((current) => current === 'MAP' ? null : 'MAP'); setWorldNotice('Bạn đang ở khu phố bán bánh tráng. Hãy đi dọc vỉa hè, gặp khách và đến xe bánh tráng để bắt đầu ca bán hàng.'); }} className="border-[3px] border-[#9cae91] bg-[#405653] px-3 py-2 font-mono text-[10px] font-bold text-[#fff2d1] shadow-[3px_3px_0_#111]">Hướng dẫn</button>
             </div>
           </div>
         </div>
