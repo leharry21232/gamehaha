@@ -598,7 +598,7 @@ export default function App() {
           setWorldNotice('Chưa có địa điểm nào đủ gần. Hãy đi đến gần cửa tiệm, hàng xóm hoặc xe bánh tráng rồi nhấn E.');
           return;
         }
-        setWorldNotice(nearby.interactionText);
+        setWorldNotice(getWorldDialogue(nearby));
         if (nearby.id === 'cart') {
           setWorldHubOpen(false);
           setWorldPanel(null);
@@ -684,6 +684,9 @@ export default function App() {
   }, [hud.screen, hud.checkout.active, hud.shopOpen]);
 
   const nearbyWorldLocation = findNearbyWorldLocation(worldPlayer.x, worldPlayer.y);
+  const getWorldDialogue = (location: NonNullable<typeof nearbyWorldLocation>) => location.id === 'co_nam'
+    ? `Cô Năm: “${hud.storyMission.allCompleted ? 'Chương đầu con làm tốt lắm, cả xóm đều biết xe bánh tráng của con rồi!' : `Cứ tập trung nhiệm vụ “${hud.storyMission.title}” nha. ${hud.storyMission.storyText.replace(/[“”]/g, '')} Tiến độ hiện tại ${hud.storyMission.progress}/${hud.storyMission.target}.`}”`
+    : location.interactionText;
 
   const handleWorldInteract = () => {
     const nearby = findNearbyWorldLocation(worldPlayer.x, worldPlayer.y);
@@ -1230,14 +1233,24 @@ export default function App() {
                 <p className="font-black text-amber-200">{worldPanel === 'MAP' ? '🗺 BẢN ĐỒ KHU PHỐ' : worldPanel === 'BAG' ? '🎒 TÚI ĐỒ' : worldPanel === 'JOURNAL' ? '📖 NHẬT KÝ' : '📱 ĐIỆN THOẠI'}</p>
                 <button type="button" onClick={() => setWorldPanel(null)} aria-label="Đóng khung thông tin" title="Đóng khung thông tin" className="flex h-9 w-9 shrink-0 items-center justify-center border-[3px] border-[#5b2d25] bg-[#b95343] text-lg font-black text-white shadow-[2px_2px_0_#111] hover:bg-[#d46654]">×</button>
               </div>
-              <p className="mt-2 text-xs leading-relaxed text-slate-200">
-                {worldPanel === 'MAP' ? (nearbyWorldLocation
+              {worldPanel === 'JOURNAL' ? (
+                <div className="mt-2 space-y-2 text-xs text-slate-100">
+                  <div className="flex items-center justify-between gap-2"><span className="font-bold text-amber-200">{hud.storyMission.chapter}</span><span className="border border-emerald-300/40 bg-emerald-900/40 px-2 py-1 text-[10px] font-bold text-emerald-200">{hud.storyMission.allCompleted ? 'Đã hoàn thành' : hud.storyMission.completed ? 'Chờ nhận thưởng' : 'Đang thực hiện'}</span></div>
+                  <p className="text-base font-black text-white">{hud.storyMission.title}</p>
+                  <p className="leading-relaxed text-slate-200">{hud.storyMission.description}</p>
+                  <div className="rounded border border-white/15 bg-black/20 p-2"><p className="font-bold text-amber-200">💬 {hud.storyMission.npcName}</p><p className="mt-1 italic text-slate-200">{hud.storyMission.storyText}</p></div>
+                  <div className="flex justify-between gap-2 text-[11px]"><span>Tiến độ: {hud.storyMission.progress.toLocaleString('vi-VN')} / {hud.storyMission.target.toLocaleString('vi-VN')}</span><span className="font-bold text-emerald-300">{hud.storyMission.reward.toLocaleString('vi-VN')}đ</span></div>
+                  <div className="h-2 overflow-hidden rounded bg-slate-700"><div className="h-full bg-emerald-400 transition-all" style={{width: `${Math.min(100, hud.storyMission.progress / Math.max(1, hud.storyMission.target) * 100)}%`}} /></div>
+                  {hud.storyMission.completed && !hud.storyMission.allCompleted && <button type="button" onClick={() => engineRef.current?.claimCurrentStoryMission()} className="w-full border-2 border-[#31543c] bg-[#65c985] px-3 py-2 font-black text-[#14251a] shadow-[3px_3px_0_#111] hover:bg-[#83e0a0]">NHẬN THƯỞNG · {hud.storyMission.reward.toLocaleString('vi-VN')}đ</button>}
+                  {hud.storyMission.allCompleted && <p className="font-bold text-emerald-300">Bạn đã hoàn thành toàn bộ Chương 1. Những câu chuyện tiếp theo sẽ được mở trong bản cập nhật sau.</p>}
+                </div>
+              ) : (
+                <p className="mt-2 text-xs leading-relaxed text-slate-200">{worldPanel === 'MAP' ? (nearbyWorldLocation
                   ? nearbyWorldLocation.name + ': ' + nearbyWorldLocation.description + ' ' + nearbyWorldLocation.interactionText
                   : 'Bạn đang bán bánh tráng tại ' + getVendorLocation(selectedVendorSpot).name + '. Đi đến gần một địa điểm rồi nhấn E để trò chuyện hoặc tương tác.') :
                   worldPanel === 'BAG' ? 'Tiền mặt: ' + hud.money.toLocaleString('vi-VN') + 'đ · Cấp độ: ' + hud.playerLevel + '. Kho nguyên liệu được quản lý trong hệ thống kinh doanh.' :
-                  worldPanel === 'JOURNAL' ? 'Nhiệm vụ hiện tại: ' + (hud.storyMission?.title ?? 'Tiếp tục hành trình khởi nghiệp và phục vụ khách đầu tiên.') :
-                  'Điện thoại khu phố: các liên hệ và thông báo kinh doanh sẽ được tích hợp tại đây.'}
-              </p>
+                  'Điện thoại khu phố: các liên hệ và thông báo kinh doanh sẽ được tích hợp tại đây.'}</p>
+              )}
             </div>
           )}
           {worldHudOpen ? (
