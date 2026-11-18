@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import type { CustomerType, GameHudSnapshot } from './game/types';
+import { WORLD_INTERACTABLES, type WorldPosition } from './game/world';
 
-type TesterTab = 'OVERVIEW' | 'CONTROL' | 'GAMEPLAY' | 'INVENTORY' | 'SAVE';
+type TesterTab = 'OVERVIEW' | 'CONTROL' | 'MAP' | 'GAMEPLAY' | 'INVENTORY' | 'SAVE';
 
 interface TesterPanelProps {
   hud: GameHudSnapshot;
@@ -12,6 +13,9 @@ interface TesterPanelProps {
   onSetDayTime: (seconds: number) => void;
   onQueueCustomer: (type: CustomerType) => boolean;
   onTriggerRain: () => boolean;
+  worldPosition: WorldPosition;
+  onOpenWorld: () => void;
+  onTeleportWorld: (x: number, y: number) => void;
 }
 
 const SESSION_SAVE_KEY = 'banh_trang_session_save_v1';
@@ -34,7 +38,7 @@ function readSaveBundle(): Record<string, string | null> {
   }
 }
 
-export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetStoryStats, onSetDayTime, onQueueCustomer, onTriggerRain }: TesterPanelProps) {
+export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetStoryStats, onSetDayTime, onQueueCustomer, onTriggerRain, worldPosition, onOpenWorld, onTeleportWorld }: TesterPanelProps) {
   const [tab, setTab] = useState<TesterTab>('OVERVIEW');
   const [moneyInput, setMoneyInput] = useState(String(hud.money));
   const [levelInput, setLevelInput] = useState(String(hud.playerLevel));
@@ -80,6 +84,7 @@ export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetStor
         <nav className="flex gap-2 border-b-2 border-[#111318] bg-[#f0e5c7] p-3">
           <button type="button" onClick={() => setTab('OVERVIEW')} className={`border-2 border-[#111318] px-3 py-2 text-xs font-black ${tab === 'OVERVIEW' ? 'bg-[#243b35] text-white' : 'bg-white'}`}>TỔNG QUAN</button>
           <button type="button" onClick={() => setTab('CONTROL')} className={`border-2 border-[#111318] px-3 py-2 text-xs font-black ${tab === 'CONTROL' ? 'bg-[#243b35] text-white' : 'bg-white'}`}>ĐIỀU KHIỂN</button>
+          <button type="button" onClick={() => setTab('MAP')} className={`border-2 border-[#111318] px-3 py-2 text-xs font-black ${tab === 'MAP' ? 'bg-[#243b35] text-white' : 'bg-white'}`}>BẢN ĐỒ</button>
           <button type="button" onClick={() => setTab('GAMEPLAY')} className={`border-2 border-[#111318] px-3 py-2 text-xs font-black ${tab === 'GAMEPLAY' ? 'bg-[#243b35] text-white' : 'bg-white'}`}>GAMEPLAY</button>
           <button type="button" onClick={() => setTab('INVENTORY')} className={`border-2 border-[#111318] px-3 py-2 text-xs font-black ${tab === 'INVENTORY' ? 'bg-[#243b35] text-white' : 'bg-white'}`}>KHO HÀNG</button>
           <button type="button" onClick={() => setTab('SAVE')} className={`border-2 border-[#111318] px-3 py-2 text-xs font-black ${tab === 'SAVE' ? 'bg-[#243b35] text-white' : 'bg-white'}`}>SAVE & DỮ LIỆU</button>
@@ -158,6 +163,25 @@ export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetStor
                 <label className="block text-xs font-bold">Giây còn lại (0–{hud.dayDuration})<input aria-label="Thời gian còn lại" type="number" min="0" max={hud.dayDuration} value={timeInput} onChange={(event) => setTimeInput(event.target.value)} className="mt-1 w-full border-2 border-[#26231d] px-3 py-2 font-mono" /></label>
                 <button type="button" onClick={() => onSetDayTime(Number(timeInput))} className="border-2 border-[#111318] bg-[#f5b942] px-3 py-2 text-xs font-black shadow-[2px_2px_0_#111318]">ĐẶT THỜI GIAN</button>
               </section>
+            </div>
+          ) : tab === 'MAP' ? (
+            <div className="space-y-4">
+              <section className="border-2 border-[#26231d] bg-amber-100 p-3 text-xs leading-relaxed">
+                <strong>KIỂM THỬ BẢN ĐỒ KHU PHỐ</strong>
+                <p className="mt-1">Dùng các nút bên dưới để mở bản đồ và dịch chuyển nhân vật tới đúng điểm tương tác. Công cụ này không thay đổi tiền, kho hàng hay tiến trình.</p>
+                <p className="mt-2 font-mono font-black">Vị trí hiện tại: X {worldPosition.x.toFixed(1)}% · Y {worldPosition.y.toFixed(1)}%</p>
+                <button type="button" onClick={onOpenWorld} className="mt-3 border-2 border-[#111318] bg-[#f5b942] px-3 py-2 text-xs font-black shadow-[2px_2px_0_#111318]">MỞ BẢN ĐỒ TẠI VỊ TRÍ HIỆN TẠI</button>
+              </section>
+              <section className="space-y-2 border-2 border-[#26231d] bg-white p-3">
+                <h3 className="text-xs font-black">DỊCH CHUYỂN ĐẾN ĐỊA ĐIỂM</h3>
+                {WORLD_INTERACTABLES.map((location) => (
+                  <button key={location.id} type="button" onClick={() => { onTeleportWorld(location.x, location.y); onOpenWorld(); setActionMessage('Đã đưa nhân vật đến ' + location.name + '. Nhấn E hoặc nút tương tác để kiểm tra.'); }} className="flex w-full items-center justify-between gap-3 border-2 border-[#26231d] bg-[#fff8df] px-3 py-2 text-left text-xs font-black hover:bg-amber-100">
+                    <span>{location.name}</span>
+                    <span className="font-mono text-[#756b58]">X{location.x} · Y{location.y}</span>
+                  </button>
+                ))}
+              </section>
+              {actionMessage && <p role="status" className="border-2 border-[#26231d] bg-white p-3 text-xs font-bold">{actionMessage}</p>}
             </div>
           ) : tab === 'GAMEPLAY' ? (
             <div className="space-y-4">
