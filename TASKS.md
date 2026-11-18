@@ -40,3 +40,13 @@
 - [ ] Kiểm tra hội thoại bằng phím E và nút tương tác trên thiết bị cảm ứng.
 - [ ] Kiểm tra nhận thưởng từ Nhật ký và xác nhận số dư được lưu sau khi tải lại.
 - [ ] Hoàn tất kiểm thử regression, TypeScript và production build.
+
+
+### M6 – Phần 2: NPC khu phố
+- [x] Thêm Cô Sáu bán hoa, Tí giao hàng, chú Bảy sửa xe và bà Tư hàng xóm vào dữ liệu tương tác.
+- [x] Hiển thị bốn NPC bằng sprite pixel-art riêng, có tên trên bản đồ.
+- [x] Cho phép trò chuyện với NPC bằng E hoặc nút tương tác cảm ứng, dùng chung hệ thống tương tác hiện có.
+- [x] Bổ sung kiểm thử hội thoại, vị trí đi bộ được và vùng tương tác cho cả năm NPC.
+- [ ] Kiểm tra trực tiếp vị trí sprite trên màn hình desktop/mobile và xác nhận không che lối đi.
+- [ ] Kiểm tra thủ công lời thoại từng NPC và tương tác với các địa điểm cũ.
+- [ ] Hoàn tất CI, TypeScript và production build.
