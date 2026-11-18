@@ -8,7 +8,9 @@ interface TesterPanelProps {
   onClose: () => void;
   onSetMoney: (value: number) => void;
   onSetProgress: (level: number, xp: number) => void;
-  onSetDayTime: (seconds: number) => void;\n  onQueueCustomer: (type: CustomerType) => boolean;\n  onTriggerRain: () => boolean;
+  onSetDayTime: (seconds: number) => void;
+  onQueueCustomer: (type: CustomerType) => boolean;
+  onTriggerRain: () => boolean;
 }
 
 const SESSION_SAVE_KEY = 'banh_trang_session_save_v1';
@@ -36,7 +38,9 @@ export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetDayT
   const [moneyInput, setMoneyInput] = useState(String(hud.money));
   const [levelInput, setLevelInput] = useState(String(hud.playerLevel));
   const [xpInput, setXpInput] = useState(String(hud.playerXp));
-  const [timeInput, setTimeInput] = useState(String(Math.floor(hud.dayTimeLeft)));\n  const [customerType, setCustomerType] = useState<CustomerType>('STUDENT');\n  const [actionMessage, setActionMessage] = useState('');
+  const [timeInput, setTimeInput] = useState(String(Math.floor(hud.dayTimeLeft)));
+  const [customerType, setCustomerType] = useState<CustomerType>('STUDENT');
+  const [actionMessage, setActionMessage] = useState('');
   const saveBundle = useMemo(() => readSaveBundle(), [hud.screen, hud.day, hud.money, hud.ordersServed]);
   const saveText = JSON.stringify(saveBundle, null, 2);
   const hasSessionSave = Boolean(saveBundle.session);
