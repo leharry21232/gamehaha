@@ -9,6 +9,7 @@ import {
   getDecorationAttraction,
   getUnlockedSkills,
   INITIAL_PLAYER_PROGRESS,
+  resetWalletForNewGame,
   type PlayerProgress,
   loadPlayerProgress,
   savePlayerProgress,
