@@ -9,5 +9,6 @@
 - [x] Verify per-ingredient removal and inventory refund in browser.
 - [x] Add Tester Panel foundation with F2 and ?debug=1 entry points.
 - [x] Show read-only gameplay diagnostics and export/copy current save data.
-- [ ] Add safe GameEngine debug actions (money, level, time, customer/event controls).
+- [x] Add safe GameEngine debug actions for money, level/XP, and day time.
+- [ ] Add customer/event controls after dedicated spawn/event APIs and safety checks are designed.
 - [ ] Add save import/reset, sample saves, and QA checklist after validation safeguards are designed.
