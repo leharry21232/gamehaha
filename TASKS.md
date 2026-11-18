@@ -50,3 +50,13 @@
 - [ ] Kiểm tra trực tiếp vị trí sprite trên màn hình desktop/mobile và xác nhận không che lối đi.
 - [ ] Kiểm tra thủ công lời thoại từng NPC và tương tác với các địa điểm cũ.
 - [ ] Hoàn tất CI, TypeScript và production build.
+
+
+### M6 – Phần 3: Nhịp sống và sự kiện khu phố
+- [x] Xác định buổi sáng/trưa/chiều theo tiến độ thời gian trong ngày của game.
+- [x] Thêm sự kiện không gây gián đoạn, luân phiên theo ngày và thời điểm trong ngày.
+- [x] Hiển thị thẻ nhịp sống khu phố gọn trên bản đồ, không chặn điều khiển di chuyển.
+- [x] Bổ sung kiểm thử cho mốc thời gian, luân phiên sự kiện và dữ liệu thời gian không hợp lệ.
+- [ ] Kiểm tra thủ công thẻ sự kiện ở các giai đoạn sáng/trưa/chiều trên bản đồ.
+- [ ] Xác nhận sự kiện không che NPC, không chặn thao tác di chuyển/tương tác và không thay đổi kinh tế/save.
+- [ ] Hoàn tất CI, TypeScript và production build.
