@@ -10,5 +10,7 @@
 - [x] Add Tester Panel foundation with F2 and ?debug=1 entry points.
 - [x] Show read-only gameplay diagnostics and export/copy current save data.
 - [x] Add safe GameEngine debug actions for money, level/XP, and day time.
-- [ ] Add customer/event controls after dedicated spawn/event APIs and safety checks are designed.
-- [ ] Add save import/reset, sample saves, and QA checklist after validation safeguards are designed.
+- [x] Add safe customer queue replacement and controlled Saigon-rain event trigger to Tester Panel.
+- [ ] Add save import/reset and sample saves after validation safeguards are designed.
+- [x] Add read-only inventory inspector and gameplay QA entry points.
+- [ ] Complete manual QA checklist across customer, rain, inventory, and save flows.
