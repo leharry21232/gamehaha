@@ -220,6 +220,10 @@ export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetStor
                     ['xoai', 'Xoài'],
                     ['rau_ram', 'Rau răm'],
                     ['tac', 'Tắc'],
+                    ['pho_mai', 'Phô mai'],
+                    ['tran_chau', 'Trân châu'],
+                    ['sau_rieng', 'Sầu riêng'],
+                    ['nuoc_cot_dua', 'Nước cốt dừa'],
                   ] as const).map(([key, label]) => {
                     const amount = hud.inventory[key];
                     const percent = hud.maxStockPerItem > 0 ? Math.min(100, (amount / hud.maxStockPerItem) * 100) : 0;

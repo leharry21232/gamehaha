@@ -1,3 +1,5 @@
+import type { RawIngredientId } from './types';
+
 export type GameDifficulty = 'EASY' | 'NORMAL' | 'HARD';
 
 export type DecorationId =
@@ -47,6 +49,16 @@ export interface PlayerSkillBonus {
   level: number;
   name: string;
   description: string;
+}
+
+export function getIngredientUnlockLevel(id: RawIngredientId): number {
+  const unlockLevels: Partial<Record<RawIngredientId, number>> = {
+    pho_mai: 2,
+    tran_chau: 3,
+    sau_rieng: 5,
+    nuoc_cot_dua: 6,
+  };
+  return unlockLevels[id] ?? 1;
 }
 
 export function getUnlockedSkills(level: number): PlayerSkillBonus[] {

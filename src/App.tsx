@@ -139,7 +139,7 @@ const SHOP_ITEMS: ShopItemMeta[] = [
     key: 'cursedMenu',
     name: 'Nguyên Liệu Hắc Ám',
     cost: 600,
-    desc: 'Mở khóa Sầu Riêng, Trân Châu & Nước Cốt Dừa. Khách Gen Z trả gấp 3 (126k), nhưng 50% bị ngộ độc (-20% khách ngày hôm sau).',
+    desc: 'Mở khóa khách Gen Z và xu hướng món Hắc Ám. Khách trả gấp 3 (126k), nhưng 50% bị ngộ độc (-20% khách ngày hôm sau).',
     accent: '#F5F3FF',
   },
   {
@@ -286,6 +286,10 @@ const INITIAL_HUD: GameHudSnapshot = {
     xoai: 0,
     rau_ram: 0,
     tac: 0,
+    pho_mai: 0,
+    tran_chau: 0,
+    sau_rieng: 0,
+    nuoc_cot_dua: 0,
   },
   maxStockPerItem: 12,
   marketPrices: { ...BASE_MARKET_PRICES },
@@ -786,7 +790,15 @@ export default function App() {
 
       {/* Lightweight Top HUD Bar during active play / prep / end-of-day / pause / game over */}
       {hud.screen !== 'TITLE_MENU' && (
-        <div className="pointer-events-none safe-top-bar pb-2 absolute top-0 left-0 right-0 z-10 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 bg-[#181920]/95 border-b-[3px] border-[#111318]">
+        <div className="pointer-events-none safe-top-bar px-3 pb-2 pt-1 absolute top-0 left-0 right-0 z-10 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 bg-[#181920]/95 border-b-[3px] border-[#111318]">
+          <div className="basis-full flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-xs">
+            <span className="shrink-0 font-display font-black text-amber-300">⭐ CẤP {hud.playerLevel}</span>
+            <div className="h-2 min-w-20 max-w-36 flex-1 overflow-hidden rounded-full border border-slate-500 bg-slate-700">
+              <div className="h-full bg-amber-400 transition-[width]" style={{ width: `${Math.min(100, hud.playerXp / Math.max(1, hud.playerXpToNext) * 100)}%` }} />
+            </div>
+            <span className="shrink-0 font-mono-tabular text-amber-100">{hud.playerXp}/{hud.playerXpToNext} XP</span>
+            <span className="min-w-0 truncate text-slate-200" title={hud.storyMission.title}>📖 {hud.storyMission.title} · {hud.storyMission.progress}/{hud.storyMission.target}</span>
+          </div>
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs sm:text-sm font-semibold whitespace-nowrap overflow-hidden">
             <span className="font-display font-extrabold text-[#F59E0B] tracking-tight">
               Ngày {hud.day}
@@ -1689,9 +1701,11 @@ export default function App() {
                   const price = hud.marketPrices[id];
                   const mult = hud.newspaper.multipliers[id] ?? 1;
                   const stock = hud.inventory[id];
+                  const unlockLevel = item.unlockLevel ?? 1;
+                  const levelLocked = hud.playerLevel < unlockLevel;
                   const isFull = stock >= hud.maxStockPerItem;
-                  const canBuy1 = !isFull && hud.money >= price;
-                  const canBuy5 = !isFull && hud.money >= price;
+                  const canBuy1 = !levelLocked && !isFull && hud.money >= price;
+                  const canBuy5 = !levelLocked && !isFull && hud.money >= price;
 
                   return (
                     <div
@@ -1704,6 +1718,7 @@ export default function App() {
                           <span className="font-display font-extrabold text-sm text-[#111318] leading-tight">
                             {item.name}
                           </span>
+                          {levelLocked && <span className="shrink-0 rounded border border-[#111318] bg-slate-800 px-1.5 py-0.5 text-[9px] font-black text-white">🔒 CẤP {unlockLevel}</span>}
                           {mult !== 1 && (
                             <span
                               className={`inline-flex items-center gap-0.5 font-mono-tabular font-extrabold text-[11px] px-1.5 py-0.5 rounded border border-[#111318] shrink-0 ${

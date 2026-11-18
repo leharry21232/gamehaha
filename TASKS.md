@@ -33,6 +33,15 @@
 - Changing the existing bánh tráng preparation mechanics, timing, or scoring as part of the story milestone.
 
 
+## M6 – Mở rộng khu phố và tiến trình người chơi (đang triển khai)
+- [x] Thêm bốn nguyên liệu topping mới vào chợ nhập hàng với giá và cấp mở khóa riêng.
+- [x] Khóa thao tác mua và sử dụng topping mới khi chưa đạt cấp; kiểm tra tại GameEngine, không chỉ khóa giao diện.
+- [x] Giữ save cũ tương thích: các nguyên liệu mới được khởi tạo tồn kho bằng 0 khi tiếp tục save phiên bản trước.
+- [x] Hiển thị cấp độ, thanh XP, nhiệm vụ, tiền và thời gian trên HUD đầu màn hình.
+- [ ] Kiểm tra thủ công cấp 1–6, mua hàng, tồn kho và sử dụng từng topping mới.
+- [ ] Kiểm tra save cũ sau nâng cấp và xác nhận số lượng nguyên liệu cũ không đổi.
+- [ ] Hoàn tất CI, TypeScript và production build.
+
 ## M6 – Kết nối bản đồ với Chương 1 (đang triển khai)
 - [x] Hiển thị nhiệm vụ Chương 1 trực tiếp trong tab Nhật ký trên bản đồ.
 - [x] Hiển thị tiến độ, trạng thái, phần thưởng và nút nhận thưởng khi đủ điều kiện.

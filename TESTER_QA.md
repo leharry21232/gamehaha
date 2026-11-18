@@ -46,6 +46,17 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] On a touch device or responsive emulator, verify the directional buttons and interaction button are usable and do not overlap important content.
 - [ ] Close the map from both new-game onboarding and morning preparation; complete a normal cooking order to confirm the original gameplay loop is unchanged.
 
+## M6 – Nguyên liệu mở khóa theo cấp và HUD
+- [ ] Ở cấp 1, chỉ sáu nguyên liệu cơ bản được mua; Phô Mai, Trân Châu, Sầu Riêng và Nước Cốt Dừa hiển thị cấp mở khóa và không thể mua.
+- [ ] Ở cấp 2, mua Phô Mai được; các mặt hàng cấp 3/5/6 vẫn khóa.
+- [ ] Ở cấp 3, mua Trân Châu được; Sầu Riêng và Nước Cốt Dừa vẫn khóa.
+- [ ] Ở cấp 5, mua Sầu Riêng được; Nước Cốt Dừa vẫn khóa đến cấp 6.
+- [ ] Ở cấp 6, mua Nước Cốt Dừa được; tiền, tồn kho và giới hạn sức chứa cập nhật chính xác.
+- [ ] Thử gọi GameEngine.buyIngredient trực tiếp ở cấp thấp; xác nhận bị từ chối dù bỏ qua giao diện.
+- [ ] Dùng từng topping sau khi mở khóa; xác nhận tồn kho giảm, bỏ topping/undo hoàn lại kho.
+- [ ] Mở save phiên bản cũ không có bốn trường tồn kho mới; xác nhận game tiếp tục bình thường và sáu nguyên liệu cũ giữ nguyên.
+- [ ] HUD trên desktop/mobile hiển thị cấp, thanh XP, nhiệm vụ, tiền và thời gian mà không che thao tác.
+
 ## Release gate
 - [ ] GitHub Actions: progression tests pass.
 - [ ] GitHub Actions: TypeScript check passes.

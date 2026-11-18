@@ -58,6 +58,13 @@
 - Sự kiện được chọn xác định theo ngày trong game và khung thời gian để kết quả ổn định, dễ kiểm thử; chưa tạo sự kiện ngẫu nhiên có gameplay effect.
 
 
+## M6 – Mở khóa nguyên liệu theo cấp
+- Bốn topping mới là hàng hóa nhập kho, không được tự cấp miễn phí: Phô Mai mở ở cấp 2, Trân Châu cấp 3, Sầu Riêng cấp 5 và Nước Cốt Dừa cấp 6.
+- Cấp độ là điều kiện bắt buộc ở cả giao diện chợ và GameEngine; đạt cấp chỉ mở quyền mua, không tự mua hoặc tự thêm hàng vào kho.
+- Save phiên bản 1 cũ được migrate an toàn bằng cách gán tồn kho 0 cho các nguyên liệu mới còn thiếu; giữ nguyên sáu nguyên liệu cũ và các số dư hiện có.
+- Nguyên Liệu Hắc Ám không còn là khóa topping; nâng cấp này vẫn giữ vai trò mở khách Gen Z theo logic hiện có.
+- HUD đầu màn hình dùng trực tiếp snapshot cấp/XP, nhiệm vụ, tiền và thời gian từ GameEngine; không tạo state tiến trình thứ hai.
+
 ## M6 – Sự kiện khách tò mò ghé xe
 - Sự kiện đầu tiên được mở bằng nút tùy chọn khi người chơi đứng gần xe bánh tráng; không tự bật popup và không chiếm phím E.
 - Hội thoại là nội dung kể chuyện thuần túy, không tạo đơn hàng, không thay đổi tiền, kho, nhiệm vụ, thời gian, save hoặc trạng thái ca bán.

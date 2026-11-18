@@ -99,6 +99,7 @@ export interface RawIngredientMeta {
   unit: string;
   basePrice: number;
   color: string;
+  unlockLevel?: number;
 }
 
 export const RAW_INGREDIENTS: RawIngredientMeta[] = [
@@ -108,6 +109,10 @@ export const RAW_INGREDIENTS: RawIngredientMeta[] = [
   { id: 'xoai', name: 'Xoài Xanh Bào', unit: 'trái', basePrice: 2000, color: '#ECFCCB' },
   { id: 'rau_ram', name: 'Rau Răm Tươi', unit: 'bó', basePrice: 1000, color: '#DCFCE7' },
   { id: 'tac', name: 'Tắc & Sa Tế Tỏi', unit: 'bịch', basePrice: 2000, color: '#FFEDD5' },
+  { id: 'pho_mai', name: 'Phô Mai', unit: 'phần', basePrice: 5000, color: '#FEF9C3', unlockLevel: 2 },
+  { id: 'tran_chau', name: 'Trân Châu', unit: 'phần', basePrice: 6000, color: '#E4E4E7', unlockLevel: 3 },
+  { id: 'sau_rieng', name: 'Sầu Riêng', unit: 'phần', basePrice: 12000, color: '#ECFCCB', unlockLevel: 5 },
+  { id: 'nuoc_cot_dua', name: 'Nước Cốt Dừa', unit: 'phần', basePrice: 7000, color: '#F8FAFC', unlockLevel: 6 },
 ];
 
 export const BASE_MARKET_PRICES: MarketPrices = {
@@ -117,6 +122,10 @@ export const BASE_MARKET_PRICES: MarketPrices = {
   xoai: 2000,
   rau_ram: 1000,
   tac: 2000,
+  pho_mai: 5000,
+  tran_chau: 6000,
+  sau_rieng: 12000,
+  nuoc_cot_dua: 7000,
 };
 
 export const NEWSPAPER_EVENTS: NewspaperEvent[] = [

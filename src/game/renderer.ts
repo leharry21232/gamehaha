@@ -68,6 +68,7 @@ export interface RenderState {
   swipeTrail: Point2D[];
   addedToppings: Record<ToppingId, number>;
   inventory: InventoryState;
+  playerLevel: number;
   bowlIngredients: BowlIngredient[];
   flyingToppings: FlyingTopping[];
   flyingCash: FlyingCashItem[];
@@ -2773,6 +2774,10 @@ function renderToppingTrays(ctx: CanvasRenderingContext2D, state: RenderState, l
     trung_cut: 'trung_cut',
     xoai: 'xoai',
     rau_ram: 'rau_ram',
+    pho_mai: 'pho_mai',
+    tran_chau: 'tran_chau',
+    sau_rieng: 'sau_rieng',
+    nuoc_cot_dua: 'nuoc_cot_dua',
   };
 
   for (const t of TOPPINGS) {
@@ -2782,9 +2787,10 @@ function renderToppingTrays(ctx: CanvasRenderingContext2D, state: RenderState, l
     const stockKey = stockKeys[t.id];
     const stock = stockKey ? state.inventory[stockKey] : null;
     const outOfStock = stock !== null && stock <= 0;
-    const cursedLocked = !state.upgrades.cursedMenu && (t.id === 'sau_rieng' || t.id === 'nuoc_cot_dua');
-    const hovered = state.hoverTrayId === t.id && !outOfStock && !cursedLocked;
-    const trayBg = cursedLocked
+    const unlockLevel = t.id === 'pho_mai' ? 2 : t.id === 'tran_chau' ? 3 : t.id === 'sau_rieng' ? 5 : t.id === 'nuoc_cot_dua' ? 6 : 1;
+    const levelLocked = state.playerLevel < unlockLevel;
+    const hovered = state.hoverTrayId === t.id && !outOfStock && !levelLocked;
+    const trayBg = levelLocked
       ? '#CBD5E1'
       : outOfStock
       ? '#E2E8F0'
@@ -2804,15 +2810,15 @@ function renderToppingTrays(ctx: CanvasRenderingContext2D, state: RenderState, l
       drawToppingIcon(ctx, t.id, drawRect.x + drawRect.w * 0.5, drawRect.y + 15, 0.65);
 
       ctx.font = '800 10px "Bricolage Grotesque", sans-serif';
-      ctx.fillStyle = cursedLocked || outOfStock ? '#64748B' : INK;
+      ctx.fillStyle = levelLocked || outOfStock ? '#64748B' : INK;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(t.shortName, drawRect.x + drawRect.w * 0.5, drawRect.y + drawRect.h - 20, drawRect.w - 8);
 
       ctx.font = '700 10px "JetBrains Mono", monospace';
-      if (cursedLocked) {
+      if (levelLocked) {
         ctx.fillStyle = '#7C3AED';
-        ctx.fillText('🔒 Hắc Ám', drawRect.x + drawRect.w * 0.5, drawRect.y + drawRect.h - 8, drawRect.w - 8);
+        ctx.fillText(`🔒 Cấp ${unlockLevel}`, drawRect.x + drawRect.w * 0.5, drawRect.y + drawRect.h - 8, drawRect.w - 8);
       } else {
         ctx.fillStyle = outOfStock
           ? '#E11D48'
@@ -2836,15 +2842,15 @@ function renderToppingTrays(ctx: CanvasRenderingContext2D, state: RenderState, l
       drawToppingIcon(ctx, t.id, panRect.x + panRect.w * 0.5, panRect.y + panRect.h * 0.5, 0.88);
 
       ctx.font = '800 13px "Bricolage Grotesque", sans-serif';
-      ctx.fillStyle = cursedLocked || outOfStock ? '#64748B' : INK;
+      ctx.fillStyle = levelLocked || outOfStock ? '#64748B' : INK;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
       ctx.fillText(t.name, drawRect.x + 58, drawRect.y + drawRect.h * 0.5 - 9, drawRect.w - 64);
 
       ctx.font = '700 11px "JetBrains Mono", monospace';
-      if (cursedLocked) {
+      if (levelLocked) {
         ctx.fillStyle = '#7C3AED';
-        ctx.fillText('🔒 Mua Hắc Ám', drawRect.x + 58, drawRect.y + drawRect.h * 0.5 + 10, drawRect.w - 64);
+        ctx.fillText(`🔒 Mở ở cấp ${unlockLevel}`, drawRect.x + 58, drawRect.y + drawRect.h * 0.5 + 10, drawRect.w - 64);
       } else {
         ctx.fillStyle = outOfStock
           ? '#E11D48'

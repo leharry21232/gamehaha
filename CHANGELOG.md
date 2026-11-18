@@ -30,5 +30,11 @@
 - Added a compact map card for current neighborhood activity; events are narrative-only and do not alter economy, inventory, missions, saves, or the cooking loop.
 
 
+## M6 – Level-gated market expansion
+- Added four purchasable topping ingredients with level unlocks: Cheese (Lv. 2), Boba (Lv. 3), Durian (Lv. 5), and Coconut Milk (Lv. 6). Unlocking grants purchase access only; stock must still be purchased.
+- Enforced unlock levels in both the market UI and GameEngine, and made new topping usage consume inventory with removal/undo returning stock.
+- Kept version-1 browser saves compatible by migrating missing new inventory fields to zero without changing existing stock.
+- Expanded the top HUD with live level/XP progress and current story-mission progress alongside the existing money and day timer.
+
 ## M6 – Interactive neighborhood event
 - Added an optional, one-time curious visitor conversation near the bánh tráng cart. It is narrative-only and leaves the existing E-to-cart flow untouched.

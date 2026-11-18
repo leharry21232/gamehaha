@@ -43,7 +43,11 @@ export type RawIngredientId =
   | 'trung_cut'
   | 'xoai'
   | 'rau_ram'
-  | 'tac';
+  | 'tac'
+  | 'pho_mai'
+  | 'tran_chau'
+  | 'sau_rieng'
+  | 'nuoc_cot_dua';
 
 export type InventoryState = Record<RawIngredientId, number>;
 

@@ -8,6 +8,7 @@ import {
   equipDecoration,
   getDecorationAttraction,
   getUnlockedSkills,
+  getIngredientUnlockLevel,
   INITIAL_PLAYER_PROGRESS,
   resetWalletForNewGame,
   type PlayerProgress,
@@ -46,6 +47,14 @@ test('XP thresholds increase by level and carry excess XP forward', () => {
   assert.deepEqual([levelUp.level, levelUp.xp], [2, 0]);
   const multiLevel = addProgress(INITIAL_PLAYER_PROGRESS, 260);
   assert.deepEqual([multiLevel.level, multiLevel.xp], [3, 10]);
+});
+
+test('new topping ingredients unlock at their configured player levels', () => {
+  assert.equal(getIngredientUnlockLevel('pho_mai'), 2);
+  assert.equal(getIngredientUnlockLevel('tran_chau'), 3);
+  assert.equal(getIngredientUnlockLevel('sau_rieng'), 5);
+  assert.equal(getIngredientUnlockLevel('nuoc_cot_dua'), 6);
+  assert.equal(getIngredientUnlockLevel('kho_bo'), 1);
 });
 
 test('progress counters are non-negative integers', () => {

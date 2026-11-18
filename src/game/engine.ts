@@ -1,5 +1,5 @@
 import { GameAudio } from './audio';
-import { addProgress, getDecorationAttraction, getUnlockedSkills, INITIAL_PLAYER_PROGRESS, resetWalletForNewGame, loadPlayerProgress, savePlayerProgress, xpRequiredForLevel, type PlayerProgress, type DecorationId, buyDecoration as purchaseDecoration, equipDecoration as applyDecoration, DIFFICULTY_SETTINGS, type GameDifficulty } from './progression';
+import { addProgress, getDecorationAttraction, getUnlockedSkills, getIngredientUnlockLevel, INITIAL_PLAYER_PROGRESS, resetWalletForNewGame, loadPlayerProgress, savePlayerProgress, xpRequiredForLevel, type PlayerProgress, type DecorationId, buyDecoration as purchaseDecoration, equipDecoration as applyDecoration, DIFFICULTY_SETTINGS, type GameDifficulty } from './progression';
 import { DayManager } from './dayManager';
 import { claimStoryMissionReward, getStoryMissionSnapshot, loadCompletedMissionIds, saveCompletedMissionIds } from './missions';
 import { createInitialRicePaper, createInitialRollPolygon, splitPolygonBySegment } from './geometry';
@@ -120,6 +120,10 @@ function emptyInventory(): InventoryState {
     xoai: 0,
     rau_ram: 0,
     tac: 0,
+    pho_mai: 0,
+    tran_chau: 0,
+    sau_rieng: 0,
+    nuoc_cot_dua: 0,
   };
 }
 
@@ -772,7 +776,7 @@ export class GameEngine {
     ) return false;
 
     const basicTypes: CustomerType[] = ['STUDENT', 'NINJA_LEAD', 'OFFICE', 'APP_SHIPPER'];
-    if (!basicTypes.includes(type) && !(type === 'GEN_Z' && (this.upgrades.ledRgb || this.upgrades.cursedMenu))) {
+    if (!basicTypes.includes(type) && !(type === 'GEN_Z' && this.playerProgress.level >= 3 && (this.upgrades.ledRgb || this.upgrades.cursedMenu))) {
       return false;
     }
 
@@ -864,8 +868,8 @@ export class GameEngine {
       const save = JSON.parse(raw) as Partial<SessionSaveSnapshot>;
       if (save.version !== 1 || !Number.isFinite(save.day) || !Number.isFinite(save.money) || !save.inventory) return false;
       const inventory = save.inventory as InventoryState;
-      const ingredientIds: RawIngredientId[] = ['banh_trang', 'kho_bo', 'trung_cut', 'xoai', 'rau_ram', 'tac'];
-      if (!ingredientIds.every((id) => Number.isFinite(inventory[id]) && inventory[id] >= 0)) return false;
+      const requiredIngredientIds: RawIngredientId[] = ['banh_trang', 'kho_bo', 'trung_cut', 'xoai', 'rau_ram', 'tac'];
+      if (!requiredIngredientIds.every((id) => Number.isFinite(inventory[id]) && inventory[id] >= 0)) return false;
 
       this.audio.unlock();
       this.money = Math.max(0, Math.floor(save.money!));
@@ -881,7 +885,14 @@ export class GameEngine {
       this.dayDuration = Math.max(0, Math.floor(save.dayDuration ?? 600));
       this.dayTimeLeft = Math.max(0, Math.floor(save.dayTimeLeft ?? this.dayDuration));
       this.dayElapsedTime = Math.max(0, Number(save.dayElapsedTime ?? 0));
-      this.inventory = { ...inventory };
+      this.inventory = {
+        ...emptyInventory(),
+        ...inventory,
+        pho_mai: Number.isFinite(inventory.pho_mai) && inventory.pho_mai >= 0 ? inventory.pho_mai : 0,
+        tran_chau: Number.isFinite(inventory.tran_chau) && inventory.tran_chau >= 0 ? inventory.tran_chau : 0,
+        sau_rieng: Number.isFinite(inventory.sau_rieng) && inventory.sau_rieng >= 0 ? inventory.sau_rieng : 0,
+        nuoc_cot_dua: Number.isFinite(inventory.nuoc_cot_dua) && inventory.nuoc_cot_dua >= 0 ? inventory.nuoc_cot_dua : 0,
+      };
       this.vehicleLevel = save.vehicleLevel === 2 || save.vehicleLevel === 3 ? save.vehicleLevel : 1;
       this.upgrades = { ...freshUpgrades(), ...(save.upgrades ?? {}) };
       this.dayRevenue = Math.max(0, Math.floor(save.dayRevenue ?? 0));
@@ -1154,6 +1165,7 @@ export class GameEngine {
   public buyIngredient(id: RawIngredientId, qty = 1): boolean {
     if (this.screen !== 'MORNING_PREP') return false;
     this.audio.unlock();
+    if (this.playerProgress.level < getIngredientUnlockLevel(id)) return false;
     const maxCap = this.getMaxStockPerItem();
     const room = Math.max(0, maxCap - this.inventory[id]);
     const price = this.marketPrices[id];
@@ -1189,7 +1201,8 @@ export class GameEngine {
     this.audio.unlock();
     const maxCap = this.getMaxStockPerItem();
     const targetPerItem = Math.min(maxCap, 8);
-    const orderIds: RawIngredientId[] = ['banh_trang', 'tac', 'kho_bo', 'trung_cut', 'xoai', 'rau_ram'];
+    const orderIds = (['banh_trang', 'tac', 'kho_bo', 'trung_cut', 'xoai', 'rau_ram', 'pho_mai', 'tran_chau', 'sau_rieng', 'nuoc_cot_dua'] as RawIngredientId[])
+      .filter((id) => this.playerProgress.level >= getIngredientUnlockLevel(id));
 
     let boughtAny = false;
     for (let round = 0; round < targetPerItem; round++) {
@@ -1982,7 +1995,7 @@ export class GameEngine {
       }
       this.spawnCallout(
         'Mở Khóa Hắc Ám Menu!',
-        'Sầu Riêng + Trân Châu + Cốt Dừa · Gen Z trả x3 (50% ngộ độc)!',
+        'Mở khách Gen Z · trả x3 (50% ngộ độc)!',
         this.width * 0.5,
         this.height * 0.36,
         '#A855F7'
@@ -2007,12 +2020,14 @@ export class GameEngine {
   }
 
   private createWaitingCustomer(forceType?: CustomerType): WaitingCustomer {
-    const pool: CustomerType[] = this.upgrades.ledRgb
+    const canSpawnGenZ = this.playerProgress.level >= 3;
+    const pool: CustomerType[] = canSpawnGenZ && this.upgrades.ledRgb
       ? ['STUDENT', 'NINJA_LEAD', 'GEN_Z', 'GEN_Z', 'OFFICE', 'APP_SHIPPER']
-      : this.upgrades.cursedMenu
+      : canSpawnGenZ && this.upgrades.cursedMenu
       ? ['STUDENT', 'NINJA_LEAD', 'GEN_Z', 'OFFICE', 'APP_SHIPPER']
       : ['STUDENT', 'NINJA_LEAD', 'OFFICE', 'APP_SHIPPER'];
-    const type = forceType ?? pool[Math.floor(Math.random() * pool.length)];
+    const requestedType = forceType ?? pool[Math.floor(Math.random() * pool.length)];
+    const type = requestedType === 'GEN_Z' && !canSpawnGenZ ? 'STUDENT' : requestedType;
     const shipperBrand = type === 'APP_SHIPPER' ? (Math.random() < 0.5 ? 'GREEN' : 'ORANGE') : undefined;
     const labelMap: Record<CustomerType, string> = {
       STUDENT: 'Sinh Viên Đói Bụng',
@@ -3983,21 +3998,19 @@ export class GameEngine {
     const startY = r.y + r.h * 0.5;
     const def = TOPPING_MAP[id];
 
-    if (!this.upgrades.cursedMenu && (id === 'sau_rieng' || id === 'nuoc_cot_dua')) {
+    const unlockLevel = getIngredientUnlockLevel(id);
+    if (this.playerProgress.level < unlockLevel) {
       this.audio.playServeFail();
-      this.spawnCallout('Chưa Mở Khóa!', 'Mua "Nguyên Liệu Hắc Ám" trong Cửa Hàng!', startX, startY - 14, '#7C3AED');
+      this.spawnCallout('Chưa Mở Khóa!', `Đạt cấp ${unlockLevel} để mở ${def.shortName}!`, startX, startY - 14, '#7C3AED');
       return;
     }
-
-    if (id === 'kho_bo' || id === 'trung_cut' || id === 'xoai' || id === 'rau_ram') {
-      if (this.inventory[id] <= 0) {
-        this.audio.playServeFail();
-        this.spawnCallout(`Hết ${def.shortName}!`, 'Hết hàng trong kho hôm nay!', startX, startY - 14, '#E11D48');
-        this.emitHud(true);
-        return;
-      }
-      this.inventory[id] -= 1;
+    if (this.inventory[id] <= 0) {
+      this.audio.playServeFail();
+      this.spawnCallout(`Hết ${def.shortName}!`, 'Hết hàng trong kho hôm nay!', startX, startY - 14, '#E11D48');
+      this.emitHud(true);
+      return;
     }
+    this.inventory[id] -= 1;
 
     this.addedToppings[id] = (this.addedToppings[id] || 0) + 1;
     this.toppingHistory.push(id);
@@ -4033,9 +4046,7 @@ export class GameEngine {
     this.toppingHistory.splice(historyIndex, 1);
     this.addedToppings[id] -= 1;
 
-    if (id === 'kho_bo' || id === 'trung_cut' || id === 'xoai' || id === 'rau_ram') {
-      this.inventory[id] += 1;
-    }
+    this.inventory[id] += 1;
 
     const flyingIndex = this.flyingToppings.map((item) => item.id).lastIndexOf(id);
     if (flyingIndex >= 0) {
@@ -4057,9 +4068,7 @@ export class GameEngine {
     if (!id) return;
 
     this.addedToppings[id] = Math.max(0, (this.addedToppings[id] || 0) - 1);
-    if (id === 'kho_bo' || id === 'trung_cut' || id === 'xoai' || id === 'rau_ram') {
-      this.inventory[id] += 1;
-    }
+    this.inventory[id] += 1;
 
     const flyingIndex = this.flyingToppings.map((item) => item.id).lastIndexOf(id);
     if (flyingIndex >= 0) {
@@ -6406,6 +6415,7 @@ export class GameEngine {
       swipeTrail: this.swipeTrail,
       addedToppings: this.addedToppings,
       inventory: this.inventory,
+      playerLevel: this.playerProgress.level,
       bowlIngredients: this.bowlIngredients,
       flyingToppings: this.flyingToppings,
       flyingCash: this.flyingCash,
