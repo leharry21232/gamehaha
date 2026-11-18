@@ -7,5 +7,5 @@
 - [x] Add visible undo control using the existing secondary button area.
 - [x] Add Backspace and Ctrl+Z shortcuts during the topping step only.
 - [x] Reset undo history when a new preparation board is created.
-- [ ] Run automated tests, TypeScript validation, and production build.
+- [x] Run automated progression tests, TypeScript validation, and production build (GitHub Actions passed).
 - [ ] Perform manual browser verification for mouse and keyboard input.
