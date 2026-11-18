@@ -3745,6 +3745,8 @@ export default function App() {
         onSetMoney={(value) => engineRef.current?.debugSetMoney(value)}
         onSetProgress={(level, xp) => engineRef.current?.debugSetProgress(level, xp)}
         onSetDayTime={(seconds) => engineRef.current?.debugSetDayTime(seconds)}
+        onQueueCustomer={(type: CustomerType) => engineRef.current?.debugQueueCustomer(type) ?? false}
+        onTriggerRain={() => engineRef.current?.debugTriggerRain() ?? false}
       />}
     </div>
   );
