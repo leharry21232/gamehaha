@@ -4,7 +4,7 @@ import { GameEngine } from './game/engine';
 import { TesterPanel } from './TesterPanel';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
 import { DECORATIONS, getUnlockedSkills } from './game/progression';
-import { getVendorLocation } from './game/world';
+import { findNearbyWorldLocation, getVendorLocation, moveWorldPlayer, WORLD_INTERACTABLES } from './game/world';
 import type { BestRecord, CityDistrictId, CustomerType, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
 import heroBgUrl from './assets/images/saigon_sidewalk_hero_1794649926456.jpg';
 
@@ -592,17 +592,26 @@ export default function App() {
       const key = event.key.toLowerCase();
       if (key === 'e') {
         event.preventDefault();
-        const cartDistance = Math.hypot(worldPlayer.x - 28, worldPlayer.y - 45);
-        if (cartDistance <= 10) { setWorldHubOpen(false); setWorldPanel(null); setWorldNotice(''); return; }
-        setWorldNotice('Hãy đi dọc vỉa hè đến xe bánh tráng ở bên trái và nhấn E để bắt đầu bán hàng.');
+        const nearby = findNearbyWorldLocation(worldPlayer.x, worldPlayer.y);
+        if (!nearby) {
+          setWorldNotice('Chưa có địa điểm nào đủ gần. Hãy đi đến gần cửa tiệm, hàng xóm hoặc xe bánh tráng rồi nhấn E.');
+          return;
+        }
+        setWorldNotice(nearby.interactionText);
+        if (nearby.id === 'cart') {
+          setWorldHubOpen(false);
+          setWorldPanel(null);
+          setWorldNotice('');
+          return;
+        }
+        setWorldPanel('MAP');
         return;
       }
       if (!['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) return;
       event.preventDefault();
-      setWorldPlayer((p) => ({
-        x: Math.max(5, Math.min(95, p.x + (key === 'a' || key === 'arrowleft' ? -2.5 : key === 'd' || key === 'arrowright' ? 2.5 : 0))),
-        y: Math.max(37, Math.min(53, p.y + (key === 'w' || key === 'arrowup' ? -1.5 : key === 's' || key === 'arrowdown' ? 1.5 : 0))),
-      }));
+      const deltaX = key === 'a' || key === 'arrowleft' ? -2.5 : key === 'd' || key === 'arrowright' ? 2.5 : 0;
+      const deltaY = key === 'w' || key === 'arrowup' ? -1.5 : key === 's' || key === 'arrowdown' ? 1.5 : 0;
+      setWorldPlayer((p) => moveWorldPlayer(p, deltaX, deltaY));
     };
     window.addEventListener('keydown', move);
     return () => window.removeEventListener('keydown', move);
@@ -671,15 +680,22 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [hud.screen, hud.checkout.active, hud.shopOpen]);
 
+  const nearbyWorldLocation = findNearbyWorldLocation(worldPlayer.x, worldPlayer.y);
+
   const handleWorldInteract = () => {
-    const distance = Math.hypot(worldPlayer.x - 28, worldPlayer.y - 45);
-    if (distance > 10) {
-      setWorldNotice('Hãy đi đến gần xe bánh tráng ở bên trái vỉa hè rồi nhấn E để tương tác.');
+    const nearby = findNearbyWorldLocation(worldPlayer.x, worldPlayer.y);
+    if (!nearby) {
+      setWorldNotice('Chưa có địa điểm nào đủ gần. Hãy đi đến gần cửa tiệm, hàng xóm hoặc xe bánh tráng rồi nhấn E.');
       return;
     }
-    setWorldHubOpen(false);
-    setWorldPanel(null);
-    setWorldNotice('');
+    setWorldNotice(nearby.interactionText);
+    if (nearby.id === 'cart') {
+      setWorldHubOpen(false);
+      setWorldPanel(null);
+      setWorldNotice('');
+      return;
+    }
+    setWorldPanel('MAP');
   };
 
   const handleStart = () => {
@@ -1203,7 +1219,9 @@ export default function App() {
                 <button type="button" onClick={() => setWorldPanel(null)} className="border border-white/30 px-2 py-1 text-xs">Đóng ✕</button>
               </div>
               <p className="mt-2 text-xs leading-relaxed text-slate-200">
-                {worldPanel === 'MAP' ? 'Bạn đang bán bánh tráng tại ' + getVendorLocation(selectedVendorSpot).name + '. Đây là khu phố kinh doanh hiện tại.' :
+                {worldPanel === 'MAP' ? (nearbyWorldLocation
+                  ? nearbyWorldLocation.name + ': ' + nearbyWorldLocation.description
+                  : 'Bạn đang bán bánh tráng tại ' + getVendorLocation(selectedVendorSpot).name + '. Đi đến gần một địa điểm rồi nhấn E để trò chuyện hoặc tương tác.') :
                   worldPanel === 'BAG' ? 'Tiền mặt: ' + hud.money.toLocaleString('vi-VN') + 'đ · Cấp độ: ' + hud.playerLevel + '. Kho nguyên liệu được quản lý trong hệ thống kinh doanh.' :
                   worldPanel === 'JOURNAL' ? 'Nhiệm vụ hiện tại: ' + (hud.storyMission?.title ?? 'Tiếp tục hành trình khởi nghiệp và phục vụ khách đầu tiên.') :
                   'Điện thoại khu phố: các liên hệ và thông báo kinh doanh sẽ được tích hợp tại đây.'}
@@ -1218,15 +1236,15 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <p className="text-center text-xs text-slate-200">{worldNotice || 'Dùng WASD / phím mũi tên để đi trên vỉa hè · Đến gần xe bánh tráng rồi nhấn E'}</p>
+            <p className="text-center text-xs text-slate-200">{nearbyWorldLocation ? 'Đang ở gần: ' + nearbyWorldLocation.name + ' · Nhấn E để tương tác' : worldNotice || 'Dùng WASD / phím mũi tên để đi trên vỉa hè · Đến gần các địa điểm rồi nhấn E'}</p>
             <div className="mt-2 flex items-center justify-center gap-2">
-              <button type="button" onClick={() => setWorldPlayer((p) => ({ ...p, y: Math.max(37, p.y - 2) }))} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi lên">↑</button>
-              <button type="button" onClick={() => setWorldPlayer((p) => ({ ...p, x: Math.max(5, p.x - 3) }))} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi trái">←</button>
-              <button type="button" onClick={() => setWorldPlayer((p) => ({ ...p, y: Math.min(53, p.y + 2) }))} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi xuống">↓</button>
-              <button type="button" onClick={() => setWorldPlayer((p) => ({ ...p, x: Math.min(95, p.x + 3) }))} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi phải">→</button>
+              <button type="button" onClick={() => setWorldPlayer((p) => moveWorldPlayer(p, 0, -2))} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi lên">↑</button>
+              <button type="button" onClick={() => setWorldPlayer((p) => moveWorldPlayer(p, -3, 0))} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi trái">←</button>
+              <button type="button" onClick={() => setWorldPlayer((p) => moveWorldPlayer(p, 0, 2))} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi xuống">↓</button>
+              <button type="button" onClick={() => setWorldPlayer((p) => moveWorldPlayer(p, 3, 0))} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi phải">→</button>
             </div>
             <div className="mt-2 flex justify-center gap-2">
-              <button type="button" onClick={handleWorldInteract} className="border-[3px] border-[#543a25] bg-[#f1c65e] px-4 py-2 font-mono text-xs font-black text-[#392819] shadow-[4px_4px_0_#111] hover:bg-[#ffda79]">E · TƯƠNG TÁC XE BÁNH TRÁNG</button>
+              <button type="button" onClick={handleWorldInteract} className="border-[3px] border-[#543a25] bg-[#f1c65e] px-4 py-2 font-mono text-xs font-black text-[#392819] shadow-[4px_4px_0_#111] hover:bg-[#ffda79]">E · {nearbyWorldLocation ? nearbyWorldLocation.name.toUpperCase() : 'TƯƠNG TÁC'}</button>
               <button type="button" onClick={() => setWorldNotice('Bạn đang ở khu phố bán bánh tráng. Hãy đi dọc vỉa hè, gặp khách và đến xe bánh tráng để bắt đầu ca bán hàng.')} className="border-[3px] border-[#9cae91] bg-[#405653] px-3 py-2 font-mono text-[10px] font-bold text-[#fff2d1] shadow-[3px_3px_0_#111]">Hướng dẫn</button>
             </div>
           </div>
@@ -1494,7 +1512,7 @@ export default function App() {
                   <h2 className="font-display font-extrabold text-2xl text-[#111318]">
                     Chợ Sớm Ngày {hud.day} · Nhập Nguyên Liệu
                   </h2>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-600"><span>📍 Điểm bán: <strong className="text-emerald-800">{getVendorLocation(selectedVendorSpot).name}</strong></span><button type="button" onClick={() => { setWorldPlayer({ x: 50, y: 76 }); setWorldHubOpen(true); }} className="rounded-md border border-emerald-700 bg-emerald-50 px-2 py-1 font-bold text-emerald-800">🚶 Đi dạo khu phố</button><button type="button" onClick={() => engineRef.current?.returnToTitle()} className="rounded-md border border-slate-500 px-2 py-1 font-bold text-slate-700">← Quay lại menu</button></div>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-600"><span>📍 Điểm bán: <strong className="text-emerald-800">{getVendorLocation(selectedVendorSpot).name}</strong></span><button type="button" onClick={() => { setWorldPlayer({ x: 48, y: 45 }); setWorldHubOpen(true); }} className="rounded-md border border-emerald-700 bg-emerald-50 px-2 py-1 font-bold text-emerald-800">🚶 Đi dạo khu phố</button><button type="button" onClick={() => engineRef.current?.returnToTitle()} className="rounded-md border border-slate-500 px-2 py-1 font-bold text-slate-700">← Quay lại menu</button></div>
                   <p className="text-xs text-slate-600 mt-0.5">
                     Phương tiện: <strong className="text-[#111318]">{vehicleMeta.name}</strong> (Tối đa{' '}
                     <span className="font-mono-tabular font-bold">{hud.maxStockPerItem}</span> phần/món) ·{' '}
