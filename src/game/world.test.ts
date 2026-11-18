@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES } from './world';
+import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, isWorldPositionWalkable, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES } from './world';
 
 test('all five vendor locations have distinct grounded costs and valid multipliers', () => {
   assert.equal(VENDOR_LOCATIONS.length, 5);
@@ -95,4 +95,11 @@ test('nearby interaction selects the closest location within its own radius', ()
   assert.equal(findNearbyWorldLocation(28, 46)?.id, 'cart');
   assert.equal(findNearbyWorldLocation(65, 53)?.id, 'drink_stall');
   assert.equal(findNearbyWorldLocation(50, 50), null);
+});
+
+test('all authored interaction points are on reachable sidewalk tiles', () => {
+  for (const location of WORLD_INTERACTABLES) {
+    assert.equal(isWorldPositionWalkable({ x: location.x, y: location.y }), true, location.id);
+  }
+  assert.equal(findNearbyWorldLocation(48, 45), null);
 });
