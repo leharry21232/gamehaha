@@ -14,7 +14,8 @@ As a player preparing a bánh tráng order, I want to remove the most recently a
 - **FR-002**: Undo removes exactly one topping addition and preserves the order of earlier additions.
 - **FR-003**: If the removed topping consumes inventory (`kho_bo`, `trung_cut`, `xoai`, or `rau_ram`), return exactly one unit to inventory.
 - **FR-004**: Undo removes the matching visual ingredient whether it is still animating toward the dish or has already landed.
-- **FR-005**: Provide an on-screen undo control and keyboard shortcuts: Backspace or Ctrl+Z.
+- **FR-005**: Provide a global undo control and per-ingredient remove controls, plus keyboard shortcuts: Backspace or Ctrl+Z.
+- **FR-008**: The player can remove one unit of a specific previously selected topping without undoing later selections.
 - **FR-006**: Undo is unavailable when no topping has been added and must not change inventory or order requirements.
 - **FR-007**: Starting a new preparation board clears the undo history.
 
@@ -25,6 +26,7 @@ As a player preparing a bánh tráng order, I want to remove the most recently a
 3. Given the player adds a stocked topping and undoes it, then its inventory count returns to the value before that addition.
 4. Given an ingredient animation is in progress, when the player undoes that ingredient, then it does not later appear on the dish.
 5. Given the player has moved beyond the `TOPPINGS` step, undo does not alter the order.
+6. Given the player selected several topping types, when they press the minus control on one selected type, then only that type decreases by one and its stock is refunded when applicable.
 
 ## Constraints / Non-Goals
 
