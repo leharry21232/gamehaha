@@ -499,6 +499,7 @@ export default function App() {
   });
   const [onboardingStep, setOnboardingStep] = useState<'STORY' | 'MAP' | null>(null);
   const [worldHubOpen, setWorldHubOpen] = useState(false);
+  const [worldHudOpen, setWorldHudOpen] = useState(true);
   const [worldPanel, setWorldPanel] = useState<'MAP' | 'BAG' | 'JOURNAL' | 'PHONE' | null>(null);
   const [worldPlayer, setWorldPlayer] = useState({ x: 48, y: 45 });
   const [worldNotice, setWorldNotice] = useState('');
@@ -1239,7 +1240,9 @@ export default function App() {
               </p>
             </div>
           )}
-          <div className="absolute bottom-3 left-1/2 z-30 w-[min(94%,620px)] border-[4px] border-[#35291f] bg-[#263b3b]/[.97] p-3 font-mono shadow-[6px_6px_0_#172126]">
+          {worldHudOpen ? (
+          <div className="absolute bottom-3 left-1/2 z-30 w-[min(94%,620px)] border-[4px] border-[#35291f] bg-[#263b3b]/[.97] p-3 pt-5 font-mono shadow-[6px_6px_0_#172126]">
+            <button type="button" onClick={() => { setWorldHudOpen(false); setWorldPanel(null); }} aria-label="Ẩn bảng điều khiển" title="Ẩn bảng điều khiển" className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center border-2 border-[#5b2d25] bg-[#b95343] text-lg font-black leading-none text-white shadow-[2px_2px_0_#111] hover:bg-[#d46654]">×</button>
             <div className="mb-2 flex items-center justify-center gap-2">
               {([{id:'MAP',icon:'🗺️',label:'Bản đồ'},{id:'BAG',icon:'🎒',label:'Túi đồ'},{id:'JOURNAL',icon:'📖',label:'Nhiệm vụ'},{id:'PHONE',icon:'📱',label:'Điện thoại'}] as const).map((item) => (
                 <button key={item.id} type="button" onClick={() => setWorldPanel((current) => current === item.id ? null : item.id)} className={"flex min-w-[62px] flex-col items-center border-[3px] px-3 py-2 font-mono text-[10px] font-bold shadow-[3px_3px_0_#111] " + (worldPanel === item.id ? "border-[#f6cf70] bg-[#8d633e] text-[#fff2c7]" : "border-[#8c9a83] bg-[#405653] text-[#f8edcf] hover:bg-[#587268]")}>
@@ -1259,6 +1262,9 @@ export default function App() {
               <button type="button" onClick={() => { setWorldPanel((current) => current === 'MAP' ? null : 'MAP'); setWorldNotice('Bạn đang ở khu phố bán bánh tráng. Hãy đi dọc vỉa hè, gặp khách và đến xe bánh tráng để bắt đầu ca bán hàng.'); }} className="border-[3px] border-[#9cae91] bg-[#405653] px-3 py-2 font-mono text-[10px] font-bold text-[#fff2d1] shadow-[3px_3px_0_#111]">Hướng dẫn</button>
             </div>
           </div>
+          ) : (
+            <button type="button" onClick={() => setWorldHudOpen(true)} className="absolute bottom-3 left-1/2 z-30 -translate-x-1/2 border-[3px] border-[#e7c77e] bg-[#263b3b]/95 px-4 py-2 font-mono text-xs font-black text-[#fff2d1] shadow-[4px_4px_0_#111] hover:bg-[#405653]">☰ MỞ BẢNG ĐIỀU KHIỂN</button>
+          )}
         </div>
       )}
 
