@@ -15,6 +15,27 @@ import {
   xpRequiredForLevel,
 } from './progression';
 
+test('starting a new game restores starter cash without erasing long-term progression', () => {
+  const progressed: PlayerProgress = {
+    ...INITIAL_PLAYER_PROGRESS,
+    level: 4,
+    xp: 35,
+    lifetimeEarnings: 250000,
+    completedOrders: 12,
+    wallet: 0,
+    ownedDecorations: ['sticker_pack'],
+    equippedDecorations: ['sticker_pack'],
+  };
+  const freshRun = resetWalletForNewGame(progressed);
+  assert.equal(freshRun.wallet, 120000);
+  assert.equal(freshRun.level, 4);
+  assert.equal(freshRun.xp, 35);
+  assert.equal(freshRun.lifetimeEarnings, 250000);
+  assert.equal(freshRun.completedOrders, 12);
+  assert.deepEqual(freshRun.ownedDecorations, ['sticker_pack']);
+  assert.deepEqual(freshRun.equippedDecorations, ['sticker_pack']);
+});
+
 test('XP thresholds increase by level and carry excess XP forward', () => {
   assert.equal(xpRequiredForLevel(1), 100);
   assert.equal(xpRequiredForLevel(2), 150);
