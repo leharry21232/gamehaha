@@ -122,3 +122,143 @@ export const PEDESTRIAN_ROUTES: readonly PedestrianRoute[] = [
   { id: 'shipper', emoji: '🛵', label: 'Shipper', animation: 'walk-short', top: '62%', delay: '-5s' },
   { id: 'local', emoji: '🧍🏻‍♀️', label: 'Người đi đường', animation: 'walk-east', top: '88%', delay: '-8s' },
 ] as const;
+
+
+export interface WorldPosition {
+  x: number;
+  y: number;
+}
+
+export interface WorldInteractable {
+  id: 'cart' | 'grocery' | 'snack_shop' | 'drink_stall' | 'market_stall' | 'co_nam';
+  name: string;
+  x: number;
+  y: number;
+  radius: number;
+  kind: 'BUSINESS' | 'NPC';
+  description: string;
+  interactionText: string;
+}
+
+export const WORLD_WALKABLE_BOUNDS = {
+  minX: 4,
+  maxX: 96,
+  minY: 33,
+  maxY: 56,
+} as const;
+
+// Percent-based collision rectangles match the neighborhood SVG's viewBox.
+export const WORLD_COLLISION_RECTS = [
+  { id: 'left_tree', x: 0, y: 34, width: 7, height: 15 },
+  { id: 'cart_upper', x: 14, y: 33, width: 20, height: 9 },
+  { id: 'cart_lower', x: 14, y: 51, width: 20, height: 7 },
+  { id: 'drink_stall', x: 57, y: 38, width: 16, height: 12 },
+  { id: 'right_tree', x: 86, y: 33, width: 7, height: 15 },
+] as const;
+
+export const WORLD_INTERACTABLES: readonly WorldInteractable[] = [
+  {
+    id: 'cart',
+    name: 'Xe bánh tráng',
+    x: 28,
+    y: 46,
+    radius: 9,
+    kind: 'BUSINESS',
+    description: 'Chiếc xe bánh tráng của bạn. Đây là nơi bắt đầu một ca bán hàng.',
+    interactionText: 'Bạn đã đến xe bánh tráng. Nhấn E để quay lại khu chuẩn bị và bắt đầu bán hàng.',
+  },
+  {
+    id: 'grocery',
+    name: 'Tạp hóa cô Năm',
+    x: 12,
+    y: 35,
+    radius: 7,
+    kind: 'BUSINESS',
+    description: 'Tiệm tạp hóa nhỏ ở đầu dãy phố. Cô Năm luôn biết chỗ mua đồ dùng rẻ.',
+    interactionText: 'Cô Năm: “Mới dọn xe ra hả con? Có thiếu gì cứ ghé cô, đừng ngại hỏi giá trước nha!”',
+  },
+  {
+    id: 'snack_shop',
+    name: 'Sạp ăn vặt',
+    x: 35,
+    y: 35,
+    radius: 7,
+    kind: 'BUSINESS',
+    description: 'Sạp đồ ăn vặt thơm mùi bánh nướng và đồ ăn buổi sáng.',
+    interactionText: 'Chủ sạp: “Buổi sáng khách đông lắm đó. Bán ngon, giữ giá dễ chịu là khách nhớ mặt liền!”',
+  },
+  {
+    id: 'drink_stall',
+    name: 'Quán nước chú Ba',
+    x: 65,
+    y: 53,
+    radius: 8,
+    kind: 'BUSINESS',
+    description: 'Quán nước nhỏ cạnh vỉa hè, nơi người trong xóm thường dừng chân trò chuyện.',
+    interactionText: 'Chú Ba: “Đường này sáng nào cũng đông. Con cứ bán từ từ, làm có tâm thì khách sẽ quay lại.”',
+  },
+  {
+    id: 'market_stall',
+    name: 'Cổng chợ',
+    x: 84,
+    y: 35,
+    radius: 8,
+    kind: 'BUSINESS',
+    description: 'Lối vào dãy sạp chợ. Người mua bán bắt đầu nhộn nhịp từ sáng sớm.',
+    interactionText: 'Tiếng loa chợ vang lên: “Chợ đã mở cửa! Bà con mua bán nhớ giữ lối đi thông thoáng nhé!”',
+  },
+  {
+    id: 'co_nam',
+    name: 'Cô Năm hàng xóm',
+    x: 46,
+    y: 51,
+    radius: 7,
+    kind: 'NPC',
+    description: 'Một người hàng xóm thân thiện đang quan sát xe bánh tráng mới mở.',
+    interactionText: 'Cô Năm: “Xe mới nhìn sạch sẽ đó. Nhớ chào khách và đừng để người ta phải chờ lâu nghe con!”',
+  },
+] as const;
+
+function isInsideWorldCollision(position: WorldPosition, padding = 1.2): boolean {
+  return WORLD_COLLISION_RECTS.some((rect) =>
+    position.x + padding > rect.x &&
+    position.x - padding < rect.x + rect.width &&
+    position.y + padding > rect.y &&
+    position.y - padding < rect.y + rect.height
+  );
+}
+
+export function moveWorldPlayer(
+  position: WorldPosition,
+  deltaX: number,
+  deltaY: number,
+): WorldPosition {
+  const nextX = Math.max(WORLD_WALKABLE_BOUNDS.minX, Math.min(WORLD_WALKABLE_BOUNDS.maxX, position.x + deltaX));
+  const nextY = Math.max(WORLD_WALKABLE_BOUNDS.minY, Math.min(WORLD_WALKABLE_BOUNDS.maxY, position.y + deltaY));
+
+  const horizontal = { x: nextX, y: position.y };
+  const afterHorizontal = isInsideWorldCollision(horizontal) ? position.x : horizontal.x;
+  const vertical = { x: afterHorizontal, y: nextY };
+  const afterVertical = isInsideWorldCollision(vertical) ? position.y : vertical.y;
+
+  return { x: afterHorizontal, y: afterVertical };
+}
+
+export function findNearbyWorldLocation(
+  x: number,
+  y: number,
+  locations: readonly WorldInteractable[] = WORLD_INTERACTABLES,
+): WorldInteractable | null {
+  let nearest: WorldInteractable | null = null;
+  let nearestDistance = Number.POSITIVE_INFINITY;
+
+  for (const location of locations) {
+    const distance = Math.hypot(x - location.x, y - location.y);
+    if (distance <= location.radius && distance < nearestDistance) {
+      nearest = location;
+      nearestDistance = distance;
+    }
+  }
+
+  return nearest;
+}
