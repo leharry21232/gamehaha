@@ -6297,7 +6297,7 @@ export class GameEngine {
       hoverTrayId,
       hoverPrimary: Boolean(this.order) && pointInRect(this.hoverPos.x, this.hoverPos.y, activePrimary),
       hoverSecondary:
-        Boolean(this.order) && (this.prepStep === 'CUTTING' || (this.prepStep === 'TOPPINGS' && this.toppingHistory.length > 0)) && pointInRect(this.hoverPos.x, this.hoverPos.y, getToppingUndoRect(layout)),
+        Boolean(this.order) && (this.prepStep === 'CUTTING' || (this.prepStep === 'TOPPINGS' && this.toppingHistory.length > 0)) && pointInRect(this.hoverPos.x, this.hoverPos.y, this.prepStep === 'TOPPINGS' ? getToppingUndoRect(layout) : layout.secondaryBtn),
       hoverShake:
         Boolean(this.order) && this.prepStep === 'SHAKING' && pointInRect(this.hoverPos.x, this.hoverPos.y, layout.shakeBtn),
       hoverRoll:
