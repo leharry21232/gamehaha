@@ -108,7 +108,7 @@ test('four new neighborhood NPCs have distinct dialogue and reachable positions'
 test('nearby interaction selects the closest location within its own radius', () => {
   assert.equal(findNearbyWorldLocation(36, 48)?.id, 'cart');
   assert.equal(findNearbyWorldLocation(74, 48)?.id, 'drink_stall');
-  assert.equal(findNearbyWorldLocation(50, 40), null);
+  assert.equal(findNearbyWorldLocation(50, 45), null);
 });
 
 test('all authored interaction points are on reachable sidewalk tiles', () => {
