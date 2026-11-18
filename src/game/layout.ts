@@ -389,6 +389,15 @@ export function computePrepLayout(w: number, h: number): PrepLayout {
   };
 }
 
+export function getToppingUndoRect(layout: PrepLayout): Rect {
+  const centeredPrimaryX = layout.width * 0.5 - layout.primaryBtn.w * 0.5;
+  return {
+    ...layout.secondaryBtn,
+    x: Math.max(12, centeredPrimaryX - layout.secondaryBtn.w - 12),
+    y: layout.primaryBtn.y,
+  };
+}
+
 export function computeRaidLayout(w: number, h: number): RaidLayout {
   const insets = readSafeAreaInsets();
   const isPortrait = w < 680;
