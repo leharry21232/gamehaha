@@ -103,3 +103,15 @@ test('all authored interaction points are on reachable sidewalk tiles', () => {
   }
   assert.equal(findNearbyWorldLocation(48, 45), null);
 });
+
+
+test('player can reach the grocery shop by walking around the cart along the lower sidewalk', () => {
+  let position = { x: 48, y: 45 };
+  position = moveWorldPlayer(position, 0, 11);
+  position = moveWorldPlayer(position, -36, 0);
+  position = moveWorldPlayer(position, 0, -23);
+
+  assert.deepEqual(position, { x: 12, y: 33 });
+  assert.equal(isWorldPositionWalkable(position), true);
+  assert.equal(findNearbyWorldLocation(position.x, position.y)?.id, 'grocery');
+});
