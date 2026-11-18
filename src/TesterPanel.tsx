@@ -8,6 +8,7 @@ interface TesterPanelProps {
   onClose: () => void;
   onSetMoney: (value: number) => void;
   onSetProgress: (level: number, xp: number) => void;
+  onSetStoryStats: (completedOrders: number, lifetimeEarnings: number) => void;
   onSetDayTime: (seconds: number) => void;
   onQueueCustomer: (type: CustomerType) => boolean;
   onTriggerRain: () => boolean;
@@ -33,11 +34,13 @@ function readSaveBundle(): Record<string, string | null> {
   }
 }
 
-export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetDayTime, onQueueCustomer, onTriggerRain }: TesterPanelProps) {
+export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetStoryStats, onSetDayTime, onQueueCustomer, onTriggerRain }: TesterPanelProps) {
   const [tab, setTab] = useState<TesterTab>('OVERVIEW');
   const [moneyInput, setMoneyInput] = useState(String(hud.money));
   const [levelInput, setLevelInput] = useState(String(hud.playerLevel));
   const [xpInput, setXpInput] = useState(String(hud.playerXp));
+  const [completedOrdersInput, setCompletedOrdersInput] = useState('0');
+  const [lifetimeEarningsInput, setLifetimeEarningsInput] = useState('0');
   const [timeInput, setTimeInput] = useState(String(Math.floor(hud.dayTimeLeft)));
   const [customerType, setCustomerType] = useState<CustomerType>('STUDENT');
   const [actionMessage, setActionMessage] = useState('');
@@ -140,6 +143,15 @@ export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetDayT
                 </div>
                 <p className="text-[10px] text-[#756b58]">XP sẽ tự giới hạn dưới ngưỡng lên cấp tiếp theo.</p>
                 <button type="button" onClick={() => onSetProgress(Number(levelInput), Number(xpInput))} className="border-2 border-[#111318] bg-[#f5b942] px-3 py-2 text-xs font-black shadow-[2px_2px_0_#111318]">ÁP DỤNG LEVEL / XP</button>
+              </section>
+              <section className="space-y-2 border-2 border-[#26231d] bg-white p-3">
+                <h3 className="text-xs font-black">CỐT TRUYỆN · TIẾN ĐỘ NHIỆM VỤ</h3>
+                <p className="text-[10px] text-[#756b58]">Chỉ dùng để kiểm thử các mốc nhiệm vụ; số liệu này sẽ được lưu vào tiến trình hiện tại.</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="text-xs font-bold">Đơn hoàn thành<input aria-label="Tổng đơn hoàn thành" type="number" min="0" max="999999999" value={completedOrdersInput} onChange={(event) => setCompletedOrdersInput(event.target.value)} className="mt-1 w-full border-2 border-[#26231d] px-2 py-2 font-mono" /></label>
+                  <label className="text-xs font-bold">Doanh thu trọn đời<input aria-label="Doanh thu trọn đời" type="number" min="0" max="999999999999" value={lifetimeEarningsInput} onChange={(event) => setLifetimeEarningsInput(event.target.value)} className="mt-1 w-full border-2 border-[#26231d] px-2 py-2 font-mono" /></label>
+                </div>
+                <button type="button" onClick={() => onSetStoryStats(Number(completedOrdersInput), Number(lifetimeEarningsInput))} className="border-2 border-[#111318] bg-[#f5b942] px-3 py-2 text-xs font-black shadow-[2px_2px_0_#111318]">ÁP DỤNG TIẾN ĐỘ NHIỆM VỤ</button>
               </section>
               <section className="space-y-2 border-2 border-[#26231d] bg-white p-3">
                 <h3 className="text-xs font-black">THỜI GIAN TRONG NGÀY</h3>
