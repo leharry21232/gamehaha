@@ -1,5 +1,5 @@
 import { GameAudio } from './audio';
-import { addProgress, getDecorationAttraction, getUnlockedSkills, INITIAL_PLAYER_PROGRESS, loadPlayerProgress, savePlayerProgress, xpRequiredForLevel, type PlayerProgress, type DecorationId, buyDecoration as purchaseDecoration, equipDecoration as applyDecoration, DIFFICULTY_SETTINGS, type GameDifficulty } from './progression';
+import { addProgress, getDecorationAttraction, getUnlockedSkills, INITIAL_PLAYER_PROGRESS, resetWalletForNewGame, loadPlayerProgress, savePlayerProgress, xpRequiredForLevel, type PlayerProgress, type DecorationId, buyDecoration as purchaseDecoration, equipDecoration as applyDecoration, DIFFICULTY_SETTINGS, type GameDifficulty } from './progression';
 import { DayManager } from './dayManager';
 import { claimStoryMissionReward, getStoryMissionSnapshot, loadCompletedMissionIds, saveCompletedMissionIds } from './missions';
 import { createInitialRicePaper, createInitialRollPolygon, splitPolygonBySegment } from './geometry';
@@ -947,8 +947,8 @@ export class GameEngine {
     this.shopOpen = false;
     // A deliberate New Game starts a fresh run with the configured starter cash.
     // Long-term progression (level, XP, lifetime earnings, decorations) remains intact.
-    this.playerProgress = { ...this.playerProgress, wallet: INITIAL_PLAYER_PROGRESS.wallet };
-    this.money = INITIAL_PLAYER_PROGRESS.wallet;
+    this.playerProgress = resetWalletForNewGame(this.playerProgress);
+    this.money = this.playerProgress.wallet;
     savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
     this.xu = 0;
     this.score = 0;
