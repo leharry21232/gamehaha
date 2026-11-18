@@ -762,6 +762,12 @@ export class GameEngine {
       this.diyMalfunction.active ||
       this.baziReading.active ||
       this.tarot.active ||
+      this.roomHunters.active ||
+      this.landlady.sweeping ||
+      this.lotterySeller.active ||
+      this.rippedBag.active ||
+      this.bocPhotTimer > 0 ||
+      this.sauceSplatterWipes > 0 ||
       this.waitingCustomers.length === 0
     ) return false;
 
@@ -791,6 +797,12 @@ export class GameEngine {
       this.diyMalfunction.active ||
       this.baziReading.active ||
       this.tarot.active ||
+      this.roomHunters.active ||
+      this.landlady.sweeping ||
+      this.lotterySeller.active ||
+      this.rippedBag.active ||
+      this.bocPhotTimer > 0 ||
+      this.sauceSplatterWipes > 0 ||
       !this.order
     ) return false;
 
