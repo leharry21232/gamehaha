@@ -18,3 +18,8 @@
 ## M6 – Chapter 1 neighborhood integration
 - Connected the map Journal tab to the live Chapter 1 mission snapshot, including progress, status, reward, and the existing reward-claim API.
 - Made Cô Năm's neighborhood dialogue reflect the current story mission and progress.
+
+
+## M6 – Neighborhood NPCs
+- Added four named neighborhood NPCs (Cô Sáu, Tí giao hàng, chú Bảy, bà Tư) with distinct pixel-art sprites, map labels, interaction ranges, and dialogue.
+- Kept all NPC interactions narrative-only and reused the existing keyboard/touch interaction flow.
