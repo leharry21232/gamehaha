@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react';
 import type { GameHudSnapshot } from './game/types';
 
-type TesterTab = 'OVERVIEW' | 'SAVE';
+type TesterTab = 'OVERVIEW' | 'CONTROL' | 'SAVE';
 
 interface TesterPanelProps {
   hud: GameHudSnapshot;
   onClose: () => void;
+  onSetMoney: (value: number) => void;
+  onSetProgress: (level: number, xp: number) => void;
+  onSetDayTime: (seconds: number) => void;
 }
 
 const SESSION_SAVE_KEY = 'banh_trang_session_save_v1';
@@ -28,8 +31,12 @@ function readSaveBundle(): Record<string, string | null> {
   }
 }
 
-export function TesterPanel({ hud, onClose }: TesterPanelProps) {
+export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetDayTime }: TesterPanelProps) {
   const [tab, setTab] = useState<TesterTab>('OVERVIEW');
+  const [moneyInput, setMoneyInput] = useState(String(hud.money));
+  const [levelInput, setLevelInput] = useState(String(hud.playerLevel));
+  const [xpInput, setXpInput] = useState(String(hud.playerXp));
+  const [timeInput, setTimeInput] = useState(String(Math.floor(hud.dayTimeLeft)));
   const saveBundle = useMemo(() => readSaveBundle(), [hud.screen, hud.day, hud.money, hud.ordersServed]);
   const saveText = JSON.stringify(saveBundle, null, 2);
   const hasSessionSave = Boolean(saveBundle.session);
@@ -65,6 +72,7 @@ export function TesterPanel({ hud, onClose }: TesterPanelProps) {
 
         <nav className="flex gap-2 border-b-2 border-[#111318] bg-[#f0e5c7] p-3">
           <button type="button" onClick={() => setTab('OVERVIEW')} className={`border-2 border-[#111318] px-3 py-2 text-xs font-black ${tab === 'OVERVIEW' ? 'bg-[#243b35] text-white' : 'bg-white'}`}>TỔNG QUAN</button>
+          <button type="button" onClick={() => setTab('CONTROL')} className={`border-2 border-[#111318] px-3 py-2 text-xs font-black ${tab === 'CONTROL' ? 'bg-[#243b35] text-white' : 'bg-white'}`}>ĐIỀU KHIỂN</button>
           <button type="button" onClick={() => setTab('SAVE')} className={`border-2 border-[#111318] px-3 py-2 text-xs font-black ${tab === 'SAVE' ? 'bg-[#243b35] text-white' : 'bg-white'}`}>SAVE & DỮ LIỆU</button>
         </nav>
 
@@ -107,6 +115,32 @@ export function TesterPanel({ hud, onClose }: TesterPanelProps) {
 
               <p className="text-[11px] leading-relaxed text-[#625a4b]">Bản đầu chỉ đọc trạng thái game, chưa có nút thay đổi tiền, level hoặc sinh sự kiện. Các nút can thiệp sẽ được thêm sau khi có API debug an toàn trong GameEngine.</p>
             </div>
+          ) : tab === 'CONTROL' ? (
+            <div className="space-y-4">
+              <div className="border-2 border-[#26231d] bg-amber-100 p-3 text-xs leading-relaxed">
+                <strong>CHẾ ĐỘ CAN THIỆP TEST</strong>
+                <p className="mt-1">Các thay đổi được lưu vào save hiện tại. Hãy dùng trong môi trường test; không ảnh hưởng công thức hay thao tác chế biến.</p>
+              </div>
+              <section className="space-y-2 border-2 border-[#26231d] bg-white p-3">
+                <h3 className="text-xs font-black">KINH TẾ · TIỀN MẶT</h3>
+                <input aria-label="Số tiền cần đặt" type="number" min="0" max="999999999" value={moneyInput} onChange={(event) => setMoneyInput(event.target.value)} className="w-full border-2 border-[#26231d] px-3 py-2 font-mono text-sm" />
+                <button type="button" onClick={() => onSetMoney(Number(moneyInput))} className="border-2 border-[#111318] bg-[#f5b942] px-3 py-2 text-xs font-black shadow-[2px_2px_0_#111318]">ÁP DỤNG TIỀN</button>
+              </section>
+              <section className="space-y-2 border-2 border-[#26231d] bg-white p-3">
+                <h3 className="text-xs font-black">TIẾN TRÌNH · LEVEL & XP</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="text-xs font-bold">Level (1–100)<input aria-label="Level" type="number" min="1" max="100" value={levelInput} onChange={(event) => setLevelInput(event.target.value)} className="mt-1 w-full border-2 border-[#26231d] px-2 py-2 font-mono" /></label>
+                  <label className="text-xs font-bold">XP hiện tại<input aria-label="XP" type="number" min="0" value={xpInput} onChange={(event) => setXpInput(event.target.value)} className="mt-1 w-full border-2 border-[#26231d] px-2 py-2 font-mono" /></label>
+                </div>
+                <p className="text-[10px] text-[#756b58]">XP sẽ tự giới hạn dưới ngưỡng lên cấp tiếp theo.</p>
+                <button type="button" onClick={() => onSetProgress(Number(levelInput), Number(xpInput))} className="border-2 border-[#111318] bg-[#f5b942] px-3 py-2 text-xs font-black shadow-[2px_2px_0_#111318]">ÁP DỤNG LEVEL / XP</button>
+              </section>
+              <section className="space-y-2 border-2 border-[#26231d] bg-white p-3">
+                <h3 className="text-xs font-black">THỜI GIAN TRONG NGÀY</h3>
+                <label className="block text-xs font-bold">Giây còn lại (0–{hud.dayDuration})<input aria-label="Thời gian còn lại" type="number" min="0" max={hud.dayDuration} value={timeInput} onChange={(event) => setTimeInput(event.target.value)} className="mt-1 w-full border-2 border-[#26231d] px-3 py-2 font-mono" /></label>
+                <button type="button" onClick={() => onSetDayTime(Number(timeInput))} className="border-2 border-[#111318] bg-[#f5b942] px-3 py-2 text-xs font-black shadow-[2px_2px_0_#111318]">ĐẶT THỜI GIAN</button>
+              </section>
+            </div>
           ) : (
             <div className="space-y-3">
               <div className="border-2 border-[#26231d] bg-white p-3">
@@ -124,7 +158,7 @@ export function TesterPanel({ hud, onClose }: TesterPanelProps) {
           )}
         </div>
 
-        <footer className="border-t-2 border-[#111318] bg-[#f0e5c7] px-4 py-2 text-[10px] font-bold text-[#625a4b]">F2 MỞ / ĐÓNG · DỮ LIỆU CHỈ ĐỌC Ở PHIÊN BẢN NÀY</footer>
+        <footer className="border-t-2 border-[#111318] bg-[#f0e5c7] px-4 py-2 text-[10px] font-bold text-[#625a4b]">F2 MỞ / ĐÓNG · CÔNG CỤ TEST CÓ GHI SAVE</footer>
       </section>
     </div>
   );
