@@ -14,3 +14,9 @@
 - Customer test actions replace only the last waiting-line entry; they do not increase queue capacity or bypass the normal order-spawn flow.
 - Forced rain reuses the existing Saigon-rain event implementation and is blocked during other interruptions, checkout, non-cooking phases, and outside an active order.
 - Inventory inspection is read-only and uses the live HUD inventory snapshot.
+
+
+## Local save ownership
+- Keep game progress in browser `localStorage`; each browser profile and device owns an independent save for the deployed origin.
+- Do not add account login, cloud sync, save import, or save reset workflows unless explicitly requested.
+- Clearing browser site data may remove that browser's local save; communicate this limitation clearly.
