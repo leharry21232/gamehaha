@@ -829,6 +829,18 @@ export class GameEngine {
     this.emitHud(true);
   }
 
+  /** Set lifetime counters for deterministic story-mission testing in the Tester Panel. */
+  public debugSetStoryStats(completedOrdersValue: number, lifetimeEarningsValue: number): void {
+    if (!Number.isFinite(completedOrdersValue) || !Number.isFinite(lifetimeEarningsValue)) return;
+    this.playerProgress = {
+      ...this.playerProgress,
+      completedOrders: Math.max(0, Math.min(999999999, Math.floor(completedOrdersValue))),
+      lifetimeEarnings: Math.max(0, Math.min(999999999999, Math.floor(lifetimeEarningsValue))),
+    };
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    this.emitHud(true);
+  }
+
   public debugSetDayTime(secondsLeft: number): void {
     if (!Number.isFinite(secondsLeft)) return;
     this.dayTimeLeft = Math.max(0, Math.min(this.dayDuration, Math.floor(secondsLeft)));
@@ -4396,7 +4408,10 @@ export class GameEngine {
     if (!result) return false;
     this.completedMissionIds = result.completedIds;
     this.money += result.reward;
+    this.playerProgress = { ...this.playerProgress, wallet: this.money };
     saveCompletedMissionIds(this.completedMissionIds, typeof window !== 'undefined' ? window.localStorage : undefined);
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    this.persistSession();
     this.audio.playCashChing();
     this.spawnCallout(`🎉 +${result.reward.toLocaleString('vi-VN')}đ`, 'Hoàn thành nhiệm vụ cốt truyện!', this.width * 0.5, this.height * 0.25, '#10B981');
     this.emitHud(true);
