@@ -746,6 +746,33 @@ export class GameEngine {
     this.emitHud(true);
   }
 
+  /** Debug-only controls called by the Tester Panel; all values are clamped. */
+  public debugSetMoney(value: number): void {
+    if (!Number.isFinite(value)) return;
+    this.money = Math.max(0, Math.min(999999999, Math.floor(value)));
+    this.playerProgress = { ...this.playerProgress, wallet: this.money };
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    this.persistSession();
+    this.emitHud(true);
+  }
+
+  public debugSetProgress(levelValue: number, xpValue: number): void {
+    if (!Number.isFinite(levelValue) || !Number.isFinite(xpValue)) return;
+    const level = Math.max(1, Math.min(100, Math.floor(levelValue)));
+    const xp = Math.max(0, Math.min(xpRequiredForLevel(level) - 1, Math.floor(xpValue)));
+    this.playerProgress = { ...this.playerProgress, level, xp };
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    this.emitHud(true);
+  }
+
+  public debugSetDayTime(secondsLeft: number): void {
+    if (!Number.isFinite(secondsLeft)) return;
+    this.dayTimeLeft = Math.max(0, Math.min(this.dayDuration, Math.floor(secondsLeft)));
+    this.dayElapsedTime = this.dayDuration - this.dayTimeLeft;
+    this.persistSession();
+    this.emitHud(true);
+  }
+
   public clearSavedGame(): void {
     try {
       if (typeof window !== 'undefined') window.localStorage.removeItem(SESSION_SAVE_KEY);
