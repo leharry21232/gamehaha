@@ -44,3 +44,9 @@
 - Tab Nhật ký trên bản đồ phải đọc trực tiếp `hud.storyMission`; không tạo bản sao trạng thái nhiệm vụ riêng.
 - Nhận thưởng từ Nhật ký phải gọi API hiện có `GameEngine.claimCurrentStoryMission()` để giữ nguyên quy tắc lưu tiền và tiến độ.
 - Lời thoại Cô Năm có thể phản ánh nhiệm vụ Chương 1 hiện tại, nhưng tương tác NPC vẫn không tự ý thay đổi tiền, kho đồ hoặc tiến độ nhiệm vụ.
+
+
+## M6 – NPC khu phố
+- NPC khu phố được khai báo cùng dữ liệu `WORLD_INTERACTABLES` để vị trí hiển thị và vùng tương tác luôn dùng chung một nguồn.
+- NPC chỉ cung cấp lời thoại; không phát sinh tiền, vật phẩm, nhiệm vụ phụ hoặc thay đổi save trong lát cắt này.
+- Giữ Cô Năm hiện có và thêm Cô Sáu, Tí giao hàng, chú Bảy và bà Tư; mỗi NPC có vị trí nằm trong vùng đi bộ và lời thoại riêng.
