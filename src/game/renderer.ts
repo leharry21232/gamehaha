@@ -2969,6 +2969,15 @@ function renderCuonStation(ctx: CanvasRenderingContext2D, state: RenderState, la
 
     if (state.prepStep === 'TOPPINGS') {
       renderToppingTrays(ctx, state, layout);
+      const hasToppings = TOPPINGS.some((t) => (state.addedToppings[t.id] || 0) > 0);
+      drawButton(
+        ctx,
+        layout.secondaryBtn,
+        hasToppings ? '↶ Hoàn Tác (Ctrl+Z)' : 'Chưa có món để rút',
+        hasToppings ? '#DBEAFE' : '#E2E8F0',
+        INK,
+        hasToppings && state.hoverSecondary
+      );
       drawButton(
         ctx,
         { ...layout.primaryBtn, x: w * 0.5 - layout.primaryBtn.w * 0.5 },
