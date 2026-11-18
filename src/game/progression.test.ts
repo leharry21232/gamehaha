@@ -104,6 +104,26 @@ test('wallet balance persists and invalid values are normalized', () => {
   assert.equal(loadPlayerProgress({ getItem: () => invalidWallet }).wallet, 0);
 });
 
+test('fresh untouched profiles recover the starter wallet if an old save stored zero', () => {
+  const legacyFreshSave = JSON.stringify({
+    ...INITIAL_PLAYER_PROGRESS,
+    wallet: 0,
+    lifetimeEarnings: 0,
+    completedOrders: 0,
+  });
+  assert.equal(loadPlayerProgress({ getItem: () => legacyFreshSave }).wallet, 120000);
+});
+
+test('a player who has completed orders can legitimately keep a zero wallet', () => {
+  const spentSave = JSON.stringify({
+    ...INITIAL_PLAYER_PROGRESS,
+    wallet: 0,
+    lifetimeEarnings: 25000,
+    completedOrders: 2,
+  });
+  assert.equal(loadPlayerProgress({ getItem: () => spentSave }).wallet, 0);
+});
+
 test('passive skills unlock at the configured player levels', () => {
   assert.deepEqual(getUnlockedSkills(1), []);
   assert.deepEqual(getUnlockedSkills(3).map((skill) => skill.id), ['FAST_LEARNER']);
