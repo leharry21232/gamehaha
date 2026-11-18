@@ -92,6 +92,27 @@ test('saved progress round-trips through storage', () => {
   assert.equal(loaded.wallet, 120000);
 });
 
+test('progress saves stay isolated between independent browser storage areas', () => {
+  const browserA = new Map<string, string>();
+  const browserB = new Map<string, string>();
+  const storageA = {
+    getItem: (key: string) => browserA.get(key) ?? null,
+    setItem: (key: string, value: string) => { browserA.set(key, value); },
+  };
+  const storageB = {
+    getItem: (key: string) => browserB.get(key) ?? null,
+    setItem: (key: string, value: string) => { browserB.set(key, value); },
+  };
+
+  savePlayerProgress({ ...INITIAL_PLAYER_PROGRESS, level: 3, wallet: 45000 }, storageA);
+  savePlayerProgress({ ...INITIAL_PLAYER_PROGRESS, level: 1, wallet: 120000 }, storageB);
+
+  assert.equal(loadPlayerProgress(storageA).level, 3);
+  assert.equal(loadPlayerProgress(storageA).wallet, 45000);
+  assert.equal(loadPlayerProgress(storageB).level, 1);
+  assert.equal(loadPlayerProgress(storageB).wallet, 120000);
+});
+
 test('invalid or corrupt saved progress safely falls back to defaults', () => {
   const invalid = JSON.stringify({ ...INITIAL_PLAYER_PROGRESS, level: -2, xp: 0 });
   assert.deepEqual(loadPlayerProgress({ getItem: () => invalid }), INITIAL_PLAYER_PROGRESS);
