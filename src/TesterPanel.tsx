@@ -81,7 +81,7 @@ export function TesterPanel({ hud, onClose, onSetMoney, onSetProgress, onSetStor
           <button type="button" onClick={onClose} className="border-2 border-[#111318] bg-white px-3 py-2 text-sm font-black shadow-[2px_2px_0_#111318] hover:bg-amber-100">ĐÓNG · F2</button>
         </header>
 
-        <nav className="flex gap-2 border-b-2 border-[#111318] bg-[#f0e5c7] p-3">
+        <nav className="flex flex-wrap gap-2 border-b-2 border-[#111318] bg-[#f0e5c7] p-3">
           <button type="button" onClick={() => setTab('OVERVIEW')} className={`border-2 border-[#111318] px-3 py-2 text-xs font-black ${tab === 'OVERVIEW' ? 'bg-[#243b35] text-white' : 'bg-white'}`}>TỔNG QUAN</button>
           <button type="button" onClick={() => setTab('CONTROL')} className={`border-2 border-[#111318] px-3 py-2 text-xs font-black ${tab === 'CONTROL' ? 'bg-[#243b35] text-white' : 'bg-white'}`}>ĐIỀU KHIỂN</button>
           <button type="button" onClick={() => setTab('MAP')} className={`border-2 border-[#111318] px-3 py-2 text-xs font-black ${tab === 'MAP' ? 'bg-[#243b35] text-white' : 'bg-white'}`}>BẢN ĐỒ</button>
