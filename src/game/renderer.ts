@@ -8,6 +8,7 @@ import {
   getFlowLaneRects,
   getLandladyRect,
   getLotterySellerRect,
+  getToppingRemoveRect,
   getToppingUndoRect,
   getQteArrowRects,
   getWaitingCustomerRects,
@@ -2971,6 +2972,12 @@ function renderCuonStation(ctx: CanvasRenderingContext2D, state: RenderState, la
     if (state.prepStep === 'TOPPINGS') {
       renderToppingTrays(ctx, state, layout);
       const hasToppings = TOPPINGS.some((t) => (state.addedToppings[t.id] || 0) > 0);
+      for (const topping of TOPPINGS) {
+        if ((state.addedToppings[topping.id] || 0) > 0) {
+          const removeRect = getToppingRemoveRect(layout, topping.id);
+          drawButton(ctx, removeRect, '−', '#FEE2E2', '#991B1B', state.hoverTrayId === topping.id);
+        }
+      }
       drawButton(
         ctx,
         getToppingUndoRect(layout),
