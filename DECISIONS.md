@@ -50,3 +50,9 @@
 - NPC khu phố được khai báo cùng dữ liệu `WORLD_INTERACTABLES` để vị trí hiển thị và vùng tương tác luôn dùng chung một nguồn.
 - NPC chỉ cung cấp lời thoại; không phát sinh tiền, vật phẩm, nhiệm vụ phụ hoặc thay đổi save trong lát cắt này.
 - Giữ Cô Năm hiện có và thêm Cô Sáu, Tí giao hàng, chú Bảy và bà Tư; mỗi NPC có vị trí nằm trong vùng đi bộ và lời thoại riêng.
+
+
+## M6 – Nhịp sống khu phố
+- Sự kiện khu phố trong lát cắt đầu tiên là sự kiện không gây gián đoạn, chỉ hiển thị bối cảnh và không thay đổi tiền, kho, nhiệm vụ, save hoặc trạng thái bán hàng.
+- Thời điểm sáng/trưa/chiều lấy từ `hud.dayTimeLeft` và `hud.dayDuration`, không dùng đồng hồ máy tính hoặc timer độc lập.
+- Sự kiện được chọn xác định theo ngày trong game và khung thời gian để kết quả ổn định, dễ kiểm thử; chưa tạo sự kiện ngẫu nhiên có gameplay effect.
