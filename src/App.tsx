@@ -4,7 +4,7 @@ import { GameEngine } from './game/engine';
 import { TesterPanel } from './TesterPanel';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
 import { DECORATIONS, getUnlockedSkills } from './game/progression';
-import { findNearbyWorldLocation, getVendorLocation, moveWorldPlayer, WORLD_INTERACTABLES } from './game/world';
+import { findNearbyWorldLocation, getVendorLocation, moveWorldPlayer } from './game/world';
 import type { BestRecord, CityDistrictId, CustomerType, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
 import heroBgUrl from './assets/images/saigon_sidewalk_hero_1794649926456.jpg';
 
@@ -1206,6 +1206,12 @@ export default function App() {
           <div className="absolute left-[57%] top-[38%] z-10" style={{animation:"walkWest 29s linear infinite"}}>
             <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#e0aa82"/><rect x="8" y="0" width="26" height="8" fill="#47382c"/><rect x="8" y="20" width="26" height="22" fill="#e2b44e"/><rect x="10" y="42" width="9" height="18" fill="#34475a"/><rect x="23" y="42" width="9" height="18" fill="#34475a"/></svg>
           </div>
+          <div className="absolute z-10 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]" style={{left:"46%",top:"52%"}} title="Cô Năm hàng xóm">
+            <svg viewBox="0 0 42 64" className="h-11 w-8 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label="Cô Năm hàng xóm">
+              <rect x="12" y="3" width="18" height="18" fill="#c98f70"/><path d="M7 13Q21 -3 35 13L31 19H11Z" fill="#8b3f35"/><rect x="8" y="22" width="26" height="22" fill="#d65f4c"/><rect x="10" y="44" width="9" height="16" fill="#344b3d"/><rect x="23" y="44" width="9" height="16" fill="#344b3d"/><rect x="9" y="59" width="12" height="5" fill="#49352b"/><rect x="22" y="59" width="12" height="5" fill="#49352b"/>
+            </svg>
+            <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap border border-[#4b3428] bg-[#ffe3a6] px-1.5 py-0.5 text-[8px] font-black text-[#35291f]">CÔ NĂM</span>
+          </div>
           <div className="absolute z-20 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]" style={{left:worldPlayer.x+"%",top:worldPlayer.y+"%",transition:"left 120ms steps(3,end), top 120ms steps(3,end)"}}>
             <svg viewBox="0 0 48 72" className="h-14 w-10 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label="Nhân vật người chơi">
               <rect x="14" y="3" width="20" height="19" fill="#d99b76"/><rect x="11" y="0" width="26" height="9" fill="#292b31"/><rect x="8" y="22" width="32" height="25" fill="#2f83a0"/><rect x="1" y="25" width="8" height="21" fill="#d99b76"/><rect x="39" y="25" width="8" height="21" fill="#d99b76"/><rect x="11" y="47" width="10" height="21" fill="#303947"/><rect x="27" y="47" width="10" height="21" fill="#303947"/><rect x="9" y="66" width="13" height="5" fill="#392c27"/><rect x="26" y="66" width="13" height="5" fill="#392c27"/>
@@ -1220,7 +1226,7 @@ export default function App() {
               </div>
               <p className="mt-2 text-xs leading-relaxed text-slate-200">
                 {worldPanel === 'MAP' ? (nearbyWorldLocation
-                  ? nearbyWorldLocation.name + ': ' + nearbyWorldLocation.description
+                  ? nearbyWorldLocation.name + ': ' + nearbyWorldLocation.description + ' ' + nearbyWorldLocation.interactionText
                   : 'Bạn đang bán bánh tráng tại ' + getVendorLocation(selectedVendorSpot).name + '. Đi đến gần một địa điểm rồi nhấn E để trò chuyện hoặc tương tác.') :
                   worldPanel === 'BAG' ? 'Tiền mặt: ' + hud.money.toLocaleString('vi-VN') + 'đ · Cấp độ: ' + hud.playerLevel + '. Kho nguyên liệu được quản lý trong hệ thống kinh doanh.' :
                   worldPanel === 'JOURNAL' ? 'Nhiệm vụ hiện tại: ' + (hud.storyMission?.title ?? 'Tiếp tục hành trình khởi nghiệp và phục vụ khách đầu tiên.') :
@@ -3766,6 +3772,9 @@ export default function App() {
         onSetDayTime={(seconds) => engineRef.current?.debugSetDayTime(seconds)}
         onQueueCustomer={(type: CustomerType) => engineRef.current?.debugQueueCustomer(type) ?? false}
         onTriggerRain={() => engineRef.current?.debugTriggerRain() ?? false}
+        worldPosition={worldPlayer}
+        onOpenWorld={() => { setWorldHubOpen(true); setWorldPanel(null); }}
+        onTeleportWorld={(x, y) => setWorldPlayer({ x, y })}
       />}
     </div>
   );
