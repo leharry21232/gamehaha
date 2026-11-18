@@ -22,3 +22,12 @@
 - The first three existing mission IDs remain unchanged to preserve completion records in older browser saves.
 - Chapter 1 is a sequential chain ending at level 5. New chapters are not added until their gameplay systems and unlocks are ready.
 - Claiming a story reward updates both the active run balance and persisted progression wallet, then persists the active session.
+
+## Neighborhood map exploration
+- Build on the existing SVG neighborhood scene; do not introduce a parallel renderer or a new dependency.
+- The first explorable map is only the current bánh tráng neighborhood. No city-wide expansion in this slice.
+- Player movement uses normalized viewport percentages, fixed sidewalk bounds, and collision rectangles aligned with the scene. Keyboard and touch controls must share the same movement function.
+- The first six interaction points are the bánh tráng cart, tạp hóa cô Năm, sạp ăn vặt, quán nước chú Ba, cổng chợ, and cô Năm hàng xóm.
+- Interactions are narrative-only for now. They must not change cash, inventory, save schema, mission progress, or cooking behavior.
+- The player may return to the existing morning-preparation screen only by interacting with the bánh tráng cart.
+- This approved M4.x exploration slice does not replace official Spec Kit M5 (decorations, skins, difficulty, and audio).
