@@ -4,7 +4,7 @@ import { GameEngine } from './game/engine';
 import { TesterPanel } from './TesterPanel';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
 import { DECORATIONS, getUnlockedSkills } from './game/progression';
-import { findNearbyWorldLocation, getVendorLocation, moveWorldPlayer } from './game/world';
+import { findNearbyWorldLocation, getVendorLocation, moveWorldPlayer, WORLD_INTERACTABLES, type WorldInteractable } from './game/world';
 import type { BestRecord, CityDistrictId, CustomerType, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
 import heroBgUrl from './assets/images/saigon_sidewalk_hero_1794649926456.jpg';
 
@@ -47,6 +47,36 @@ function formatClock(sec: number): string {
   const m = Math.floor(s / 60);
   const rem = s % 60;
   return `${m}:${rem.toString().padStart(2, '0')}`;
+}
+
+function WorldNpcSprite({ npc }: { npc: WorldInteractable }) {
+  const palette = npc.id === 'co_sau'
+    ? { shirt: '#b86b91', hair: '#5b392e', accent: '#f4c6d8', hat: false }
+    : npc.id === 'shipper_ti'
+      ? { shirt: '#2d8d9c', hair: '#292b31', accent: '#f2c94c', hat: true }
+      : npc.id === 'chu_bay'
+        ? { shirt: '#63865a', hair: '#554235', accent: '#d6b47a', hat: true }
+        : { shirt: '#8467a8', hair: '#77706a', accent: '#f0d99b', hat: false };
+
+  return (
+    <div className="absolute z-10 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]" style={{ left: npc.x + '%', top: npc.y + '%' }} title={npc.name}>
+      <svg viewBox="0 0 42 64" className="h-11 w-8 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label={npc.name}>
+        {palette.hat && <rect x="6" y="2" width="30" height="7" fill={palette.accent} stroke="#46352b" strokeWidth="2" />}
+        <rect x="12" y="5" width="18" height="17" fill="#d39a78" />
+        <path d="M8 15Q8 0 21 0Q34 0 34 15L29 18H13Z" fill={palette.hair} />
+        <rect x="8" y="22" width="26" height="22" fill={palette.shirt} stroke="#49382d" strokeWidth="2" />
+        <rect x="10" y="44" width="9" height="16" fill="#344052" />
+        <rect x="23" y="44" width="9" height="16" fill="#344052" />
+        <rect x="8" y="59" width="13" height="5" fill="#49352b" />
+        <rect x="21" y="59" width="13" height="5" fill="#49352b" />
+        {npc.id === 'co_sau' && <><rect x="2" y="28" width="5" height="13" fill="#6f9b53" /><rect x="1" y="23" width="7" height="6" fill="#f2b8c7" /></>}
+        {npc.id === 'shipper_ti' && <rect x="31" y="25" width="9" height="13" fill="#f2c94c" stroke="#49382d" strokeWidth="2" />}
+        {npc.id === 'chu_bay' && <rect x="2" y="28" width="6" height="12" fill="#b6b1a2" />}
+        {npc.id === 'ba_tu' && <rect x="7" y="19" width="28" height="5" fill="#e7d8b7" />}
+      </svg>
+      <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap border border-[#4b3428] bg-[#ffe3a6] px-1.5 py-0.5 text-[8px] font-black text-[#35291f]">{npc.name.toUpperCase()}</span>
+    </div>
+  );
 }
 
 function BusinessDayInfo({ dark = false }: { dark?: boolean }) {
@@ -1215,6 +1245,9 @@ export default function App() {
           <div className="pointer-events-none absolute left-0 top-[73%] z-[5]" style={{animation:"trafficEast 13s linear infinite",animationDelay:"-4s"}} aria-hidden="true">
             <svg viewBox="0 0 110 64" className="h-9 w-16 sm:h-10 sm:w-20" shapeRendering="crispEdges"><circle cx="23" cy="49" r="9" fill="#242a2e"/><circle cx="83" cy="49" r="9" fill="#242a2e"/><path d="M20 42L32 26H69L85 42Z" fill="#d65a45" stroke="#593b31" strokeWidth="4"/><rect x="40" y="29" width="23" height="10" fill="#b8d7d4" stroke="#593b31" strokeWidth="3"/><path d="M12 40H95" stroke="#593b31" strokeWidth="4"/></svg>
           </div>
+          {WORLD_INTERACTABLES.filter((location) => location.kind === 'NPC' && location.id !== 'co_nam').map((npc) => (
+            <WorldNpcSprite key={npc.id} npc={npc} />
+          ))}
           <div className="absolute z-10 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]" style={{left:"46%",top:"52%"}} title="Cô Năm hàng xóm">
             <svg viewBox="0 0 42 64" className="h-11 w-8 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label="Cô Năm hàng xóm">
               <rect x="12" y="3" width="18" height="18" fill="#c98f70"/><path d="M7 13Q21 -3 35 13L31 19H11Z" fill="#8b3f35"/><rect x="8" y="22" width="26" height="22" fill="#d65f4c"/><rect x="10" y="44" width="9" height="16" fill="#344b3d"/><rect x="23" y="44" width="9" height="16" fill="#344b3d"/><rect x="9" y="59" width="12" height="5" fill="#49352b"/><rect x="22" y="59" width="12" height="5" fill="#49352b"/>
