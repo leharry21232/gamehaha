@@ -39,3 +39,8 @@
 - Map interactions in M5 are informational only. They must not modify money, inventory, staff, missions, vendor location, or save data.
 - The bánh tráng cart remains the only map interaction that closes the neighborhood overlay and returns to the existing morning-preparation flow.
 - Keyboard and touch controls must share the same collision-aware movement function.
+
+## M6 – Kết nối bản đồ và cốt truyện
+- Tab Nhật ký trên bản đồ phải đọc trực tiếp `hud.storyMission`; không tạo bản sao trạng thái nhiệm vụ riêng.
+- Nhận thưởng từ Nhật ký phải gọi API hiện có `GameEngine.claimCurrentStoryMission()` để giữ nguyên quy tắc lưu tiền và tiến độ.
+- Lời thoại Cô Năm có thể phản ánh nhiệm vụ Chương 1 hiện tại, nhưng tương tác NPC vẫn không tự ý thay đổi tiền, kho đồ hoặc tiến độ nhiệm vụ.
