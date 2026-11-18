@@ -8,6 +8,7 @@ import {
   getFlowLaneRects,
   getLandladyRect,
   getLotterySellerRect,
+  getToppingUndoRect,
   getQteArrowRects,
   getWaitingCustomerRects,
   type PrepLayout,
@@ -2972,7 +2973,7 @@ function renderCuonStation(ctx: CanvasRenderingContext2D, state: RenderState, la
       const hasToppings = TOPPINGS.some((t) => (state.addedToppings[t.id] || 0) > 0);
       drawButton(
         ctx,
-        layout.secondaryBtn,
+        getToppingUndoRect(layout),
         hasToppings ? '↶ Hoàn Tác (Ctrl+Z)' : 'Chưa có món để rút',
         hasToppings ? '#DBEAFE' : '#E2E8F0',
         INK,
