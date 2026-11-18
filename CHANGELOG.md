@@ -1,7 +1,9 @@
 # Changelog
 
 ## Unreleased
-- Confirmed the intended save model: game progress and the active session stay in the current browser profile's localStorage; no account or cloud sync. Added regression coverage for independent storage areas.
+- Expanded Chapter 1 into a four-step story mission chain ending at level 5, while preserving existing mission IDs for old browser saves.
+- Added Tester Panel controls for lifetime order count and earnings to test story progression, and ensured claimed mission rewards persist across reloads.
+- Confirmed the intended save model: game progress and the active session stay in the current browser profile's localStorage; no account or cloud sync. Added isolation regression coverage.
 - Tester Panel adds a live inventory inspector, a guarded customer-queue test action, and a guarded Saigon-rain trigger using existing gameplay logic.
 - Tester Panel includes safe controls to set cash, player level/XP, and remaining day time; changes persist through the existing save systems.
 
