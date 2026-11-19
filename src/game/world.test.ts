@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, isWorldPositionWalkable, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES, getNeighborhoodEvent, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST } from './world';
+import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, isWorldPositionWalkable, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES, getNeighborhoodEvent, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, NEIGHBORHOOD_PARCEL_QUEST } from './world';
 
 test('all five vendor locations have distinct grounded costs and valid multipliers', () => {
   assert.equal(VENDOR_LOCATIONS.length, 5);
@@ -174,4 +174,22 @@ test('neighbor help quest completes only when the accepted message reaches Co Sa
   assert.equal(NEIGHBORHOOD_HELP_QUEST.giverId, 'chu_bay');
   assert.equal(NEIGHBORHOOD_HELP_QUEST.targetId, 'co_sau');
   assert.match(NEIGHBORHOOD_HELP_QUEST.objective, /Cô Sáu/);
+});
+
+test('parcel side quest is optional and can be deferred or revisited with Ti', () => {
+  assert.equal(getNeighborhoodParcelQuestAction('shipper_ti', 'AVAILABLE'), 'OFFER');
+  assert.equal(getNeighborhoodParcelQuestAction('ba_tu', 'AVAILABLE'), 'DIALOGUE');
+  assert.equal(getNeighborhoodParcelQuestAction('shipper_ti', 'ACCEPTED'), 'REMIND');
+  assert.equal(getNeighborhoodParcelQuestAction('shipper_ti', 'COMPLETED'), 'DIALOGUE');
+  assert.equal(NEIGHBORHOOD_PARCEL_QUEST.giverId, 'shipper_ti');
+  assert.equal(NEIGHBORHOOD_PARCEL_QUEST.targetId, 'ba_tu');
+  assert.match(NEIGHBORHOOD_PARCEL_QUEST.objective, /Bà Tư/);
+});
+
+test('parcel side quest completes only at Ba Tu and does not cross-complete the first quest', () => {
+  assert.equal(getNeighborhoodParcelQuestAction('ba_tu', 'ACCEPTED'), 'DELIVER');
+  assert.equal(getNeighborhoodParcelQuestAction('co_sau', 'ACCEPTED'), 'DIALOGUE');
+  assert.equal(getNeighborhoodParcelQuestAction('chu_bay', 'ACCEPTED'), 'DIALOGUE');
+  assert.equal(getNeighborhoodHelpQuestAction('ba_tu', 'ACCEPTED'), 'DIALOGUE');
+  assert.equal(getNeighborhoodParcelQuestAction('co_sau', 'COMPLETED'), 'DIALOGUE');
 });

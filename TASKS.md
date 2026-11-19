@@ -89,3 +89,14 @@
 - [ ] Kiểm tra thủ công luồng nhận lời, trì hoãn, nhắc lại và hoàn thành trên desktop/mobile.
 - [ ] Xác nhận tương tác NPC không liên quan không hoàn thành nhầm nhiệm vụ; nhiệm vụ Chương 1 và gameplay bán hàng không đổi.
 - [ ] Hoàn tất CI, TypeScript và production build.
+
+
+### M6 – Phần 6: Nhiệm vụ phụ Chuyến hàng cuối ngõ
+- [x] Thêm lời nhờ tùy chọn từ Tí giao hàng, có lựa chọn nhận lời hoặc để lúc khác.
+- [x] Khi nhận lời, theo dõi mục tiêu gặp Bà Tư; chỉ tương tác đúng NPC mới hoàn thành.
+- [x] Hiển thị mục tiêu và trạng thái hoàn thành độc lập với nhiệm vụ Chú Bảy.
+- [x] Bổ sung kiểm thử cho lời mời, trì hoãn, nhắc lại, giao lời và NPC không liên quan.
+- [x] Giữ nhiệm vụ thuần kể chuyện, chỉ tồn tại trong phiên; không thay đổi save, tiền, kho, XP, thời gian hoặc nhiệm vụ Chương 1.
+- [ ] Kiểm tra thủ công cả hai nhiệm vụ phụ cùng tồn tại trên desktop/mobile.
+- [ ] Xác nhận nhận/hoàn thành nhiệm vụ này không làm thay đổi trạng thái nhiệm vụ Chú Bảy và ngược lại.
+- [ ] Hoàn tất CI, TypeScript và production build.

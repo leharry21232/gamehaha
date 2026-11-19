@@ -386,3 +386,29 @@ export function getNeighborhoodHelpQuestAction(
   if (npcId === NEIGHBORHOOD_HELP_QUEST.targetId && status === 'ACCEPTED') return 'DELIVER';
   return 'DIALOGUE';
 }
+
+export type NeighborhoodParcelQuestStatus = 'AVAILABLE' | 'ACCEPTED' | 'COMPLETED';
+export type NeighborhoodParcelQuestAction = 'OFFER' | 'REMIND' | 'DELIVER' | 'DIALOGUE';
+
+export const NEIGHBORHOOD_PARCEL_QUEST = {
+  id: 'last_delivery_for_ba_tu',
+  title: 'Chuyến hàng cuối ngõ',
+  giverId: 'shipper_ti',
+  targetId: 'ba_tu',
+  offerDialogue: 'Tí: “Anh/chị ơi, em còn một gói hàng của Bà Tư mà sắp trễ chuyến. Bà ở cuối ngõ kia, anh/chị ghé báo giúp em là em sẽ mang hàng tới ngay được không?”',
+  acceptedDialogue: 'Tí: “May quá, cảm ơn anh/chị! Em sẽ tranh thủ chạy qua ngay sau khi giao xong đơn này.”',
+  reminderDialogue: 'Tí: “Nếu gặp Bà Tư, anh/chị nhắn giúp em là gói hàng sắp được giao tới nha!”',
+  completedDialogue: 'Bà Tư: “Tí vừa gọi báo rồi, cảm ơn con đã nhắn giúp. Có người trong xóm hỗ trợ nhau vậy vui ghê!”',
+  objective: 'Ghé gặp Bà Tư và báo gói hàng của Tí sắp được giao tới.',
+} as const;
+
+export function getNeighborhoodParcelQuestAction(
+  npcId: WorldInteractable['id'],
+  status: NeighborhoodParcelQuestStatus,
+): NeighborhoodParcelQuestAction {
+  if (npcId === NEIGHBORHOOD_PARCEL_QUEST.giverId) {
+    return status === 'AVAILABLE' ? 'OFFER' : status === 'ACCEPTED' ? 'REMIND' : 'DIALOGUE';
+  }
+  if (npcId === NEIGHBORHOOD_PARCEL_QUEST.targetId && status === 'ACCEPTED') return 'DELIVER';
+  return 'DIALOGUE';
+}

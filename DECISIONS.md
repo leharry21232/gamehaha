@@ -75,3 +75,9 @@
 - Sau khi nhận lời, chỉ tương tác với Cô Sáu mới hoàn thành nhiệm vụ; NPC khác không tăng tiến độ.
 - Nhiệm vụ phụ là narrative-only trong lát cắt này: không thưởng tiền/vật phẩm/XP, không tiêu thời gian và không tác động nhiệm vụ Chương 1, kinh tế, kho hoặc save.
 - Trạng thái nhiệm vụ phụ dùng React state trong phiên hiện tại, chưa ghi vào save schema.
+
+## M6 – Nhiệm vụ phụ Chuyến hàng cuối ngõ
+- Tí giao hàng đưa ra một lời nhờ độc lập; người chơi có thể nhận hoặc trì hoãn, và có thể hỏi lại Tí sau đó.
+- Chỉ tương tác với Bà Tư sau khi nhận lời mới hoàn thành nhiệm vụ; NPC khác không tác động tiến độ.
+- Hai nhiệm vụ phụ có state và điều kiện hoàn thành độc lập, không được hoàn thành chéo lẫn nhau.
+- Nhiệm vụ chỉ kể chuyện, tồn tại trong phiên hiện tại; không tạo vật phẩm thực, không thưởng tiền/XP, không tiêu thời gian và không thay đổi save, nhiệm vụ chính hoặc gameplay bán hàng.

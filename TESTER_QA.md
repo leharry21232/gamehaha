@@ -90,3 +90,14 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] So sánh tiền, kho, XP, thời gian và nhiệm vụ Chương 1 trước/sau; tất cả phải giữ nguyên.
 - [ ] Tải lại ứng dụng; xác nhận nhiệm vụ phụ không làm thay đổi save cũ (trạng thái phiên được reset).
 - [ ] Kiểm tra modal và tracker trên desktop/mobile, không che điều khiển di chuyển.
+
+## M6 – Nhiệm vụ phụ Chuyến hàng cuối ngõ
+- [ ] Đến gần Tí giao hàng; nhấn E hoặc nút tương tác và xác nhận lời mời xuất hiện.
+- [ ] Chọn “ĐỂ LÚC KHÁC”; xác nhận có thể hỏi lại Tí và nhiệm vụ chưa được nhận.
+- [ ] Nhận lời; xác nhận mục tiêu gặp Bà Tư xuất hiện trên bảng điều khiển.
+- [ ] Tương tác Cô Sáu, Chú Bảy hoặc NPC khác; xác nhận không hoàn thành nhầm nhiệm vụ.
+- [ ] Đến Bà Tư và tương tác; xác nhận nhiệm vụ chuyển sang hoàn thành.
+- [ ] Hoàn thành nhiệm vụ Tí trước/sau nhiệm vụ Chú Bảy; xác nhận hai trạng thái độc lập.
+- [ ] So sánh tiền, kho, XP, thời gian và nhiệm vụ Chương 1 trước/sau; tất cả phải giữ nguyên.
+- [ ] Tải lại ứng dụng; xác nhận trạng thái hai nhiệm vụ phụ reset theo phiên và không thay đổi save.
+- [ ] Kiểm tra hai tracker và modal trên desktop/mobile, không che điều khiển di chuyển.

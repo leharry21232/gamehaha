@@ -43,3 +43,8 @@
 - Added an optional side quest from Chú Bảy: accept or defer his request, then deliver a message to Cô Sáu.
 - Added an in-map objective/completion tracker and regression tests for valid NPC progression.
 - Kept the quest session-only and narrative-only: no money, item, XP, time, main-mission, save, or cooking-loop changes.
+
+## M6 – Second neighborhood side quest
+- Added Tí's optional “Chuyến hàng cuối ngõ” story: accept or defer his request, then tell Bà Tư the parcel is on its way.
+- Added an independent objective/completion tracker, offer modal, and regression tests to prevent cross-completing either side quest.
+- Kept both side quests session-only and narrative-only with no save, economy, inventory, XP, time, main-mission, or cooking-loop effects.
