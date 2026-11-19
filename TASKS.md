@@ -126,3 +126,11 @@
 - [x] Khi bảng Bản đồ/Nhật ký đang mở, phím E chỉ đóng bảng thay vì tương tác với NPC bị che.
 - [x] Hỗ trợ Escape đóng bảng đang mở; giữ nguyên WASD/phím mũi tên để đóng bảng và di chuyển như luồng hiện tại.
 - [ ] Kiểm tra thủ công các trường hợp phím khi hộp thoại và bảng đang mở.
+
+
+### M6 – Phần 10: Hội thoại ghi nhận nhiệm vụ đã hoàn thành
+- [x] Chú Bảy và Cô Sáu có lời thoại tiếp nối sau khi hoàn thành nhiệm vụ chuyển tin xe đạp.
+- [x] Tí và Bà Tư có lời thoại tiếp nối sau khi hoàn thành nhiệm vụ chuyến hàng.
+- [x] Chỉ hiển thị lời thoại tiếp nối sau khi nhiệm vụ tương ứng hoàn thành; NPC không liên quan giữ hội thoại cũ.
+- [x] Bổ sung regression tests cho bốn NPC và trạng thái chưa hoàn thành.
+- [ ] Kiểm tra thủ công lời thoại lần đầu hoàn thành và các lần trò chuyện tiếp theo.

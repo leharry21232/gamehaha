@@ -4,7 +4,7 @@ import { GameEngine } from './game/engine';
 import { TesterPanel } from './TesterPanel';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
 import { DECORATIONS, getUnlockedSkills } from './game/progression';
-import { findNearbyWorldLocation, getNeighborhoodEvent, getVendorLocation, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, NEIGHBORHOOD_PARCEL_QUEST, moveWorldPlayer, WORLD_INTERACTABLES, type NeighborhoodHelpQuestStatus, type NeighborhoodParcelQuestStatus, type WorldInteractable } from './game/world';
+import { findNearbyWorldLocation, getNeighborhoodEvent, getVendorLocation, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, getNeighborhoodQuestFollowUpDialogue, NEIGHBORHOOD_PARCEL_QUEST, moveWorldPlayer, WORLD_INTERACTABLES, type NeighborhoodHelpQuestStatus, type NeighborhoodParcelQuestStatus, type WorldInteractable } from './game/world';
 import type { BestRecord, CityDistrictId, CustomerType, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
 import heroBgUrl from './assets/images/saigon_sidewalk_hero_1794649926456.jpg';
 
@@ -776,7 +776,12 @@ export default function App() {
         setNeighborhoodParcelQuestStatus('COMPLETED');
         setWorldNotice(NEIGHBORHOOD_PARCEL_QUEST.completedDialogue);
       } else {
-        setWorldNotice(getWorldDialogue(location));
+        const followUpDialogue = getNeighborhoodQuestFollowUpDialogue(
+          location.id,
+          neighborhoodHelpQuestStatus,
+          neighborhoodParcelQuestStatus,
+        );
+        setWorldNotice(followUpDialogue ?? getWorldDialogue(location));
       }
     }
     setWorldPanel(null);

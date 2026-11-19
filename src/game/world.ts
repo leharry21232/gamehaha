@@ -412,3 +412,30 @@ export function getNeighborhoodParcelQuestAction(
   if (npcId === NEIGHBORHOOD_PARCEL_QUEST.targetId && status === 'ACCEPTED') return 'DELIVER';
   return 'DIALOGUE';
 }
+
+// After a side quest is complete, its giver and recipient acknowledge the player's help.
+export function getNeighborhoodQuestFollowUpDialogue(
+  npcId: WorldInteractable['id'],
+  helpStatus: NeighborhoodHelpQuestStatus,
+  parcelStatus: NeighborhoodParcelQuestStatus,
+): string | null {
+  if (helpStatus === 'COMPLETED') {
+    if (npcId === NEIGHBORHOOD_HELP_QUEST.giverId) {
+      return 'Chú Bảy: “Cô Sáu ghé lấy xe rồi, chú cảm ơn con đã chuyển lời giúp chú nghen!”';
+    }
+    if (npcId === NEIGHBORHOOD_HELP_QUEST.targetId) {
+      return 'Cô Sáu: “Nhờ con báo tin mà cô lấy được xe rồi. Bữa nào cô ghé mua bánh tráng ủng hộ con nha!”';
+    }
+  }
+
+  if (parcelStatus === 'COMPLETED') {
+    if (npcId === NEIGHBORHOOD_PARCEL_QUEST.giverId) {
+      return 'Tí: “Bà Tư nhận được tin rồi, cảm ơn anh/chị đã giúp em nha. Em chạy đơn tiếp đây!”';
+    }
+    if (npcId === NEIGHBORHOOD_PARCEL_QUEST.targetId) {
+      return 'Bà Tư: “Tí giao hàng tới rồi con. Nhờ con báo tin trước nên bà đỡ phải chờ lâu, cảm ơn con nghen!”';
+    }
+  }
+
+  return null;
+}

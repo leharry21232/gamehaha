@@ -193,3 +193,19 @@ test('parcel side quest completes only at Ba Tu and does not cross-complete the 
   assert.equal(getNeighborhoodHelpQuestAction('ba_tu', 'ACCEPTED'), 'DIALOGUE');
   assert.equal(getNeighborhoodParcelQuestAction('co_sau', 'COMPLETED'), 'DIALOGUE');
 });
+
+test('completed neighborhood quests are acknowledged by both the giver and recipient', async () => {
+  const { getNeighborhoodQuestFollowUpDialogue } = await import('./world');
+  assert.match(getNeighborhoodQuestFollowUpDialogue('chu_bay', 'COMPLETED', 'AVAILABLE') ?? '', /Cô Sáu ghé lấy xe rồi/i);
+  assert.match(getNeighborhoodQuestFollowUpDialogue('co_sau', 'COMPLETED', 'AVAILABLE') ?? '', /lấy được xe rồi/i);
+  assert.match(getNeighborhoodQuestFollowUpDialogue('shipper_ti', 'AVAILABLE', 'COMPLETED') ?? '', /Bà Tư nhận được tin rồi/i);
+  assert.match(getNeighborhoodQuestFollowUpDialogue('ba_tu', 'AVAILABLE', 'COMPLETED') ?? '', /Tí giao hàng tới rồi/i);
+});
+
+test('quest follow-up dialogue does not appear before completion or for unrelated NPCs', async () => {
+  const { getNeighborhoodQuestFollowUpDialogue } = await import('./world');
+  assert.equal(getNeighborhoodQuestFollowUpDialogue('chu_bay', 'ACCEPTED', 'AVAILABLE'), null);
+  assert.equal(getNeighborhoodQuestFollowUpDialogue('co_sau', 'AVAILABLE', 'ACCEPTED'), null);
+  assert.equal(getNeighborhoodQuestFollowUpDialogue('ba_tu', 'AVAILABLE', 'AVAILABLE'), null);
+  assert.equal(getNeighborhoodQuestFollowUpDialogue('co_nam', 'COMPLETED', 'COMPLETED'), null);
+});

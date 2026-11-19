@@ -93,3 +93,8 @@
 ## M6 – Khóa điều khiển nền của bản đồ
 - Khi hộp thoại nhận nhiệm vụ mở, các phím di chuyển và E không được tác động lên nhân vật/NPC phía sau; Escape chỉ đóng hộp thoại và không thay đổi trạng thái nhiệm vụ.
 - Khi bảng Bản đồ/Nhật ký đang mở, E đóng bảng thay vì kích hoạt NPC phía sau; Escape đóng bảng. Phím di chuyển tiếp tục đóng bảng và di chuyển như trước.
+
+
+## M6 – Hội thoại tiếp nối sau nhiệm vụ khu phố
+- Sau khi hoàn thành nhiệm vụ, cả người giao việc và người nhận lời nhắn có hội thoại ghi nhận kết quả ở những lần tương tác tiếp theo.
+- Hội thoại tiếp nối chỉ phụ thuộc trạng thái COMPLETED của đúng nhiệm vụ; không mở khóa phần thưởng, không thay đổi kinh tế, thời gian, save hay nhiệm vụ khác.

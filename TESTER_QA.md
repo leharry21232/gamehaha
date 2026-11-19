@@ -124,3 +124,10 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] Nhấn Escape khi lời mời đang mở; xác nhận hộp thoại đóng nhưng nhiệm vụ vẫn ở trạng thái Chưa nhận và có thể hỏi lại NPC.
 - [ ] Mở tab Nhật ký/Bản đồ rồi nhấn E; xác nhận chỉ đóng bảng, không tương tác với NPC đang bị che phía sau.
 - [ ] Nhấn Escape khi bảng Nhật ký/Bản đồ đang mở; xác nhận bảng đóng mà không di chuyển nhân vật.
+
+
+## M6 – Hội thoại sau khi hoàn thành nhiệm vụ khu phố
+- [ ] Hoàn thành “Lời nhắn của Chú Bảy”; xác nhận lần đầu Cô Sáu hiện lời thoại hoàn thành, lần sau Cô Sáu và Chú Bảy đều ghi nhận việc đã chuyển tin.
+- [ ] Hoàn thành “Chuyến hàng cuối ngõ”; xác nhận lần đầu Bà Tư hiện lời thoại hoàn thành, lần sau Bà Tư và Tí đều ghi nhận việc đã báo tin.
+- [ ] Xác nhận NPC không liên quan và nhiệm vụ chưa hoàn thành vẫn dùng hội thoại bình thường.
+- [ ] Xác nhận hai nhiệm vụ hoàn thành độc lập, không làm thay đổi tiền, kho, XP, thời gian hoặc nhiệm vụ Chương 1.
