@@ -121,3 +121,9 @@
 - Hai thẻ thông tin phía trên phải có giới hạn chiều rộng theo viewport trên điện thoại; thẻ trạng thái ngày/tiền và thẻ nhịp sống không được chiếm cùng vùng ngang.
 - Các tab và nút hành động phía dưới phải được phép co giãn/xuống dòng; không được cắt nhãn tương tác dài hoặc đẩy nút ra ngoài viewport.
 - Ưu tiên thay đổi trình bày responsive; không sửa logic điều khiển, tương tác, nhiệm vụ hoặc gameplay chỉ để xử lý tràn giao diện.
+
+
+## M6 – Ánh sáng môi trường Map 1
+- Ánh sáng nền chỉ là lớp trình bày nhẹ, đồng bộ với khung thời gian của sự kiện khu phố hiện có (sáng/trưa/chiều).
+- Lớp phủ đặt phía trên nền tĩnh nhưng dưới NPC, nhân vật và HUD; luôn bỏ qua pointer events.
+- Không thêm chu kỳ thời gian, hiệu ứng gameplay, thay đổi độ sáng màn hình thiết bị hoặc dữ liệu save mới.

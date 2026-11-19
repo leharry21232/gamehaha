@@ -160,4 +160,10 @@
 - [x] Thu gọn và giới hạn chiều rộng hai thẻ thông tin phía trên để không chồng lấn trên điện thoại hẹp.
 - [x] Cho bốn tab điều hướng và hàng nút hành động tự xuống dòng khi không đủ chiều ngang.
 - [x] Giữ nguyên hành vi di chuyển, tương tác, nhiệm vụ và vòng lặp bán hàng.
-- [ ] Kiểm tra thủ công ở viewport 320×640, 360×640, 390×844 và điện thoại xoay ngang; xác nhận không có nút bị cắt hoặc che.
+- [x] Người chơi xác nhận đã kiểm tra viewport điện thoại và các nút/tab không bị cắt hoặc che.
+
+
+### M6 – Không khí theo thời điểm trong ngày
+- [x] Đồng bộ một lớp ánh sáng môi trường nhẹ với ba khung thời gian sáng/trưa/chiều đã có.
+- [x] Giữ lớp ánh sáng không nhận pointer event và không che nhân vật/NPC/điều khiển.
+- [ ] Kiểm tra thủ công ba khung thời gian để bảo đảm chữ, vật thể và nhân vật vẫn rõ.

@@ -71,3 +71,8 @@
 - Giới hạn chiều rộng hai thẻ thông tin đầu màn hình trên điện thoại để tránh chồng lấn.
 - Cho các tab và nút hành động ở bảng điều khiển tự co giãn/xuống dòng trên màn hình hẹp.
 - Chỉ thay đổi lớp trình bày; giữ nguyên logic bản đồ, nhiệm vụ và bán hàng.
+
+
+## M6 – Ánh sáng khu phố theo thời điểm
+- Thêm sắc độ ánh sáng môi trường nhẹ cho buổi sáng, buổi trưa và buổi chiều, đồng bộ với thẻ nhịp sống khu phố.
+- Lớp phủ chỉ trang trí, không chặn thao tác và không tác động gameplay.

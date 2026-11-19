@@ -1293,6 +1293,17 @@ export default function App() {
               <text x="36" y="700">KHU PHỐ BÁN BÁNH TRÁNG · SÀI GÒN</text>
             </g>
           </svg>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 z-[4] mix-blend-soft-light"
+            style={{
+              background: neighborhoodEvent.dayPart === 'MORNING'
+                ? 'linear-gradient(180deg, rgba(255,220,150,.16) 0%, rgba(255,220,150,.04) 48%, transparent 78%)'
+                : neighborhoodEvent.dayPart === 'NOON'
+                  ? 'linear-gradient(180deg, rgba(255,250,215,.08) 0%, transparent 62%)'
+                  : 'linear-gradient(180deg, rgba(255,155,100,.17) 0%, rgba(255,155,100,.05) 56%, transparent 82%)',
+            }}
+          />
           <div className="absolute left-2 top-2 z-20 w-[min(46%,250px)] border-[3px] border-[#35291f] bg-[#263b3b] px-2 py-2 font-mono shadow-[4px_4px_0_#172126] [image-rendering:pixelated] sm:left-[2%] sm:top-[2%] sm:w-auto sm:px-4 sm:py-3">
             <p className="text-[9px] font-black tracking-[.1em] text-amber-300 sm:text-[10px] sm:tracking-[.16em]">GÓC PHỐ BÁNH TRÁNG</p>
             <p className="text-[11px] font-extrabold sm:text-sm">Ngày {hud.day} · {hud.money.toLocaleString('vi-VN')}đ</p>

@@ -157,9 +157,14 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 
 
 ## Map 1 – HUD responsive và không tràn màn hình
-- [ ] Mở Map 1 ở chiều rộng 320px; xác nhận thẻ ngày/tiền và thẻ nhịp sống không chồng lên nhau.
-- [ ] Kiểm tra 4 tab Bản đồ/Túi đồ/Nhiệm vụ/Điện thoại; tất cả phải bấm được và không tràn ngang.
-- [ ] Đứng gần xe để hiện nút Khách tò mò; xác nhận hàng nút hành động tự xuống dòng, không che hoặc cắt nút E và Hướng dẫn.
-- [ ] Kiểm tra 360×640 và 390×844; xác nhận bảng điều khiển không che khuất khả năng thao tác trên bản đồ.
-- [ ] Xoay ngang điện thoại/viewport thấp; xác nhận các nút vẫn truy cập được và nội dung bảng có thể cuộn khi cần.
-- [ ] Xác nhận thay đổi bố cục không làm thay đổi vị trí nhân vật, mục tiêu tương tác, nhiệm vụ, tiền, kho hoặc gameplay bán hàng.
+- [x] Người chơi xác nhận thẻ ngày/tiền và thẻ nhịp sống không chồng lấn trên màn hình nhỏ.
+- [x] Người chơi xác nhận cả bốn tab Bản đồ/Túi đồ/Nhiệm vụ/Điện thoại bấm được và không tràn ngang.
+- [x] Người chơi xác nhận hàng nút hành động tự xuống dòng và không cắt nút E/Hướng dẫn.
+- [x] Người chơi xác nhận bố cục ổn trên các kích thước điện thoại và khi xoay ngang.
+- [x] Người chơi xác nhận thay đổi trình bày không làm thay đổi gameplay.
+
+
+## Map 1 – Ánh sáng môi trường theo thời điểm
+- [ ] Đợi hoặc dùng Tester Panel đổi thời gian trong ngày; xác nhận ánh sáng chuyển đúng ba trạng thái sáng, trưa và chiều.
+- [ ] Kiểm tra nhãn NPC, nhân vật, điểm tương tác và chữ trên bản đồ vẫn dễ đọc ở cả ba trạng thái.
+- [ ] Xác nhận lớp ánh sáng không chặn thao tác chạm/click, không ảnh hưởng di chuyển, va chạm hoặc tương tác.
