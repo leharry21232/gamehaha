@@ -69,3 +69,9 @@
 - Sự kiện đầu tiên được mở bằng nút tùy chọn khi người chơi đứng gần xe bánh tráng; không tự bật popup và không chiếm phím E.
 - Hội thoại là nội dung kể chuyện thuần túy, không tạo đơn hàng, không thay đổi tiền, kho, nhiệm vụ, thời gian, save hoặc trạng thái ca bán.
 - Chỉ đánh dấu đã xem trong state của phiên ứng dụng hiện tại; không thêm trường vào save schema. Tương tác xe bánh tráng hiện hữu luôn giữ nguyên.
+
+## M6 – Nhiệm vụ phụ hàng xóm
+- Lời nhờ của Chú Bảy là tùy chọn; “Để lúc khác” chỉ đóng lời mời, không đánh dấu từ chối vĩnh viễn.
+- Sau khi nhận lời, chỉ tương tác với Cô Sáu mới hoàn thành nhiệm vụ; NPC khác không tăng tiến độ.
+- Nhiệm vụ phụ là narrative-only trong lát cắt này: không thưởng tiền/vật phẩm/XP, không tiêu thời gian và không tác động nhiệm vụ Chương 1, kinh tế, kho hoặc save.
+- Trạng thái nhiệm vụ phụ dùng React state trong phiên hiện tại, chưa ghi vào save schema.

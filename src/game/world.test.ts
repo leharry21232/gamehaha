@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, isWorldPositionWalkable, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES, getNeighborhoodEvent, CURIOUS_CART_VISITOR_EVENT } from './world';
+import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, isWorldPositionWalkable, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES, getNeighborhoodEvent, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST } from './world';
 
 test('all five vendor locations have distinct grounded costs and valid multipliers', () => {
   assert.equal(VENDOR_LOCATIONS.length, 5);
@@ -158,4 +158,20 @@ test('curious cart visitor is a narrative-only optional interaction', () => {
   assert.equal(CURIOUS_CART_VISITOR_EVENT.id, 'curious_cart_visitor');
   assert.match(CURIOUS_CART_VISITOR_EVENT.dialogue, /xe bánh tráng mới mở/i);
   assert.equal(Object.keys(CURIOUS_CART_VISITOR_EVENT).sort().join(','), 'dialogue,id,title');
+});
+
+test('neighbor help quest is opt-in and can be deferred without losing the offer', () => {
+  assert.equal(getNeighborhoodHelpQuestAction('chu_bay', 'AVAILABLE'), 'OFFER');
+  assert.equal(getNeighborhoodHelpQuestAction('co_sau', 'AVAILABLE'), 'DIALOGUE');
+  assert.equal(getNeighborhoodHelpQuestAction('chu_bay', 'ACCEPTED'), 'REMIND');
+  assert.equal(getNeighborhoodHelpQuestAction('chu_bay', 'COMPLETED'), 'DIALOGUE');
+});
+
+test('neighbor help quest completes only when the accepted message reaches Co Sau', () => {
+  assert.equal(getNeighborhoodHelpQuestAction('co_sau', 'ACCEPTED'), 'DELIVER');
+  assert.equal(getNeighborhoodHelpQuestAction('shipper_ti', 'ACCEPTED'), 'DIALOGUE');
+  assert.equal(getNeighborhoodHelpQuestAction('ba_tu', 'ACCEPTED'), 'DIALOGUE');
+  assert.equal(NEIGHBORHOOD_HELP_QUEST.giverId, 'chu_bay');
+  assert.equal(NEIGHBORHOOD_HELP_QUEST.targetId, 'co_sau');
+  assert.match(NEIGHBORHOOD_HELP_QUEST.objective, /Cô Sáu/);
 });

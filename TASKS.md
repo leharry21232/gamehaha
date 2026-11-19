@@ -78,3 +78,14 @@
 - [x] Bổ sung regression test xác nhận dữ liệu sự kiện chỉ chứa nội dung hội thoại.
 - [ ] Kiểm tra thủ công nút khách tò mò trên desktop/mobile và xác nhận có thể bỏ qua.
 - [ ] Xác nhận sau hội thoại, nhấn E tại xe vẫn mở khu chuẩn bị; tiền, kho, nhiệm vụ và save không đổi.
+
+
+### M6 – Phần 5: Nhiệm vụ phụ hàng xóm
+- [x] Thêm lời nhờ tùy chọn từ Chú Bảy, có lựa chọn nhận lời hoặc để lúc khác.
+- [x] Khi nhận lời, theo dõi mục tiêu gặp Cô Sáu và hoàn thành khi tương tác đúng NPC.
+- [x] Hiển thị tiến độ nhiệm vụ phụ trên bảng điều khiển khu phố.
+- [x] Giữ nhiệm vụ phụ tách biệt khỏi nhiệm vụ Chương 1, tiền, kho, XP, thời gian và vòng lặp bán bánh.
+- [x] Không thêm dữ liệu vào save; trạng thái nhiệm vụ chỉ tồn tại trong phiên ứng dụng hiện tại.
+- [ ] Kiểm tra thủ công luồng nhận lời, trì hoãn, nhắc lại và hoàn thành trên desktop/mobile.
+- [ ] Xác nhận tương tác NPC không liên quan không hoàn thành nhầm nhiệm vụ; nhiệm vụ Chương 1 và gameplay bán hàng không đổi.
+- [ ] Hoàn tất CI, TypeScript và production build.

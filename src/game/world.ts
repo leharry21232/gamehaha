@@ -360,3 +360,29 @@ export const CURIOUS_CART_VISITOR_EVENT = {
   title: 'Một vị khách tò mò',
   dialogue: 'Một bạn trẻ dừng xe trước quầy: “Ủa, xe bánh tráng mới mở hả? Nhìn topping hấp dẫn ghê! Bạn mới bán ở khu này phải không?” Bạn mỉm cười: “Ừ, mình mới bắt đầu. Khi nào thèm thì ghé ủng hộ nha!” Người khách gật đầu rồi tiếp tục đi dạo quanh phố.',
 } as const;
+
+export type NeighborhoodHelpQuestStatus = 'AVAILABLE' | 'ACCEPTED' | 'COMPLETED';
+export type NeighborhoodHelpQuestAction = 'OFFER' | 'REMIND' | 'DELIVER' | 'DIALOGUE';
+
+export const NEIGHBORHOOD_HELP_QUEST = {
+  id: 'neighbor_message_for_co_sau',
+  title: 'Lời nhắn của Chú Bảy',
+  giverId: 'chu_bay',
+  targetId: 'co_sau',
+  offerDialogue: 'Chú Bảy: “Chú vừa sửa xong chiếc xe đạp cho Cô Sáu bán hoa. Con tiện ghé qua thì nhắn cô ấy biết xe đã sửa xong, khi nào rảnh ghé lấy giúp chú nha?”',
+  acceptedDialogue: 'Chú Bảy: “Cảm ơn con nghen! Con gặp Cô Sáu thì nhắn cô ấy chiếc xe đạp đã sửa xong rồi, cứ ghé chú lấy bất cứ lúc nào.”',
+  reminderDialogue: 'Chú Bảy: “Nếu gặp Cô Sáu thì con nhắn giúp chú chuyện chiếc xe đạp đã sửa xong nha!”',
+  completedDialogue: 'Cô Sáu: “À, chú Bảy sửa xong xe rồi hả con? Cảm ơn con đã ghé báo tin nghen! Có dịp cô sẽ ghé xe bánh tráng ủng hộ.”',
+  objective: 'Ghé gặp Cô Sáu bán hoa và chuyển lời nhắn của Chú Bảy.',
+} as const;
+
+export function getNeighborhoodHelpQuestAction(
+  npcId: WorldInteractable['id'],
+  status: NeighborhoodHelpQuestStatus,
+): NeighborhoodHelpQuestAction {
+  if (npcId === NEIGHBORHOOD_HELP_QUEST.giverId) {
+    return status === 'AVAILABLE' ? 'OFFER' : status === 'ACCEPTED' ? 'REMIND' : 'DIALOGUE';
+  }
+  if (npcId === NEIGHBORHOOD_HELP_QUEST.targetId && status === 'ACCEPTED') return 'DELIVER';
+  return 'DIALOGUE';
+}

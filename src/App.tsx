@@ -4,7 +4,7 @@ import { GameEngine } from './game/engine';
 import { TesterPanel } from './TesterPanel';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
 import { DECORATIONS, getUnlockedSkills } from './game/progression';
-import { findNearbyWorldLocation, getNeighborhoodEvent, getVendorLocation, CURIOUS_CART_VISITOR_EVENT, moveWorldPlayer, WORLD_INTERACTABLES, type WorldInteractable } from './game/world';
+import { findNearbyWorldLocation, getNeighborhoodEvent, getVendorLocation, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, moveWorldPlayer, WORLD_INTERACTABLES, type NeighborhoodHelpQuestStatus, type WorldInteractable } from './game/world';
 import type { BestRecord, CityDistrictId, CustomerType, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
 import heroBgUrl from './assets/images/saigon_sidewalk_hero_1794649926456.jpg';
 
@@ -538,6 +538,8 @@ export default function App() {
   const [worldPlayer, setWorldPlayer] = useState({ x: 48, y: 45 });
   const [worldNotice, setWorldNotice] = useState('');
   const [cartVisitorEventSeen, setCartVisitorEventSeen] = useState(false);
+  const [neighborhoodHelpQuestStatus, setNeighborhoodHelpQuestStatus] = useState<NeighborhoodHelpQuestStatus>('AVAILABLE');
+  const [neighborhoodHelpQuestOfferOpen, setNeighborhoodHelpQuestOfferOpen] = useState(false);
   const [tutorialDismissed, setTutorialDismissed] = useState(() => {
     try { return localStorage.getItem('banhtrang_tutorial_v1') === 'done'; } catch { return false; }
   });
@@ -633,14 +635,7 @@ export default function App() {
           setWorldNotice('Chưa có địa điểm nào đủ gần. Hãy đi đến gần cửa tiệm, hàng xóm hoặc xe bánh tráng rồi nhấn E.');
           return;
         }
-        setWorldNotice(getWorldDialogue(nearby));
-        if (nearby.id === 'cart') {
-          setWorldHubOpen(false);
-          setWorldPanel(null);
-          setWorldNotice('');
-          return;
-        }
-        setWorldPanel(null);
+        handleWorldLocationInteraction(nearby);
         return;
       }
       if (!['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) return;
@@ -653,7 +648,7 @@ export default function App() {
     };
     window.addEventListener('keydown', move);
     return () => window.removeEventListener('keydown', move);
-  }, [worldHubOpen, worldPlayer, hud.playerLevel, hud.cityTycoon.totalStaff, hud.storyMission]);
+  }, [worldHubOpen, worldPlayer, hud.playerLevel, hud.cityTycoon.totalStaff, hud.storyMission, neighborhoodHelpQuestStatus]);
 
   // Persist high scores cleanly whenever money or ordersServed increases
   useEffect(() => {
@@ -724,20 +719,36 @@ export default function App() {
     ? `Cô Năm: “${hud.storyMission.allCompleted ? 'Chương đầu con làm tốt lắm, cả xóm đều biết xe bánh tráng của con rồi!' : `Cứ tập trung nhiệm vụ “${hud.storyMission.title}” nha. ${hud.storyMission.storyText.replace(/[“”]/g, '')} Tiến độ hiện tại ${hud.storyMission.progress}/${hud.storyMission.target}.`}”`
     : location.interactionText;
 
+  function handleWorldLocationInteraction(location: WorldInteractable) {
+    if (location.id === 'cart') {
+      setWorldHubOpen(false);
+      setWorldPanel(null);
+      setWorldNotice('');
+      return;
+    }
+
+    const questAction = getNeighborhoodHelpQuestAction(location.id, neighborhoodHelpQuestStatus);
+    if (questAction === 'OFFER') {
+      setWorldNotice(NEIGHBORHOOD_HELP_QUEST.offerDialogue);
+      setNeighborhoodHelpQuestOfferOpen(true);
+    } else if (questAction === 'REMIND') {
+      setWorldNotice(NEIGHBORHOOD_HELP_QUEST.reminderDialogue);
+    } else if (questAction === 'DELIVER') {
+      setNeighborhoodHelpQuestStatus('COMPLETED');
+      setWorldNotice(NEIGHBORHOOD_HELP_QUEST.completedDialogue);
+    } else {
+      setWorldNotice(getWorldDialogue(location));
+    }
+    setWorldPanel(null);
+  }
+
   const handleWorldInteract = () => {
     const nearby = findNearbyWorldLocation(worldPlayer.x, worldPlayer.y);
     if (!nearby) {
       setWorldNotice('Chưa có địa điểm nào đủ gần. Hãy đi đến gần cửa tiệm, hàng xóm hoặc xe bánh tráng rồi nhấn E.');
       return;
     }
-    setWorldNotice(getWorldDialogue(nearby));
-    if (nearby.id === 'cart') {
-      setWorldHubOpen(false);
-      setWorldPanel(null);
-      setWorldNotice('');
-      return;
-    }
-    setWorldPanel(null);
+    handleWorldLocationInteraction(nearby);
   };
 
   const handleStart = () => {
@@ -1320,6 +1331,8 @@ export default function App() {
               ))}
             </div>
             <p className="text-center text-xs leading-relaxed text-slate-200">{worldNotice || (nearbyWorldLocation ? 'Đang ở gần: ' + nearbyWorldLocation.name + ' · Nhấn E để tương tác' : 'Dùng WASD / phím mũi tên để đi trên vỉa hè · Đến gần các địa điểm rồi nhấn E')}</p>
+            {neighborhoodHelpQuestStatus === 'ACCEPTED' && <p className="mt-1 text-center text-[10px] font-black text-amber-200">📌 NHIỆM VỤ PHỤ: {NEIGHBORHOOD_HELP_QUEST.objective}</p>}
+            {neighborhoodHelpQuestStatus === 'COMPLETED' && <p className="mt-1 text-center text-[10px] font-black text-emerald-200">✓ ĐÃ HOÀN THÀNH: {NEIGHBORHOOD_HELP_QUEST.title}</p>}
             <div className="mt-2 flex items-center justify-center gap-2">
               <button type="button" onClick={() => { setWorldPanel(null); setWorldNotice(''); setWorldPlayer((p) => moveWorldPlayer(p, 0, -2)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi lên">↑</button>
               <button type="button" onClick={() => { setWorldPanel(null); setWorldNotice(''); setWorldPlayer((p) => moveWorldPlayer(p, -3, 0)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi trái">←</button>
@@ -1334,6 +1347,22 @@ export default function App() {
           </div>
           ) : (
             <button type="button" onClick={() => setWorldHudOpen(true)} className="absolute bottom-3 left-1/2 z-30 -translate-x-1/2 border-[3px] border-[#e7c77e] bg-[#263b3b]/95 px-4 py-2 font-mono text-xs font-black text-[#fff2d1] shadow-[4px_4px_0_#111] hover:bg-[#405653]">☰ MỞ BẢNG ĐIỀU KHIỂN</button>
+          )}
+          {neighborhoodHelpQuestOfferOpen && (
+            <div className="absolute inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="neighbor-quest-title">
+              <div className="w-full max-w-md border-[4px] border-[#35291f] bg-[#f4e2b8] p-4 font-mono text-[#392819] shadow-[7px_7px_0_#111]">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <h2 id="neighbor-quest-title" className="text-sm font-black">📜 LỜI NHỜ TỪ HÀNG XÓM</h2>
+                  <button type="button" onClick={() => setNeighborhoodHelpQuestOfferOpen(false)} aria-label="Đóng lời mời" className="border-2 border-[#543a25] bg-[#e7c77e] px-2 py-1 font-black">×</button>
+                </div>
+                <p className="text-xs leading-relaxed">{NEIGHBORHOOD_HELP_QUEST.offerDialogue}</p>
+                <p className="mt-3 border-y-2 border-[#b99a69] py-2 text-xs font-bold">Nhiệm vụ: {NEIGHBORHOOD_HELP_QUEST.objective}</p>
+                <div className="mt-3 flex flex-wrap justify-end gap-2">
+                  <button type="button" onClick={() => { setNeighborhoodHelpQuestOfferOpen(false); setWorldNotice('Chú Bảy: “Không sao, khi nào tiện thì con ghé giúp chú cũng được!”'); }} className="border-[3px] border-[#765c3c] bg-[#e7c77e] px-3 py-2 text-[10px] font-black hover:bg-[#f1d89d]">ĐỂ LÚC KHÁC</button>
+                  <button type="button" onClick={() => { setNeighborhoodHelpQuestStatus('ACCEPTED'); setNeighborhoodHelpQuestOfferOpen(false); setWorldNotice(NEIGHBORHOOD_HELP_QUEST.acceptedDialogue); }} className="border-[3px] border-[#31533e] bg-[#8fbd8c] px-3 py-2 text-[10px] font-black hover:bg-[#a7d3a2]">NHẬN LỜI</button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       )}

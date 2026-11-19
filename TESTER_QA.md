@@ -79,3 +79,14 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] Bỏ qua sự kiện và nhấn E; xác nhận quay về khu chuẩn bị như trước.
 - [ ] So sánh tiền, kho, tiến độ nhiệm vụ và save trước/sau; tất cả phải giữ nguyên.
 - [ ] Kiểm tra responsive desktop/mobile, bảo đảm nút không làm tràn bảng điều khiển.
+
+## M6 – Nhiệm vụ phụ hàng xóm
+- [ ] Đến gần Chú Bảy và nhấn E hoặc nút tương tác; xác nhận lời mời nhiệm vụ phụ xuất hiện.
+- [ ] Chọn “ĐỂ LÚC KHÁC”; xác nhận nhiệm vụ chưa được nhận và có thể hỏi lại Chú Bảy.
+- [ ] Nhận lời; xác nhận mục tiêu “Gặp Cô Sáu” hiển thị ở bảng điều khiển.
+- [ ] Tương tác Tí, Bà Tư hoặc NPC khác; xác nhận nhiệm vụ vẫn chưa hoàn thành.
+- [ ] Đến Cô Sáu và tương tác; xác nhận nhiệm vụ phụ chuyển sang hoàn thành đúng một lần.
+- [ ] Tương tác lại Chú Bảy/Cô Sáu; xác nhận không có phần thưởng hoặc tiến độ lặp.
+- [ ] So sánh tiền, kho, XP, thời gian và nhiệm vụ Chương 1 trước/sau; tất cả phải giữ nguyên.
+- [ ] Tải lại ứng dụng; xác nhận nhiệm vụ phụ không làm thay đổi save cũ (trạng thái phiên được reset).
+- [ ] Kiểm tra modal và tracker trên desktop/mobile, không che điều khiển di chuyển.

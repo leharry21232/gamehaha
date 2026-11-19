@@ -38,3 +38,8 @@
 
 ## M6 – Interactive neighborhood event
 - Added an optional, one-time curious visitor conversation near the bánh tráng cart. It is narrative-only and leaves the existing E-to-cart flow untouched.
+
+## M6 – Neighborhood side quest
+- Added an optional side quest from Chú Bảy: accept or defer his request, then deliver a message to Cô Sáu.
+- Added an in-map objective/completion tracker and regression tests for valid NPC progression.
+- Kept the quest session-only and narrative-only: no money, item, XP, time, main-mission, save, or cooking-loop changes.
