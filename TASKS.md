@@ -109,3 +109,12 @@
 - [ ] Kiểm tra trạng thái nhật ký cập nhật sau khi nhận, trì hoãn và hoàn thành từng nhiệm vụ.
 - [ ] Kiểm tra bố cục nhật ký trên desktop/mobile và khi Chương 1 đã hoàn thành.
 - [ ] Hoàn tất CI, TypeScript và production build.
+
+
+### M6 – Phần 8: Hoàn thiện bố cục bảng nhiệm vụ trên màn hình nhỏ
+- [x] Đặt bảng thông tin/Nhật ký trong vùng an toàn phía trên cụm điều khiển dưới màn hình.
+- [x] Cho phép cuộn nội dung Nhật ký theo chiều dọc trên màn hình cảm ứng, không cuộn nhầm bản đồ.
+- [x] Giới hạn chiều cao hộp thoại nhận nhiệm vụ để các nút lựa chọn luôn có thể truy cập trên màn hình thấp.
+- [ ] Kiểm tra Nhật ký khi có đủ nhiệm vụ Chương 1 và hai nhiệm vụ phụ ở màn hình điện thoại dọc/ngang.
+- [ ] Kiểm tra hai hộp thoại nhận nhiệm vụ trên màn hình thấp và xác nhận nút NHẬN LỜI / ĐỂ LÚC KHÁC luôn nhìn thấy, cuộn được khi cần.
+- [ ] Xác nhận các nút di chuyển, tương tác và đóng bản đồ không bị bảng thông tin che khuất.

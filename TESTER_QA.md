@@ -110,3 +110,11 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] Hoàn thành một nhiệm vụ; xác nhận nhật ký chuyển đúng nhiệm vụ sang “Đã hoàn thành”.
 - [ ] Làm tương tự với nhiệm vụ còn lại; xác nhận trạng thái độc lập, không bị ghi đè.
 - [ ] Kiểm tra tab Nhật ký trên desktop/mobile và sau khi hoàn thành Chương 1.
+
+
+## M6 – Bố cục bản đồ trên màn hình nhỏ
+- [ ] Mở bản đồ ở màn hình điện thoại dọc (chiều cao khoảng 640px hoặc thấp hơn), mở tab Nhiệm vụ và cuộn từ nhiệm vụ Chương 1 xuống hết hai nhiệm vụ phụ.
+- [ ] Xác nhận bảng Nhiệm vụ nằm phía trên cụm điều khiển dưới màn hình, không che các nút di chuyển và tương tác.
+- [ ] Xoay ngang điện thoại hoặc dùng viewport thấp; xác nhận nội dung vẫn cuộn được và nút đóng bảng luôn truy cập được.
+- [ ] Mở lời mời của Chú Bảy và Tí; xác nhận cả hai lựa chọn “NHẬN LỜI” và “ĐỂ LÚC KHÁC” nhìn thấy hoặc truy cập được bằng cuộn.
+- [ ] Cuộn trong bảng/hộp thoại không làm nhân vật di chuyển hoặc cuộn trang nền.

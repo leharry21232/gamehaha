@@ -82,3 +82,9 @@
 - Hai nhiệm vụ phụ có state và điều kiện hoàn thành độc lập, không được hoàn thành chéo lẫn nhau.
 - Nhiệm vụ chỉ kể chuyện, tồn tại trong phiên hiện tại; không tạo vật phẩm thực, không thưởng tiền/XP, không tiêu thời gian và không thay đổi save, nhiệm vụ chính hoặc gameplay bán hàng.
 - Tab Nhật ký hiển thị trạng thái hai nhiệm vụ phụ từ React state hiện tại; đây là giao diện đọc בלבד, không tạo bản sao trạng thái hay lưu tiến độ mới.
+
+
+## M6 – Bố cục Nhật ký và hộp thoại trên màn hình nhỏ
+- Bảng thông tin bản đồ phải nằm trong vùng an toàn phía trên cụm điều khiển dưới cùng; không được che D-pad, nút tương tác hoặc nút đóng bản đồ.
+- Nhật ký có thể dài hơn chiều cao khả dụng nên phải cuộn độc lập theo chiều dọc trên thiết bị cảm ứng; không thay đổi vị trí nhân vật hoặc cuộn trang nền.
+- Hộp thoại nhiệm vụ phải giới hạn chiều cao theo viewport và cho phép cuộn để hai lựa chọn nhận/trì hoãn luôn truy cập được.

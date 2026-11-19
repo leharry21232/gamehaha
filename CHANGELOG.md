@@ -52,3 +52,8 @@
 ## M6 – Neighborhood quest journal
 - Added both optional neighborhood side quests to the map Journal with live “Not accepted / In progress / Completed” states and next-NPC guidance.
 - The journal reads the existing session state only; no save schema, quest progression, economy, or cooking-loop changes.
+
+
+## M6 – Responsive neighborhood journal
+- Repositioned the map information/journal panel into the safe area above the bottom controls and enabled independent vertical scrolling for touch devices.
+- Constrained both optional-quest offer dialogs to the viewport height so their accept/defer actions remain reachable on short screens.

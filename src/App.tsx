@@ -1308,7 +1308,7 @@ export default function App() {
             <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap border border-[#243d36] bg-[#9ee4a8] px-2 py-0.5 text-[8px] font-black text-[#17251e]">BẠN</span>
           </div>
           {worldPanel && (
-            <div className="absolute bottom-[17%] left-1/2 z-30 w-[min(92%,520px)] -translate-x-1/2 border-2 border-[#e7c77e] bg-[#18262b]/95 p-4 shadow-[6px_6px_0_#111]">
+            <div className="absolute top-[14%] bottom-[32%] left-1/2 z-30 w-[min(92%,520px)] -translate-x-1/2 overflow-y-auto overscroll-contain touch-pan-y border-2 border-[#e7c77e] bg-[#18262b]/95 p-4 shadow-[6px_6px_0_#111]">
               <div className="flex items-center justify-between gap-3">
                 <p className="font-black text-amber-200">{worldPanel === 'MAP' ? '🗺 BẢN ĐỒ KHU PHỐ' : worldPanel === 'BAG' ? '🎒 TÚI ĐỒ' : worldPanel === 'JOURNAL' ? '📖 NHẬT KÝ' : '📱 ĐIỆN THOẠI'}</p>
                 <button type="button" onClick={() => setWorldPanel(null)} aria-label="Đóng khung thông tin" title="Đóng khung thông tin" className="flex h-9 w-9 shrink-0 items-center justify-center border-[3px] border-[#5b2d25] bg-[#b95343] text-lg font-black text-white shadow-[2px_2px_0_#111] hover:bg-[#d46654]">×</button>
@@ -1388,7 +1388,7 @@ export default function App() {
           )}
           {neighborhoodParcelQuestOfferOpen && (
             <div className="absolute inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="parcel-quest-title">
-              <div className="w-full max-w-md border-[4px] border-[#35291f] bg-[#f4e2b8] p-4 font-mono text-[#392819] shadow-[7px_7px_0_#111]">
+              <div className="max-h-[85dvh] w-full max-w-md overflow-y-auto overscroll-contain touch-pan-y border-[4px] border-[#35291f] bg-[#f4e2b8] p-4 font-mono text-[#392819] shadow-[7px_7px_0_#111]">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <h2 id="parcel-quest-title" className="text-sm font-black">📦 CHUYẾN HÀNG CUỐI NGÕ</h2>
                   <button type="button" onClick={() => setNeighborhoodParcelQuestOfferOpen(false)} aria-label="Đóng lời mời" className="border-2 border-[#543a25] bg-[#e7c77e] px-2 py-1 font-black">×</button>
@@ -1404,7 +1404,7 @@ export default function App() {
           )}
           {neighborhoodHelpQuestOfferOpen && (
             <div className="absolute inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="neighbor-quest-title">
-              <div className="w-full max-w-md border-[4px] border-[#35291f] bg-[#f4e2b8] p-4 font-mono text-[#392819] shadow-[7px_7px_0_#111]">
+              <div className="max-h-[85dvh] w-full max-w-md overflow-y-auto overscroll-contain touch-pan-y border-[4px] border-[#35291f] bg-[#f4e2b8] p-4 font-mono text-[#392819] shadow-[7px_7px_0_#111]">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <h2 id="neighbor-quest-title" className="text-sm font-black">📜 LỜI NHỜ TỪ HÀNG XÓM</h2>
                   <button type="button" onClick={() => setNeighborhoodHelpQuestOfferOpen(false)} aria-label="Đóng lời mời" className="border-2 border-[#543a25] bg-[#e7c77e] px-2 py-1 font-black">×</button>
