@@ -81,3 +81,4 @@
 - Chỉ tương tác với Bà Tư sau khi nhận lời mới hoàn thành nhiệm vụ; NPC khác không tác động tiến độ.
 - Hai nhiệm vụ phụ có state và điều kiện hoàn thành độc lập, không được hoàn thành chéo lẫn nhau.
 - Nhiệm vụ chỉ kể chuyện, tồn tại trong phiên hiện tại; không tạo vật phẩm thực, không thưởng tiền/XP, không tiêu thời gian và không thay đổi save, nhiệm vụ chính hoặc gameplay bán hàng.
+- Tab Nhật ký hiển thị trạng thái hai nhiệm vụ phụ từ React state hiện tại; đây là giao diện đọc בלבד, không tạo bản sao trạng thái hay lưu tiến độ mới.

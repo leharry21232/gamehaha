@@ -100,3 +100,12 @@
 - [ ] Kiểm tra thủ công cả hai nhiệm vụ phụ cùng tồn tại trên desktop/mobile.
 - [ ] Xác nhận nhận/hoàn thành nhiệm vụ này không làm thay đổi trạng thái nhiệm vụ Chú Bảy và ngược lại.
 - [ ] Hoàn tất CI, TypeScript và production build.
+
+
+### M6 – Phần 7: Nhật ký nhiệm vụ khu phố
+- [x] Thêm danh sách hai nhiệm vụ phụ trong tab Nhiệm vụ của bản đồ.
+- [x] Hiển thị trạng thái Chưa nhận / Đang thực hiện / Đã hoàn thành và hướng dẫn NPC cần gặp.
+- [x] Nội dung nhật ký đọc trực tiếp trạng thái React hiện tại; không tạo save mới hoặc thay đổi tiến trình nhiệm vụ.
+- [ ] Kiểm tra trạng thái nhật ký cập nhật sau khi nhận, trì hoãn và hoàn thành từng nhiệm vụ.
+- [ ] Kiểm tra bố cục nhật ký trên desktop/mobile và khi Chương 1 đã hoàn thành.
+- [ ] Hoàn tất CI, TypeScript và production build.

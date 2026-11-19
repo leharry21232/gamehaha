@@ -101,3 +101,12 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] So sánh tiền, kho, XP, thời gian và nhiệm vụ Chương 1 trước/sau; tất cả phải giữ nguyên.
 - [ ] Tải lại ứng dụng; xác nhận trạng thái hai nhiệm vụ phụ reset theo phiên và không thay đổi save.
 - [ ] Kiểm tra hai tracker và modal trên desktop/mobile, không che điều khiển di chuyển.
+
+## M6 – Nhật ký nhiệm vụ khu phố
+- [ ] Mở bản đồ > Nhiệm vụ; xác nhận có cả nhiệm vụ Chú Bảy và nhiệm vụ Tí.
+- [ ] Khi chưa nhận, cả hai hiển thị “Chưa nhận” cùng NPC cần tìm.
+- [ ] Nhận một nhiệm vụ; xác nhận chỉ nhiệm vụ đó chuyển sang “Đang thực hiện” và hiện đúng mục tiêu.
+- [ ] Trì hoãn lời mời; xác nhận trạng thái vẫn là “Chưa nhận”.
+- [ ] Hoàn thành một nhiệm vụ; xác nhận nhật ký chuyển đúng nhiệm vụ sang “Đã hoàn thành”.
+- [ ] Làm tương tự với nhiệm vụ còn lại; xác nhận trạng thái độc lập, không bị ghi đè.
+- [ ] Kiểm tra tab Nhật ký trên desktop/mobile và sau khi hoàn thành Chương 1.

@@ -48,3 +48,7 @@
 - Added Tí's optional “Chuyến hàng cuối ngõ” story: accept or defer his request, then tell Bà Tư the parcel is on its way.
 - Added an independent objective/completion tracker, offer modal, and regression tests to prevent cross-completing either side quest.
 - Kept both side quests session-only and narrative-only with no save, economy, inventory, XP, time, main-mission, or cooking-loop effects.
+
+## M6 – Neighborhood quest journal
+- Added both optional neighborhood side quests to the map Journal with live “Not accepted / In progress / Completed” states and next-NPC guidance.
+- The journal reads the existing session state only; no save schema, quest progression, economy, or cooking-loop changes.

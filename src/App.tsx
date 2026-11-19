@@ -1323,6 +1323,29 @@ export default function App() {
                   <div className="h-2 overflow-hidden rounded bg-slate-700"><div className="h-full bg-emerald-400 transition-all" style={{width: `${Math.min(100, hud.storyMission.progress / Math.max(1, hud.storyMission.target) * 100)}%`}} /></div>
                   {hud.storyMission.completed && !hud.storyMission.allCompleted && <button type="button" onClick={() => engineRef.current?.claimCurrentStoryMission()} className="w-full border-2 border-[#31543c] bg-[#65c985] px-3 py-2 font-black text-[#14251a] shadow-[3px_3px_0_#111] hover:bg-[#83e0a0]">NHẬN THƯỞNG · {hud.storyMission.reward.toLocaleString('vi-VN')}đ</button>}
                   {hud.storyMission.allCompleted && <p className="font-bold text-emerald-300">Bạn đã hoàn thành toàn bộ Chương 1. Những câu chuyện tiếp theo sẽ được mở trong bản cập nhật sau.</p>}
+                  <div className="mt-3 border-t-2 border-white/15 pt-3">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <p className="font-black text-amber-200">📌 CÂU CHUYỆN KHU PHỐ</p>
+                      <span className="text-[10px] text-slate-300">Nhiệm vụ phụ</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="rounded border border-white/15 bg-black/20 p-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="font-bold text-white">{NEIGHBORHOOD_HELP_QUEST.title}</p>
+                          <span className={"border px-2 py-0.5 text-[10px] font-bold " + (neighborhoodHelpQuestStatus === 'COMPLETED' ? "border-emerald-300/40 bg-emerald-900/40 text-emerald-200" : neighborhoodHelpQuestStatus === 'ACCEPTED' ? "border-amber-300/40 bg-amber-900/40 text-amber-200" : "border-slate-400/30 bg-slate-800/60 text-slate-300")}>{neighborhoodHelpQuestStatus === 'COMPLETED' ? 'Đã hoàn thành' : neighborhoodHelpQuestStatus === 'ACCEPTED' ? 'Đang thực hiện' : 'Chưa nhận'}</span>
+                        </div>
+                        <p className="mt-1 text-[11px] leading-relaxed text-slate-300">{neighborhoodHelpQuestStatus === 'COMPLETED' ? 'Bạn đã chuyển lời nhắn của Chú Bảy đến Cô Sáu.' : neighborhoodHelpQuestStatus === 'ACCEPTED' ? NEIGHBORHOOD_HELP_QUEST.objective : 'Gặp Chú Bảy ở tiệm sửa xe để nghe lời nhờ.'}</p>
+                      </div>
+                      <div className="rounded border border-white/15 bg-black/20 p-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="font-bold text-white">{NEIGHBORHOOD_PARCEL_QUEST.title}</p>
+                          <span className={"border px-2 py-0.5 text-[10px] font-bold " + (neighborhoodParcelQuestStatus === 'COMPLETED' ? "border-emerald-300/40 bg-emerald-900/40 text-emerald-200" : neighborhoodParcelQuestStatus === 'ACCEPTED' ? "border-amber-300/40 bg-amber-900/40 text-amber-200" : "border-slate-400/30 bg-slate-800/60 text-slate-300")}>{neighborhoodParcelQuestStatus === 'COMPLETED' ? 'Đã hoàn thành' : neighborhoodParcelQuestStatus === 'ACCEPTED' ? 'Đang thực hiện' : 'Chưa nhận'}</span>
+                        </div>
+                        <p className="mt-1 text-[11px] leading-relaxed text-slate-300">{neighborhoodParcelQuestStatus === 'COMPLETED' ? 'Bạn đã báo tin cho Bà Tư về gói hàng của Tí.' : neighborhoodParcelQuestStatus === 'ACCEPTED' ? NEIGHBORHOOD_PARCEL_QUEST.objective : 'Gặp Tí giao hàng trên phố để nghe lời nhờ.'}</p>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-[10px] italic text-slate-400">Các câu chuyện khu phố là nhiệm vụ tùy chọn, không ảnh hưởng tiến trình bán hàng.</p>
+                  </div>
                 </div>
               ) : (
                 <p className="mt-2 text-xs leading-relaxed text-slate-200">{worldPanel === 'MAP' ? (nearbyWorldLocation
