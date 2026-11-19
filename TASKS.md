@@ -134,3 +134,9 @@
 - [x] Chỉ hiển thị lời thoại tiếp nối sau khi nhiệm vụ tương ứng hoàn thành; NPC không liên quan giữ hội thoại cũ.
 - [x] Bổ sung regression tests cho bốn NPC và trạng thái chưa hoàn thành.
 - [ ] Kiểm tra thủ công lời thoại lần đầu hoàn thành và các lần trò chuyện tiếp theo.
+
+
+### M6 – Kiểm tra khả năng đi đến mọi điểm trên Map 1
+- [x] Bổ sung kiểm thử tìm đường từ vị trí xuất hiện mặc định bằng đúng bước di chuyển bàn phím (2.5% ngang, 1.5% dọc).
+- [ ] Kiểm tra thủ công đi bộ từ điểm xuất hiện đến đủ 10 địa điểm/NPC, đặc biệt các góc sát ranh bản đồ.
+- [ ] Nếu phát hiện điểm bị chắn hoặc vùng tương tác chồng lấn gây khó thao tác, điều chỉnh tọa độ/collision rồi kiểm tra lại toàn bộ tuyến.

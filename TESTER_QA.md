@@ -131,3 +131,10 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] Hoàn thành “Chuyến hàng cuối ngõ”; xác nhận lần đầu Bà Tư hiện lời thoại hoàn thành, lần sau Bà Tư và Tí đều ghi nhận việc đã báo tin.
 - [ ] Xác nhận NPC không liên quan và nhiệm vụ chưa hoàn thành vẫn dùng hội thoại bình thường.
 - [ ] Xác nhận hai nhiệm vụ hoàn thành độc lập, không làm thay đổi tiền, kho, XP, thời gian hoặc nhiệm vụ Chương 1.
+
+
+## M6 – Kiểm tra đường đi toàn bộ Map 1
+- [ ] Bắt đầu từ vị trí xuất hiện mặc định và đi bằng WASD/phím mũi tên đến đủ 10 điểm: xe bánh tráng, tạp hóa, sạp ăn vặt, quán nước, cổng chợ, Cô Năm, Cô Sáu, Tí, Chú Bảy và Bà Tư.
+- [ ] Ưu tiên kiểm tra đường vòng quanh xe bánh tráng, quán nước và hai mép bản đồ; xác nhận không cần dịch chuyển bằng Tester Panel.
+- [ ] Tại từng điểm, xác nhận chỉ NPC/địa điểm gần nhất được chọn và nhấn E/nút tương tác mở đúng nội dung.
+- [ ] Đi sát các vật cản từ nhiều hướng; xác nhận nhân vật không xuyên vật thể và vẫn trượt dọc mép vật cản.

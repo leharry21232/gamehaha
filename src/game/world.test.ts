@@ -209,3 +209,36 @@ test('quest follow-up dialogue does not appear before completion or for unrelate
   assert.equal(getNeighborhoodQuestFollowUpDialogue('ba_tu', 'AVAILABLE', 'AVAILABLE'), null);
   assert.equal(getNeighborhoodQuestFollowUpDialogue('co_nam', 'COMPLETED', 'COMPLETED'), null);
 });
+
+test('every neighborhood interaction is reachable from the default spawn with real keyboard step sizes', () => {
+  const queue = [{ x: 48, y: 45 }];
+  const visited = new Set(['48.000,45.000']);
+  const reachableIds = new Set<string>();
+  const steps = [
+    { x: -2.5, y: 0 },
+    { x: 2.5, y: 0 },
+    { x: 0, y: -1.5 },
+    { x: 0, y: 1.5 },
+  ];
+
+  for (let cursor = 0; cursor < queue.length; cursor += 1) {
+    const position = queue[cursor];
+    const nearby = findNearbyWorldLocation(position.x, position.y);
+    if (nearby) reachableIds.add(nearby.id);
+
+    for (const step of steps) {
+      const next = moveWorldPlayer(position, step.x, step.y);
+      const key = `${next.x.toFixed(3)},${next.y.toFixed(3)}`;
+      if (key !== `${position.x.toFixed(3)},${position.y.toFixed(3)}` && !visited.has(key)) {
+        visited.add(key);
+        queue.push(next);
+      }
+    }
+  }
+
+  assert.deepEqual(
+    [...reachableIds].sort(),
+    WORLD_INTERACTABLES.map((location) => location.id).sort(),
+    'every business and NPC must be interactable from the default map spawn',
+  );
+});

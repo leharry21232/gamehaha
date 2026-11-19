@@ -98,3 +98,8 @@
 ## M6 – Hội thoại tiếp nối sau nhiệm vụ khu phố
 - Sau khi hoàn thành nhiệm vụ, cả người giao việc và người nhận lời nhắn có hội thoại ghi nhận kết quả ở những lần tương tác tiếp theo.
 - Hội thoại tiếp nối chỉ phụ thuộc trạng thái COMPLETED của đúng nhiệm vụ; không mở khóa phần thưởng, không thay đổi kinh tế, thời gian, save hay nhiệm vụ khác.
+
+
+## M6 – Kiểm chứng khả năng tiếp cận Map 1
+- Mọi điểm tương tác của Map 1 phải có thể tiếp cận từ vị trí xuất hiện mặc định bằng các bước di chuyển bàn phím thực tế, không phụ thuộc chức năng teleport của Tester Panel.
+- Kiểm thử reachability mô phỏng các bước ngang 2.5% và dọc 1.5% qua cùng hàm di chuyển/collision dùng trong game; thay đổi tọa độ hoặc vật cản phải tiếp tục giữ tất cả điểm tương tác có thể tiếp cận.
