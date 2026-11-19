@@ -147,3 +147,10 @@
 - [x] Bổ sung test vùng tương tác chồng lấn: chọn mục tiêu gần nhất, xử lý khoảng cách bằng nhau ổn định và không chọn mục tiêu ngoài bán kính.
 - [ ] Kiểm tra thủ công đi sát bốn vật cản từ nhiều hướng và xác nhận nhân vật trượt dọc cạnh thay vì bị khựng cả hai trục.
 - [ ] Đi vào vùng giao nhau giữa hai vòng tương tác; xác nhận nhãn E chuyển sang đối tượng gần hơn một cách dễ hiểu.
+
+
+### M6 – Hoàn thiện hướng dẫn khám phá Map 1
+- [x] Chuyển bảng Hướng dẫn thành chỉ dẫn có cấu trúc: điều khiển bàn phím, cảm ứng, tương tác E và cách quay về xe bánh tráng.
+- [x] Liệt kê 10 điểm khám phá và giải thích cách chọn mục tiêu gần nhất.
+- [x] Ưu tiên hiển thị nội dung hướng dẫn khi người chơi mở bảng, không để lời thoại NPC che mất hướng dẫn.
+- [ ] Kiểm tra thủ công bảng hướng dẫn trên desktop/mobile và xác nhận không ảnh hưởng gameplay.

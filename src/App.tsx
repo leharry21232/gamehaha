@@ -1379,12 +1379,34 @@ export default function App() {
                     <p className="mt-2 text-[10px] italic text-slate-400">Các câu chuyện khu phố là nhiệm vụ tùy chọn, không ảnh hưởng tiến trình bán hàng.</p>
                   </div>
                 </div>
+              ) : worldPanel === 'MAP' ? (
+                <div className="mt-3 space-y-3 text-xs text-slate-100">
+                  {worldNotice && <p className="border-l-4 border-amber-300 bg-amber-100/10 px-3 py-2 leading-relaxed text-amber-100">{worldNotice}</p>}
+                  <section className="border border-white/15 bg-black/20 p-3">
+                    <p className="font-black text-amber-200">🎮 CÁCH KHÁM PHÁ KHU PHỐ</p>
+                    <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <div className="flex gap-2"><span className="grid h-8 w-12 shrink-0 place-items-center border border-white/20 bg-white/10 font-black">WASD</span><span className="leading-relaxed">Di chuyển bằng W/A/S/D hoặc phím mũi tên.</span></div>
+                      <div className="flex gap-2"><span className="grid h-8 w-12 shrink-0 place-items-center border border-amber-200/40 bg-amber-200/10 font-black text-amber-100">E</span><span className="leading-relaxed">Nói chuyện hoặc tương tác với người/địa điểm gần nhất.</span></div>
+                      <div className="flex gap-2"><span className="grid h-8 w-12 shrink-0 place-items-center border border-white/20 bg-white/10 font-black">↑↓←→</span><span className="leading-relaxed">Trên điện thoại, dùng cụm nút mũi tên phía dưới.</span></div>
+                      <div className="flex gap-2"><span className="grid h-8 w-12 shrink-0 place-items-center border border-white/20 bg-white/10 font-black">E · XE</span><span className="leading-relaxed">Đến xe bánh tráng và tương tác để bắt đầu bán hàng.</span></div>
+                    </div>
+                  </section>
+                  <section className="border border-white/15 bg-black/20 p-3">
+                    <p className="font-black text-amber-200">📍 CÁC ĐIỂM CÓ THỂ GHÉ</p>
+                    <div className="mt-2 grid grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-2">
+                      <p>🛒 Tạp hóa cô Năm · nhập hàng</p><p>🍢 Sạp ăn vặt · gặp người bán</p>
+                      <p>🥤 Quán nước chú Ba · nghỉ chân</p><p>🏪 Cổng chợ · khám phá khu chợ</p>
+                      <p>🌺 Cô Sáu · người bán hoa</p><p>🛵 Tí · người giao hàng</p>
+                      <p>🔧 Chú Bảy · tiệm sửa xe</p><p>🏠 Bà Tư · hàng xóm</p>
+                      <p>👵 Cô Năm · hàng xóm</p><p>🛺 Xe bánh tráng · bắt đầu ca bán</p>
+                    </div>
+                    <p className="mt-2 text-[10px] leading-relaxed text-slate-400">Đi lại gần từng điểm để xem tên hiện trên nút E. Nếu đứng giữa hai điểm, game ưu tiên đối tượng gần bạn hơn.</p>
+                  </section>
+                  {nearbyWorldLocation && <section className="border border-emerald-300/30 bg-emerald-900/20 p-3"><p className="font-black text-emerald-200">ĐANG Ở GẦN: {nearbyWorldLocation.name.toUpperCase()}</p><p className="mt-1 leading-relaxed text-slate-200">{nearbyWorldLocation.description} {getWorldDialogue(nearbyWorldLocation)}</p></section>}
+                  <p className="text-[10px] italic text-slate-400">Mẹo: nhiệm vụ phụ là tùy chọn. Bạn có thể trò chuyện, khám phá trước rồi quay lại xe bánh tráng bất cứ lúc nào.</p>
+                </div>
               ) : (
-                <p className="mt-2 text-xs leading-relaxed text-slate-200">{worldPanel === 'MAP' ? (nearbyWorldLocation
-                  ? nearbyWorldLocation.name + ': ' + nearbyWorldLocation.description + ' ' + getWorldDialogue(nearbyWorldLocation)
-                  : 'Bạn đang bán bánh tráng tại ' + getVendorLocation(selectedVendorSpot).name + '. Đi đến gần một địa điểm rồi nhấn E để trò chuyện hoặc tương tác.') :
-                  worldPanel === 'BAG' ? 'Tiền mặt: ' + hud.money.toLocaleString('vi-VN') + 'đ · Cấp độ: ' + hud.playerLevel + '. Kho nguyên liệu được quản lý trong hệ thống kinh doanh.' :
-                  'Điện thoại khu phố: các liên hệ và thông báo kinh doanh sẽ được tích hợp tại đây.'}</p>
+                <p className="mt-2 text-xs leading-relaxed text-slate-200">{worldPanel === 'BAG' ? 'Tiền mặt: ' + hud.money.toLocaleString('vi-VN') + 'đ · Cấp độ: ' + hud.playerLevel + '. Kho nguyên liệu được quản lý trong hệ thống kinh doanh.' : 'Điện thoại khu phố: các liên hệ và thông báo kinh doanh sẽ được tích hợp tại đây.'}</p>
               )}
             </div>
           )}

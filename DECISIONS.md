@@ -109,3 +109,9 @@
 - Vật cản chính trên Map 1 phải chặn chuyển động theo trục va chạm nhưng vẫn cho phép trượt theo trục còn lại.
 - Khi nhiều vùng tương tác chồng lấn, chỉ chọn một mục tiêu gần nhất; nếu khoảng cách bằng nhau, giữ thứ tự khai báo hiện tại để kết quả ổn định.
 - Không mở rộng bán kính tương tác chỉ để bù cho lối đi khó tiếp cận; ưu tiên sửa bố cục hoặc đường đi nếu QA phát hiện vấn đề.
+
+
+## M6 – Hướng dẫn khám phá Map 1
+- Bảng Hướng dẫn phải luôn hiển thị cách di chuyển, tương tác, điều khiển cảm ứng, đường quay lại xe bánh tráng và danh sách các điểm có thể ghé.
+- Khi mở Hướng dẫn, nội dung chỉ dẫn được ưu tiên; thông tin địa điểm gần nhất chỉ là phần bổ sung, không được thay thế hướng dẫn.
+- Đây là lớp thông tin tĩnh, không cấp thưởng, không thay đổi trạng thái nhiệm vụ, kinh tế, thời gian hay save.

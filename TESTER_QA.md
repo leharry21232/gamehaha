@@ -145,3 +145,12 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] Đi chéo sát cạnh từng vật cản; xác nhận vẫn trượt được theo trục còn lại, không bị kẹt.
 - [ ] Di chuyển qua vùng giao nhau giữa hai vùng tương tác; nhãn E phải ưu tiên địa điểm/NPC gần nhân vật nhất và đổi mục tiêu hợp lý khi tiếp tục di chuyển.
 - [ ] Đứng ngoài bán kính tương tác; không được hiện nhầm tên địa điểm/NPC.
+
+
+## Map 1 – Hướng dẫn người chơi mới và khám phá khu phố
+- [ ] Bấm nút “Hướng dẫn”; xác nhận bảng chỉ dẫn mở đúng kể cả khi đang đứng gần NPC/địa điểm.
+- [ ] Xác nhận hướng dẫn nêu rõ WASD/phím mũi tên, cụm nút cảm ứng, phím E và cách bắt đầu ca bán tại xe bánh tráng.
+- [ ] Kiểm tra danh sách 10 điểm khám phá; tên và mô tả không bị cắt trên desktop và màn hình điện thoại.
+- [ ] Đứng gần một NPC rồi mở Hướng dẫn; xác nhận nội dung chỉ dẫn vẫn hiện và thông tin điểm gần nhất cũng dễ nhận biết.
+- [ ] Đóng bảng bằng nút × hoặc Escape; xác nhận nhân vật không tự di chuyển và có thể tiếp tục khám phá.
+- [ ] Xác nhận hướng dẫn không thay đổi tiền, kho, XP, nhiệm vụ, thời gian hoặc save.

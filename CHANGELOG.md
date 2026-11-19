@@ -59,3 +59,9 @@
 ## M6 – Responsive neighborhood journal
 - Repositioned the map information/journal panel into the safe area above the bottom controls and enabled independent vertical scrolling for touch devices.
 - Constrained both optional-quest offer dialogs to the viewport height so their accept/defer actions remain reachable on short screens.
+
+
+## M6 – Map 1 exploration guide
+- Reworked the in-map Guide panel into a structured first-time-player guide for keyboard/touch movement, interaction, returning to the bánh tráng cart, and all ten neighborhood stops.
+- The guide now remains visible even when the player is standing near an NPC; nearby-location context appears as a supplemental section instead of replacing the guide.
+- UI-only change: no quest, save, economy, inventory, time, or cooking-loop behavior changed.
