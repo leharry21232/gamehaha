@@ -630,6 +630,33 @@ export default function App() {
     if (!worldHubOpen) return;
     const move = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
+      const questOfferOpen = neighborhoodHelpQuestOfferOpen || neighborhoodParcelQuestOfferOpen;
+
+      // Keep keyboard movement and interaction behind an active quest dialog disabled.
+      if (questOfferOpen) {
+        if (key === 'escape') {
+          event.preventDefault();
+          setNeighborhoodHelpQuestOfferOpen(false);
+          setNeighborhoodParcelQuestOfferOpen(false);
+        } else if (['e','w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) {
+          event.preventDefault();
+        }
+        return;
+      }
+
+      if (key === 'escape' && worldPanel) {
+        event.preventDefault();
+        setWorldPanel(null);
+        return;
+      }
+
+      // E must not interact with an NPC hidden behind the open map/journal panel.
+      if (key === 'e' && worldPanel) {
+        event.preventDefault();
+        setWorldPanel(null);
+        return;
+      }
+
       if (key === 'e') {
         event.preventDefault();
         const nearby = findNearbyWorldLocation(worldPlayer.x, worldPlayer.y);
@@ -650,7 +677,7 @@ export default function App() {
     };
     window.addEventListener('keydown', move);
     return () => window.removeEventListener('keydown', move);
-  }, [worldHubOpen, worldPlayer, hud.playerLevel, hud.cityTycoon.totalStaff, hud.storyMission, neighborhoodHelpQuestStatus, neighborhoodParcelQuestStatus]);
+  }, [worldHubOpen, worldPlayer, worldPanel, neighborhoodHelpQuestOfferOpen, neighborhoodParcelQuestOfferOpen, hud.playerLevel, hud.cityTycoon.totalStaff, hud.storyMission, neighborhoodHelpQuestStatus, neighborhoodParcelQuestStatus]);
 
   // Persist high scores cleanly whenever money or ordersServed increases
   useEffect(() => {

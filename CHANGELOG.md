@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Prevented background movement/interactions while a neighborhood quest dialog is open; Escape closes dialogs without accepting or declining. E now closes an open map/journal panel instead of interacting with a hidden NPC, and Escape closes the panel.
 - Added the first explorable neighborhood slice using the existing 2D pixel-art scene: collision-aware movement, six local interaction points with dialogue, and Tester Panel map QA controls. No economy, inventory, save, or cooking-loop behavior is changed.
 - Added collision-aware neighborhood exploration using the existing pixel-art SVG map, with six walkable interaction points and contextual NPC/store dialogue.
 - Added keyboard and touch movement through shared world rules, plus Tester Panel map teleport/QA controls and regression tests.

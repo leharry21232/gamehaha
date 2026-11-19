@@ -118,3 +118,9 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] Xoay ngang điện thoại hoặc dùng viewport thấp; xác nhận nội dung vẫn cuộn được và nút đóng bảng luôn truy cập được.
 - [ ] Mở lời mời của Chú Bảy và Tí; xác nhận cả hai lựa chọn “NHẬN LỜI” và “ĐỂ LÚC KHÁC” nhìn thấy hoặc truy cập được bằng cuộn.
 - [ ] Cuộn trong bảng/hộp thoại không làm nhân vật di chuyển hoặc cuộn trang nền.
+
+## M6 – Khóa điều khiển nền khi mở hộp thoại/bảng bản đồ
+- [ ] Mở lời mời nhiệm vụ rồi nhấn WASD/phím mũi tên/E; xác nhận nhân vật và NPC phía sau hộp thoại không bị điều khiển/tương tác.
+- [ ] Nhấn Escape khi lời mời đang mở; xác nhận hộp thoại đóng nhưng nhiệm vụ vẫn ở trạng thái Chưa nhận và có thể hỏi lại NPC.
+- [ ] Mở tab Nhật ký/Bản đồ rồi nhấn E; xác nhận chỉ đóng bảng, không tương tác với NPC đang bị che phía sau.
+- [ ] Nhấn Escape khi bảng Nhật ký/Bản đồ đang mở; xác nhận bảng đóng mà không di chuyển nhân vật.

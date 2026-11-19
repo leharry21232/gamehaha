@@ -118,3 +118,11 @@
 - [ ] Kiểm tra Nhật ký khi có đủ nhiệm vụ Chương 1 và hai nhiệm vụ phụ ở màn hình điện thoại dọc/ngang.
 - [ ] Kiểm tra hai hộp thoại nhận nhiệm vụ trên màn hình thấp và xác nhận nút NHẬN LỜI / ĐỂ LÚC KHÁC luôn nhìn thấy, cuộn được khi cần.
 - [ ] Xác nhận các nút di chuyển, tương tác và đóng bản đồ không bị bảng thông tin che khuất.
+
+
+### M6 – Phần 9: Khóa tương tác nền khi mở giao diện
+- [x] Chặn WASD/phím mũi tên/E khi hộp thoại nhận nhiệm vụ đang mở để không điều khiển nhân vật hoặc tương tác phía sau.
+- [x] Hỗ trợ Escape để đóng lời mời mà không nhận/từ chối nhiệm vụ.
+- [x] Khi bảng Bản đồ/Nhật ký đang mở, phím E chỉ đóng bảng thay vì tương tác với NPC bị che.
+- [x] Hỗ trợ Escape đóng bảng đang mở; giữ nguyên WASD/phím mũi tên để đóng bảng và di chuyển như luồng hiện tại.
+- [ ] Kiểm tra thủ công các trường hợp phím khi hộp thoại và bảng đang mở.

@@ -88,3 +88,8 @@
 - Bảng thông tin bản đồ phải nằm trong vùng an toàn phía trên cụm điều khiển dưới cùng; không được che D-pad, nút tương tác hoặc nút đóng bản đồ.
 - Nhật ký có thể dài hơn chiều cao khả dụng nên phải cuộn độc lập theo chiều dọc trên thiết bị cảm ứng; không thay đổi vị trí nhân vật hoặc cuộn trang nền.
 - Hộp thoại nhiệm vụ phải giới hạn chiều cao theo viewport và cho phép cuộn để hai lựa chọn nhận/trì hoãn luôn truy cập được.
+
+
+## M6 – Khóa điều khiển nền của bản đồ
+- Khi hộp thoại nhận nhiệm vụ mở, các phím di chuyển và E không được tác động lên nhân vật/NPC phía sau; Escape chỉ đóng hộp thoại và không thay đổi trạng thái nhiệm vụ.
+- Khi bảng Bản đồ/Nhật ký đang mở, E đóng bảng thay vì kích hoạt NPC phía sau; Escape đóng bảng. Phím di chuyển tiếp tục đóng bảng và di chuyển như trước.
