@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, isWorldPositionWalkable, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES, getNeighborhoodEvent, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, NEIGHBORHOOD_PARCEL_QUEST } from './world';
+import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, isWorldPositionWalkable, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES, getNeighborhoodEvent, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, NEIGHBORHOOD_PARCEL_QUEST, type WorldInteractable } from './world';
 
 test('all five vendor locations have distinct grounded costs and valid multipliers', () => {
   assert.equal(VENDOR_LOCATIONS.length, 5);
@@ -241,4 +241,31 @@ test('every neighborhood interaction is reachable from the default spawn with re
     WORLD_INTERACTABLES.map((location) => location.id).sort(),
     'every business and NPC must be interactable from the default map spawn',
   );
+});
+
+
+test('all four solid neighborhood obstacles block entry from the sidewalk', () => {
+  const cases = [
+    { id: 'left tree', start: { x: 9, y: 40 }, dx: -5, dy: 0 },
+    { id: 'cart', start: { x: 40, y: 38 }, dx: -15, dy: 0 },
+    { id: 'drink stall', start: { x: 50, y: 45 }, dx: 20, dy: 0 },
+    { id: 'right tree', start: { x: 84, y: 40 }, dx: 5, dy: 0 },
+  ];
+
+  for (const obstacle of cases) {
+    const moved = moveWorldPlayer(obstacle.start, obstacle.dx, obstacle.dy);
+    assert.equal(moved.x, obstacle.start.x, `player must not pass through ${obstacle.id}`);
+    assert.equal(moved.y, obstacle.start.y, `blocked horizontal movement must not shift ${obstacle.id} test vertically`);
+  }
+});
+
+test('overlapping interaction radii always select the nearest target and resolve exact ties consistently', () => {
+  const locations: WorldInteractable[] = [
+    { ...WORLD_INTERACTABLES[0], id: 'cart', x: 0, y: 0, radius: 6 },
+    { ...WORLD_INTERACTABLES[1], id: 'grocery', x: 8, y: 0, radius: 6 },
+  ];
+
+  assert.equal(findNearbyWorldLocation(5, 0, locations)?.id, 'grocery');
+  assert.equal(findNearbyWorldLocation(4, 0, locations)?.id, 'cart');
+  assert.equal(findNearbyWorldLocation(15, 0, locations), null);
 });

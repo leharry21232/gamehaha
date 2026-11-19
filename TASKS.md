@@ -140,3 +140,10 @@
 - [x] Bổ sung kiểm thử tìm đường từ vị trí xuất hiện mặc định bằng đúng bước di chuyển bàn phím (2.5% ngang, 1.5% dọc).
 - [ ] Kiểm tra thủ công đi bộ từ điểm xuất hiện đến đủ 10 địa điểm/NPC, đặc biệt các góc sát ranh bản đồ.
 - [ ] Nếu phát hiện điểm bị chắn hoặc vùng tương tác chồng lấn gây khó thao tác, điều chỉnh tọa độ/collision rồi kiểm tra lại toàn bộ tuyến.
+
+
+### M6 – Rà soát va chạm và vùng tương tác
+- [x] Bổ sung regression test xác nhận bốn vật cản chính (cây trái, xe bánh tráng, quán nước, cây phải) đều chặn nhân vật đi xuyên qua.
+- [x] Bổ sung test vùng tương tác chồng lấn: chọn mục tiêu gần nhất, xử lý khoảng cách bằng nhau ổn định và không chọn mục tiêu ngoài bán kính.
+- [ ] Kiểm tra thủ công đi sát bốn vật cản từ nhiều hướng và xác nhận nhân vật trượt dọc cạnh thay vì bị khựng cả hai trục.
+- [ ] Đi vào vùng giao nhau giữa hai vòng tương tác; xác nhận nhãn E chuyển sang đối tượng gần hơn một cách dễ hiểu.

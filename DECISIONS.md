@@ -103,3 +103,9 @@
 ## M6 – Kiểm chứng khả năng tiếp cận Map 1
 - Mọi điểm tương tác của Map 1 phải có thể tiếp cận từ vị trí xuất hiện mặc định bằng các bước di chuyển bàn phím thực tế, không phụ thuộc chức năng teleport của Tester Panel.
 - Kiểm thử reachability mô phỏng các bước ngang 2.5% và dọc 1.5% qua cùng hàm di chuyển/collision dùng trong game; thay đổi tọa độ hoặc vật cản phải tiếp tục giữ tất cả điểm tương tác có thể tiếp cận.
+
+
+## M6 – Quy tắc va chạm và chọn mục tiêu tương tác
+- Vật cản chính trên Map 1 phải chặn chuyển động theo trục va chạm nhưng vẫn cho phép trượt theo trục còn lại.
+- Khi nhiều vùng tương tác chồng lấn, chỉ chọn một mục tiêu gần nhất; nếu khoảng cách bằng nhau, giữ thứ tự khai báo hiện tại để kết quả ổn định.
+- Không mở rộng bán kính tương tác chỉ để bù cho lối đi khó tiếp cận; ưu tiên sửa bố cục hoặc đường đi nếu QA phát hiện vấn đề.

@@ -138,3 +138,10 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] Ưu tiên kiểm tra đường vòng quanh xe bánh tráng, quán nước và hai mép bản đồ; xác nhận không cần dịch chuyển bằng Tester Panel.
 - [ ] Tại từng điểm, xác nhận chỉ NPC/địa điểm gần nhất được chọn và nhấn E/nút tương tác mở đúng nội dung.
 - [ ] Đi sát các vật cản từ nhiều hướng; xác nhận nhân vật không xuyên vật thể và vẫn trượt dọc mép vật cản.
+
+
+## M6 – Va chạm và vùng tương tác
+- [ ] Thử đi xuyên qua cây bên trái, xe bánh tráng, quán nước và cây bên phải từ cả hai hướng; nhân vật không được xuyên vật thể.
+- [ ] Đi chéo sát cạnh từng vật cản; xác nhận vẫn trượt được theo trục còn lại, không bị kẹt.
+- [ ] Di chuyển qua vùng giao nhau giữa hai vùng tương tác; nhãn E phải ưu tiên địa điểm/NPC gần nhân vật nhất và đổi mục tiêu hợp lý khi tiếp tục di chuyển.
+- [ ] Đứng ngoài bán kính tương tác; không được hiện nhầm tên địa điểm/NPC.
