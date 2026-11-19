@@ -167,3 +167,11 @@
 - [x] Đồng bộ một lớp ánh sáng môi trường nhẹ với ba khung thời gian sáng/trưa/chiều đã có.
 - [x] Giữ lớp ánh sáng không nhận pointer event và không che nhân vật/NPC/điều khiển.
 - [ ] Kiểm tra thủ công ba khung thời gian để bảo đảm chữ, vật thể và nhân vật vẫn rõ.
+
+## M6 – Chất lượng hội thoại Map 1
+- [x] Tách hội thoại lần đầu và hội thoại khi quay lại cho chín điểm không bao gồm xe bánh tráng.
+- [x] Bổ sung lời thoại theo sáng/trưa/chiều dựa trên thời điểm trong game hiện có.
+- [x] Làm rõ Tạp hóa đầu ngõ là tiệm riêng, không phải một vị trí thứ hai của Cô Năm.
+- [ ] Người chơi kiểm tra lời thoại lần đầu, quay lại và cả ba thời điểm trong ngày tại đủ chín điểm.
+- [ ] Xác nhận hội thoại nhiệm vụ của Chú Bảy/Tí và lời thoại tiến trình Chương 1 của Cô Năm vẫn được ưu tiên đúng lúc.
+- [ ] Xác nhận số lần ghé chỉ tồn tại trong phiên bản đồ hiện tại, không được ghi vào save hoặc thay đổi gameplay.

@@ -127,3 +127,11 @@
 - Ánh sáng nền chỉ là lớp trình bày nhẹ, đồng bộ với khung thời gian của sự kiện khu phố hiện có (sáng/trưa/chiều).
 - Lớp phủ đặt phía trên nền tĩnh nhưng dưới NPC, nhân vật và HUD; luôn bỏ qua pointer events.
 - Không thêm chu kỳ thời gian, hiệu ứng gameplay, thay đổi độ sáng màn hình thiết bị hoặc dữ liệu save mới.
+
+## M6 – Hội thoại có ngữ cảnh cho Map 1
+- Chín điểm không bao gồm xe bánh tráng có lời thoại lần đầu, lời thoại khi quay lại và câu bối cảnh theo ba khung giờ MORNING/NOON/AFTERNOON.
+- Khung giờ lấy từ `getNeighborhoodEvent` hiện có; không tạo timer hoặc chu kỳ thời gian mới.
+- Số lần ghé chỉ nằm trong React state của phiên bản đồ, không ghi vào localStorage/save và không có tác động gameplay.
+- Hội thoại nhiệm vụ phụ và hội thoại tiến trình Chương 1 có độ ưu tiên cao hơn hội thoại thông thường.
+- Tạp hóa đầu ngõ là một chủ tiệm riêng; NPC Cô Năm chỉ xuất hiện tại vị trí Cô Năm hàng xóm, tránh hiểu nhầm một nhân vật có hai vị trí tương tác.
+- Tất cả nội dung chỉ mang tính kể chuyện; không thay đổi tiền, kho, XP, thời gian, nhiệm vụ, nhân viên hoặc vòng lặp làm bánh.

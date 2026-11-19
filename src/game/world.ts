@@ -211,13 +211,13 @@ export const WORLD_INTERACTABLES: readonly WorldInteractable[] = [
   },
   {
     id: 'grocery',
-    name: 'Tạp hóa cô Năm',
+    name: 'Tạp hóa đầu ngõ',
     x: 12,
     y: 33,
     radius: 7,
     kind: 'BUSINESS',
-    description: 'Tiệm tạp hóa nhỏ ở đầu dãy phố. Cô Năm luôn biết chỗ mua đồ dùng rẻ.',
-    interactionText: 'Cô Năm: “Mới dọn xe ra hả con? Có thiếu gì cứ ghé cô, đừng ngại hỏi giá trước nha!”',
+    description: 'Tiệm tạp hóa nhỏ ở đầu dãy phố, do cô chủ tiệm vui tính trông coi.',
+    interactionText: 'Cô chủ tiệm: “Mới dọn xe ra bán hả con? Cứ xem giá kỹ rồi hãy lấy hàng, bán buôn phải tính từng đồng đó nghen!”',
   },
   {
     id: 'snack_shop',
@@ -300,6 +300,73 @@ export const WORLD_INTERACTABLES: readonly WorldInteractable[] = [
     interactionText: 'Bà Tư: “Ở xóm này người ta quý nhau cái tình. Con bán đàng hoàng, giữ vệ sinh là bà con thương thôi!”',
   },
 ] as const;
+
+export type NeighborhoodDialogueLocationId = Exclude<WorldInteractable['id'], 'cart'>;
+
+interface NeighborhoodDialogueEntry {
+  firstVisit: string;
+  returnVisit: string;
+  dayPart: Record<NeighborhoodDayPart, string>;
+}
+
+// Conversation is presentation-only. Visit counts live in React session state and are not saved.
+const NEIGHBORHOOD_DIALOGUES: Record<NeighborhoodDialogueLocationId, NeighborhoodDialogueEntry> = {
+  grocery: {
+    firstVisit: 'Cô chủ tiệm: “Mới dọn xe ra bán hả con? Cứ xem giá kỹ rồi hãy lấy hàng, bán buôn phải tính từng đồng đó nghen!”',
+    returnVisit: 'Cô chủ tiệm: “Lại ghé nữa hả? Có món nào sắp hết thì ghi ra giấy, đi một vòng mua đủ sẽ đỡ mất công chạy tới chạy lui.”',
+    dayPart: { MORNING: 'Sáng nay cô vừa nhập thêm mấy thùng nước, hàng mới còn xếp ở trong.', NOON: 'Trưa rồi, cô đang tranh thủ kiểm lại sổ hàng trước khi khách đông.', AFTERNOON: 'Chiều xuống cô thường chốt lại món nào bán chạy để mai lấy thêm.' },
+  },
+  snack_shop: {
+    firstVisit: 'Chủ sạp: “Bên này toàn món ăn vặt quen thuộc thôi. Khách nhớ một sạp nhỏ nhiều khi vì cái vị thân quen chứ chẳng cần cầu kỳ đâu!”',
+    returnVisit: 'Chủ sạp: “Lại gặp em rồi! Hôm nay có mẻ bánh mới, thơm tới tận đầu ngõ luôn đó.”',
+    dayPart: { MORNING: 'Mẻ bánh đầu ngày vừa ra lò, còn nóng giòn.', NOON: 'Giờ này mấy bạn học sinh, sinh viên hay ghé mua món ăn lót dạ.', AFTERNOON: 'Xế chiều là lúc sạp đông nhất, ai đi ngang cũng muốn ăn chút gì.' },
+  },
+  drink_stall: {
+    firstVisit: 'Chú Ba: “Ngồi nghỉ chân chút không con? Bán hàng cả buổi nhớ uống nước, đừng mải lo cho khách rồi quên mình.”',
+    returnVisit: 'Chú Ba: “Quen mặt rồi nghen! Có chuyện gì ở khu này cứ hỏi, chú ngồi đây nhìn phố từ sáng tới chiều mà.”',
+    dayPart: { MORNING: 'Sáng chú hay pha trà nóng, mấy cô chú đi chợ ghé làm một ly.', NOON: 'Trưa nắng, khách tìm bóng mát với ly nước mát nhiều hơn hẳn.', AFTERNOON: 'Tầm này dân tan làm bắt đầu ghé uống nước, kể chuyện cuối ngày.' },
+  },
+  market_stall: {
+    firstVisit: 'Tiếng loa chợ: “Bà con đi chợ nhớ coi kỹ hàng, hỏi giá trước khi mua và nhường lối cho người phía sau nhé!”',
+    returnVisit: 'Tiếng loa chợ: “Quý khách lại ghé chợ. Các sạp vẫn mở cửa, bà con mua bán vui vẻ và giữ gìn vệ sinh chung!”',
+    dayPart: { MORNING: 'Các sạp rau và đồ tươi vừa bày hàng, người đi chợ đang lựa món cho bữa nhà.', NOON: 'Chợ thưa khách hơn một chút, tiểu thương tranh thủ ăn trưa và sắp lại quầy.', AFTERNOON: 'Người tan ca ghé mua đồ cho bữa tối, lối vào chợ lại rộn ràng.' },
+  },
+  co_nam: {
+    firstVisit: 'Cô Năm: “Cô ở xóm này lâu rồi, có gì chưa quen cứ hỏi cô. Mới bắt đầu làm ăn thì cứ từ tốn, đừng nóng ruột nghe con.”',
+    returnVisit: 'Cô Năm: “Con lại đi thăm bà con trong xóm đó hả? Nhớ giữ sức, làm ăn lâu dài quan trọng hơn một buổi đông khách.”',
+    dayPart: { MORNING: 'Cô vừa tưới mấy chậu cây trước hiên, nghe tiếng xe con là biết con bắt đầu ngày mới.', NOON: 'Cô đang tránh nắng trong hiên, thấy con ghé thì vui vì xóm mình có người qua lại hỏi thăm.', AFTERNOON: 'Cô đang quét sân, chiều nào cũng thích ngồi nhìn bà con đi làm về.' },
+  },
+  co_sau: {
+    firstVisit: 'Cô Sáu: “Cô bán hoa ở góc này quen rồi. Hoa đẹp thì vui mắt, nhưng người bán vui vẻ mới khiến khách muốn quay lại con à!”',
+    returnVisit: 'Cô Sáu: “Lại ghé thăm cô hả? Hôm nào rảnh đứng ngắm hoa một chút, nhìn màu sắc tươi tắn tự nhiên thấy nhẹ lòng.”',
+    dayPart: { MORNING: 'Cô đang tỉa lại mấy cành cúc mới nhập, bông nào cũng còn đẫm sương.', NOON: 'Cô chuyển mấy chậu hoa vào chỗ râm để tránh nắng gắt.', AFTERNOON: 'Cô đang bó những bó hoa cuối ngày cho khách ghé mua mang về.' },
+  },
+  shipper_ti: {
+    firstVisit: 'Tí: “Em chạy giao hàng quanh mấy con hẻm này nè. Địa chỉ càng rõ, gói đồ càng gọn thì người nhận càng vui!”',
+    returnVisit: 'Tí: “Anh/chị lại đây à? Em thuộc gần hết đường trong khu này rồi, hẻm nào đông xe em cũng biết giờ né.”',
+    dayPart: { MORNING: 'Em đang gom đơn đầu ngày, tranh thủ giao trước khi đường đông.', NOON: 'Trưa nắng chạy xe mệt lắm, em tranh thủ nghỉ vài phút rồi đi tiếp.', AFTERNOON: 'Đơn cuối buổi đang tới, em cố giao xong trước giờ đường đông nghẹt.' },
+  },
+  chu_bay: {
+    firstVisit: 'Chú Bảy: “Đồ đạc hư thì sửa được, chứ chạy xe ẩu dễ nguy hiểm lắm. Con kê xe gọn, chừa lối cho người ta đi nghen!”',
+    returnVisit: 'Chú Bảy: “Lại ghé chơi hả? Có tiếng động lạ thì đem chú coi, đừng để hư nặng rồi mới sửa.”',
+    dayPart: { MORNING: 'Chú đang bơm bánh cho khách đi làm, đầu ngày ai cũng vội.', NOON: 'Nắng trưa làm chú nghỉ tay một chút, chiều mát mới sửa tiếp.', AFTERNOON: 'Giờ tan tầm xe cộ đông, chú kiểm tra phanh với đèn cho khách trước khi về.' },
+  },
+  ba_tu: {
+    firstVisit: 'Bà Tư: “Ở xóm này quý nhất là biết hỏi thăm nhau. Con buôn bán đàng hoàng, gặp ai cũng vui vẻ thì bà con thương thôi.”',
+    returnVisit: 'Bà Tư: “Con lại ghé đó à? Có chuyện vui buồn gì cứ kể bà nghe, cuối ngõ này lúc nào cũng có người ngồi hóng chuyện.”',
+    dayPart: { MORNING: 'Bà đang chuẩn bị đi chợ, còn dặn mấy nhà gần đây nhớ khóa cửa cẩn thận.', NOON: 'Bà vừa ăn cơm xong, ngồi nghỉ dưới mái hiên tránh nắng.', AFTERNOON: 'Bà đem ghế ra trước cửa hóng gió, chờ con cháu đi học đi làm về.' },
+  },
+};
+
+export function isNeighborhoodDialogueLocationId(id: WorldInteractable['id']): id is NeighborhoodDialogueLocationId {
+  return id !== 'cart';
+}
+
+export function getNeighborhoodDialogue(locationId: NeighborhoodDialogueLocationId, dayPart: NeighborhoodDayPart, visitCount = 0): string {
+  const dialogue = NEIGHBORHOOD_DIALOGUES[locationId];
+  const greeting = visitCount <= 0 ? dialogue.firstVisit : dialogue.returnVisit;
+  return greeting + ' ' + dialogue.dayPart[dayPart];
+}
 
 function isInsideWorldCollision(position: WorldPosition, padding = 1.2): boolean {
   return WORLD_COLLISION_RECTS.some((rect) =>

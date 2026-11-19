@@ -168,3 +168,13 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] Đợi hoặc dùng Tester Panel đổi thời gian trong ngày; xác nhận ánh sáng chuyển đúng ba trạng thái sáng, trưa và chiều.
 - [ ] Kiểm tra nhãn NPC, nhân vật, điểm tương tác và chữ trên bản đồ vẫn dễ đọc ở cả ba trạng thái.
 - [ ] Xác nhận lớp ánh sáng không chặn thao tác chạm/click, không ảnh hưởng di chuyển, va chạm hoặc tương tác.
+
+## Map 1 – Chất lượng hội thoại và cá tính địa điểm
+- [ ] Ghé từng điểm trong chín điểm không bao gồm xe bánh tráng; xác nhận lời thoại lần đầu đúng nhân vật và đúng địa điểm.
+- [ ] Rời đi rồi quay lại cùng điểm; xác nhận nhân vật nhận ra người chơi và không lặp nguyên câu mở đầu lần đầu.
+- [ ] Kiểm tra hội thoại ở buổi sáng, buổi trưa và buổi chiều bằng thời gian game/Tester Panel; nội dung bối cảnh phải thay đổi phù hợp.
+- [ ] Xác nhận Tạp hóa đầu ngõ là cô chủ tiệm riêng, không bị nhầm là Cô Năm; Cô Năm chỉ là NPC tại vị trí riêng.
+- [ ] Kiểm tra Cô Năm vẫn nhắc đúng nhiệm vụ Chương 1 và tiến độ hiện tại.
+- [ ] Nhận nhiệm vụ Chú Bảy/Tí; xác nhận lời mời, nhắc lại, hoàn thành và hội thoại sau hoàn thành vẫn ưu tiên hơn hội thoại thường.
+- [ ] Mở lại bản đồ/phiên chơi mới; xác nhận số lần ghé không được lưu vào save.
+- [ ] So sánh tiền, tồn kho, XP, thời gian, nhiệm vụ chính và trạng thái bán hàng trước/sau khi trò chuyện; không giá trị nào bị thay đổi.

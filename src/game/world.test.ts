@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, isWorldPositionWalkable, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES, getNeighborhoodEvent, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, NEIGHBORHOOD_PARCEL_QUEST, type WorldInteractable } from './world';
+import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, isWorldPositionWalkable, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES, getNeighborhoodEvent, getNeighborhoodDialogue, isNeighborhoodDialogueLocationId, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, NEIGHBORHOOD_PARCEL_QUEST, type WorldInteractable } from './world';
 
 test('all five vendor locations have distinct grounded costs and valid multipliers', () => {
   assert.equal(VENDOR_LOCATIONS.length, 5);
@@ -268,4 +268,28 @@ test('overlapping interaction radii always select the nearest target and resolve
   assert.equal(findNearbyWorldLocation(5, 0, locations)?.id, 'grocery');
   assert.equal(findNearbyWorldLocation(4, 0, locations)?.id, 'cart');
   assert.equal(findNearbyWorldLocation(15, 0, locations), null);
+});
+
+test('all nine non-cart stops have distinct first-visit and return dialogue for all dayparts', () => {
+  const ids = WORLD_INTERACTABLES.map((location) => location.id).filter(isNeighborhoodDialogueLocationId);
+  assert.equal(ids.length, 9);
+  const firstVisitLines = ids.map((id) => getNeighborhoodDialogue(id, 'MORNING', 0));
+  assert.equal(new Set(firstVisitLines).size, ids.length);
+  for (const id of ids) {
+    assert.notEqual(getNeighborhoodDialogue(id, 'MORNING', 0), getNeighborhoodDialogue(id, 'MORNING', 1), id + ' should acknowledge a return visit');
+    for (const dayPart of ['MORNING', 'NOON', 'AFTERNOON'] as const) {
+      assert.ok(getNeighborhoodDialogue(id, dayPart, 0).length > 40, id + ' first visit ' + dayPart);
+      assert.ok(getNeighborhoodDialogue(id, dayPart, 1).length > 40, id + ' return visit ' + dayPart);
+    }
+  }
+});
+
+test('grocery shop and Cô Năm are clearly different map characters', () => {
+  const grocery = WORLD_INTERACTABLES.find((location) => location.id === 'grocery');
+  const coNam = WORLD_INTERACTABLES.find((location) => location.id === 'co_nam');
+  assert.equal(grocery?.name, 'Tạp hóa đầu ngõ');
+  assert.match(grocery?.description ?? '', /cô chủ tiệm/i);
+  assert.match(getNeighborhoodDialogue('grocery', 'MORNING'), /Cô chủ tiệm/);
+  assert.equal(coNam?.name, 'Cô Năm hàng xóm');
+  assert.match(getNeighborhoodDialogue('co_nam', 'MORNING'), /Cô Năm/);
 });

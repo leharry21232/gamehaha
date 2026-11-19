@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- Expanded Map 1 conversations with first-visit and return-visit dialogue plus morning/noon/afternoon context at nine non-cart stops; clarified the grocery shopkeeper as a separate character from Cô Năm. Visit counts are session-only and narrative-only.
+
+## Unreleased
 - Added follow-up dialogue for Chú Bảy/Cô Sáu and Tí/Bà Tư after their respective neighborhood side quests are completed.
 - Prevented background movement/interactions while a neighborhood quest dialog is open; Escape closes dialogs without accepting or declining. E now closes an open map/journal panel instead of interacting with a hidden NPC, and Escape closes the panel.
 - Added the first explorable neighborhood slice using the existing 2D pixel-art scene: collision-aware movement, six local interaction points with dialogue, and Tester Panel map QA controls. No economy, inventory, save, or cooking-loop behavior is changed.

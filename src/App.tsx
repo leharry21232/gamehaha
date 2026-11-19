@@ -4,7 +4,7 @@ import { GameEngine } from './game/engine';
 import { TesterPanel } from './TesterPanel';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
 import { DECORATIONS, getUnlockedSkills } from './game/progression';
-import { findNearbyWorldLocation, getNeighborhoodEvent, getVendorLocation, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, getNeighborhoodQuestFollowUpDialogue, NEIGHBORHOOD_PARCEL_QUEST, moveWorldPlayer, WORLD_INTERACTABLES, type NeighborhoodHelpQuestStatus, type NeighborhoodParcelQuestStatus, type WorldInteractable } from './game/world';
+import { findNearbyWorldLocation, getNeighborhoodEvent, getNeighborhoodDialogue, isNeighborhoodDialogueLocationId, getVendorLocation, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, getNeighborhoodQuestFollowUpDialogue, NEIGHBORHOOD_PARCEL_QUEST, moveWorldPlayer, WORLD_INTERACTABLES, type NeighborhoodHelpQuestStatus, type NeighborhoodParcelQuestStatus, type WorldInteractable } from './game/world';
 import type { BestRecord, CityDistrictId, CustomerType, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
 import heroBgUrl from './assets/images/saigon_sidewalk_hero_1794649926456.jpg';
 
@@ -538,6 +538,7 @@ export default function App() {
   const [worldPlayer, setWorldPlayer] = useState({ x: 48, y: 45 });
   const [worldNotice, setWorldNotice] = useState('');
   const [cartVisitorEventSeen, setCartVisitorEventSeen] = useState(false);
+  const [neighborhoodVisitCounts, setNeighborhoodVisitCounts] = useState<Partial<Record<Exclude<WorldInteractable['id'], 'cart'>, number>>>({});
   const [neighborhoodHelpQuestStatus, setNeighborhoodHelpQuestStatus] = useState<NeighborhoodHelpQuestStatus>('AVAILABLE');
   const [neighborhoodHelpQuestOfferOpen, setNeighborhoodHelpQuestOfferOpen] = useState(false);
   const [neighborhoodParcelQuestStatus, setNeighborhoodParcelQuestStatus] = useState<NeighborhoodParcelQuestStatus>('AVAILABLE');
@@ -744,17 +745,30 @@ export default function App() {
 
   const nearbyWorldLocation = findNearbyWorldLocation(worldPlayer.x, worldPlayer.y);
   const neighborhoodEvent = getNeighborhoodEvent(hud.day, hud.dayTimeLeft, hud.dayDuration);
-  const getWorldDialogue = (location: NonNullable<typeof nearbyWorldLocation>) => location.id === 'co_nam'
-    ? `Cô Năm: “${hud.storyMission.allCompleted ? 'Chương đầu con làm tốt lắm, cả xóm đều biết xe bánh tráng của con rồi!' : `Cứ tập trung nhiệm vụ “${hud.storyMission.title}” nha. ${hud.storyMission.storyText.replace(/[“”]/g, '')} Tiến độ hiện tại ${hud.storyMission.progress}/${hud.storyMission.target}.`}”`
-    : location.interactionText;
+  const getWorldDialogue = (location: NonNullable<typeof nearbyWorldLocation>) => {
+    if (!isNeighborhoodDialogueLocationId(location.id)) return location.interactionText;
+    const visitCount = neighborhoodVisitCounts[location.id] ?? 0;
+    const neighborhoodDialogue = getNeighborhoodDialogue(location.id, neighborhoodEvent.dayPart, visitCount);
+    if (location.id !== 'co_nam') return neighborhoodDialogue;
+    const storyDialogue = hud.storyMission.allCompleted
+      ? 'Chương đầu con làm tốt lắm, cả xóm đều biết xe bánh tráng của con rồi!'
+      : `Cứ tập trung nhiệm vụ “${hud.storyMission.title}” nha. ${hud.storyMission.storyText.replace(/[“”]/g, '')} Tiến độ hiện tại ${hud.storyMission.progress}/${hud.storyMission.target}.`;
+    return `${neighborhoodDialogue} Cô Năm: “${storyDialogue}”`;
+  };
 
   function handleWorldLocationInteraction(location: WorldInteractable) {
-    if (location.id === 'cart') {
+    if (!isNeighborhoodDialogueLocationId(location.id)) {
       setWorldHubOpen(false);
       setWorldPanel(null);
       setWorldNotice('');
       return;
     }
+
+    const dialogueLocationId = location.id as Exclude<WorldInteractable['id'], 'cart'>;
+    setNeighborhoodVisitCounts((counts) => ({
+      ...counts,
+      [dialogueLocationId]: (counts[dialogueLocationId] ?? 0) + 1,
+    }));
 
     const questAction = getNeighborhoodHelpQuestAction(location.id, neighborhoodHelpQuestStatus);
     if (questAction === 'OFFER') {
@@ -1405,7 +1419,7 @@ export default function App() {
                   <section className="border border-white/15 bg-black/20 p-3">
                     <p className="font-black text-amber-200">📍 CÁC ĐIỂM CÓ THỂ GHÉ</p>
                     <div className="mt-2 grid grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-2">
-                      <p>🛒 Tạp hóa cô Năm · nhập hàng</p><p>🍢 Sạp ăn vặt · gặp người bán</p>
+                      <p>🛒 Tạp hóa đầu ngõ · nhập hàng</p><p>🍢 Sạp ăn vặt · gặp người bán</p>
                       <p>🥤 Quán nước chú Ba · nghỉ chân</p><p>🏪 Cổng chợ · khám phá khu chợ</p>
                       <p>🌺 Cô Sáu · người bán hoa</p><p>🛵 Tí · người giao hàng</p>
                       <p>🔧 Chú Bảy · tiệm sửa xe</p><p>🏠 Bà Tư · hàng xóm</p>
