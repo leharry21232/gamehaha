@@ -1293,12 +1293,12 @@ export default function App() {
               <text x="36" y="700">KHU PHỐ BÁN BÁNH TRÁNG · SÀI GÒN</text>
             </g>
           </svg>
-          <div className="absolute left-[2%] top-[2%] z-20 border-[3px] border-[#35291f] bg-[#263b3b] px-4 py-3 font-mono shadow-[4px_4px_0_#172126] [image-rendering:pixelated]">
-            <p className="text-[10px] font-black tracking-[.16em] text-amber-300">GÓC PHỐ BÁNH TRÁNG</p>
-            <p className="text-sm font-extrabold">Ngày {hud.day} · {hud.money.toLocaleString('vi-VN')}đ</p>
-            <p className="text-[10px] text-slate-200">Cấp {hud.playerLevel} · Đi bộ đến xe để bán hàng</p>
+          <div className="absolute left-2 top-2 z-20 w-[min(46%,250px)] border-[3px] border-[#35291f] bg-[#263b3b] px-2 py-2 font-mono shadow-[4px_4px_0_#172126] [image-rendering:pixelated] sm:left-[2%] sm:top-[2%] sm:w-auto sm:px-4 sm:py-3">
+            <p className="text-[9px] font-black tracking-[.1em] text-amber-300 sm:text-[10px] sm:tracking-[.16em]">GÓC PHỐ BÁNH TRÁNG</p>
+            <p className="text-[11px] font-extrabold sm:text-sm">Ngày {hud.day} · {hud.money.toLocaleString('vi-VN')}đ</p>
+            <p className="text-[8px] leading-relaxed text-slate-200 sm:text-[10px]">Cấp {hud.playerLevel} · Đi bộ đến xe để bán hàng</p>
           </div>
-          <div className="absolute right-3 top-16 z-20 w-[min(68%,270px)] border-[3px] border-[#35291f] bg-[#263b3b]/95 p-2.5 font-mono shadow-[4px_4px_0_#172126] sm:right-5 sm:top-16 sm:w-[270px]">
+          <div className="absolute right-2 top-16 z-20 w-[min(48%,270px)] border-[3px] border-[#35291f] bg-[#263b3b]/95 p-2 font-mono shadow-[4px_4px_0_#172126] sm:right-5 sm:top-16 sm:w-[270px] sm:p-2.5">
             <div className="flex items-center justify-between gap-2">
               <p className="text-[9px] font-black tracking-[.12em] text-amber-300">NHỊP SỐNG KHU PHỐ</p>
               <span className="shrink-0 border border-amber-200/40 bg-amber-100/10 px-1.5 py-0.5 text-[8px] font-bold text-amber-100">{neighborhoodEvent.dayPartLabel}</span>
@@ -1413,9 +1413,9 @@ export default function App() {
           {worldHudOpen ? (
           <div className="absolute bottom-3 left-1/2 z-30 w-[min(94%,620px)] border-[4px] border-[#35291f] bg-[#263b3b]/[.97] p-3 pt-5 font-mono shadow-[6px_6px_0_#172126]">
             <button type="button" onClick={() => { setWorldHudOpen(false); setWorldPanel(null); }} aria-label="Ẩn bảng điều khiển" title="Ẩn bảng điều khiển" className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center border-2 border-[#5b2d25] bg-[#b95343] text-lg font-black leading-none text-white shadow-[2px_2px_0_#111] hover:bg-[#d46654]">×</button>
-            <div className="mb-2 flex items-center justify-center gap-2">
+            <div className="mb-2 flex flex-wrap items-center justify-center gap-2">
               {([{id:'MAP',icon:'🗺️',label:'Bản đồ'},{id:'BAG',icon:'🎒',label:'Túi đồ'},{id:'JOURNAL',icon:'📖',label:'Nhiệm vụ'},{id:'PHONE',icon:'📱',label:'Điện thoại'}] as const).map((item) => (
-                <button key={item.id} type="button" onClick={() => setWorldPanel((current) => current === item.id ? null : item.id)} className={"flex min-w-[62px] flex-col items-center border-[3px] px-3 py-2 font-mono text-[10px] font-bold shadow-[3px_3px_0_#111] " + (worldPanel === item.id ? "border-[#f6cf70] bg-[#8d633e] text-[#fff2c7]" : "border-[#8c9a83] bg-[#405653] text-[#f8edcf] hover:bg-[#587268]")}>
+                <button key={item.id} type="button" onClick={() => setWorldPanel((current) => current === item.id ? null : item.id)} className={"flex min-w-[58px] flex-1 flex-col items-center border-[3px] px-2 py-1.5 font-mono text-[10px] font-bold shadow-[3px_3px_0_#111] sm:min-w-[62px] sm:flex-none sm:px-3 sm:py-2 " + (worldPanel === item.id ? "border-[#f6cf70] bg-[#8d633e] text-[#fff2c7]" : "border-[#8c9a83] bg-[#405653] text-[#f8edcf] hover:bg-[#587268]")}>
                   <span className="text-xl">{item.icon}</span>{item.label}
                 </button>
               ))}
@@ -1431,10 +1431,10 @@ export default function App() {
               <button type="button" onClick={() => { setWorldPanel(null); setWorldNotice(''); setWorldPlayer((p) => moveWorldPlayer(p, 0, 2)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi xuống">↓</button>
               <button type="button" onClick={() => { setWorldPanel(null); setWorldNotice(''); setWorldPlayer((p) => moveWorldPlayer(p, 3, 0)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi phải">→</button>
             </div>
-            <div className="mt-2 flex justify-center gap-2">
-              {nearbyWorldLocation?.id === 'cart' && !cartVisitorEventSeen && <button type="button" onClick={() => { setCartVisitorEventSeen(true); setWorldNotice(CURIOUS_CART_VISITOR_EVENT.dialogue); setWorldPanel(null); }} className="border-[3px] border-[#6b5430] bg-[#f6dfa0] px-3 py-2 font-mono text-[10px] font-black text-[#392819] shadow-[3px_3px_0_#111] hover:bg-[#ffe9b2]">💬 KHÁCH TÒ MÒ</button>}
-              <button type="button" onClick={handleWorldInteract} className="border-[3px] border-[#543a25] bg-[#f1c65e] px-4 py-2 font-mono text-xs font-black text-[#392819] shadow-[4px_4px_0_#111] hover:bg-[#ffda79]">E · {nearbyWorldLocation ? nearbyWorldLocation.name.toUpperCase() : 'TƯƠNG TÁC'}</button>
-              <button type="button" onClick={() => { setWorldPanel((current) => current === 'MAP' ? null : 'MAP'); setWorldNotice('Bạn đang ở khu phố bán bánh tráng. Hãy đi dọc vỉa hè, gặp khách và đến xe bánh tráng để bắt đầu ca bán hàng.'); }} className="border-[3px] border-[#9cae91] bg-[#405653] px-3 py-2 font-mono text-[10px] font-bold text-[#fff2d1] shadow-[3px_3px_0_#111]">Hướng dẫn</button>
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+              {nearbyWorldLocation?.id === 'cart' && !cartVisitorEventSeen && <button type="button" onClick={() => { setCartVisitorEventSeen(true); setWorldNotice(CURIOUS_CART_VISITOR_EVENT.dialogue); setWorldPanel(null); }} className="max-w-full border-[3px] border-[#6b5430] bg-[#f6dfa0] px-3 py-2 font-mono text-[10px] font-black text-[#392819] shadow-[3px_3px_0_#111] hover:bg-[#ffe9b2]">💬 KHÁCH TÒ MÒ</button>}
+              <button type="button" onClick={handleWorldInteract} className="max-w-full whitespace-normal break-words border-[3px] border-[#543a25] bg-[#f1c65e] px-4 py-2 text-center font-mono text-xs font-black text-[#392819] shadow-[4px_4px_0_#111] hover:bg-[#ffda79]">E · {nearbyWorldLocation ? nearbyWorldLocation.name.toUpperCase() : 'TƯƠNG TÁC'}</button>
+              <button type="button" onClick={() => { setWorldPanel((current) => current === 'MAP' ? null : 'MAP'); setWorldNotice('Bạn đang ở khu phố bán bánh tráng. Hãy đi dọc vỉa hè, gặp khách và đến xe bánh tráng để bắt đầu ca bán hàng.'); }} className="max-w-full border-[3px] border-[#9cae91] bg-[#405653] px-3 py-2 font-mono text-[10px] font-bold text-[#fff2d1] shadow-[3px_3px_0_#111]">Hướng dẫn</button>
             </div>
           </div>
           ) : (

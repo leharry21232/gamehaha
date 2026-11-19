@@ -65,3 +65,9 @@
 - Reworked the in-map Guide panel into a structured first-time-player guide for keyboard/touch movement, interaction, returning to the bánh tráng cart, and all ten neighborhood stops.
 - The guide now remains visible even when the player is standing near an NPC; nearby-location context appears as a supplemental section instead of replacing the guide.
 - UI-only change: no quest, save, economy, inventory, time, or cooking-loop behavior changed.
+
+
+## M6 – Responsive HUD cho Map 1
+- Giới hạn chiều rộng hai thẻ thông tin đầu màn hình trên điện thoại để tránh chồng lấn.
+- Cho các tab và nút hành động ở bảng điều khiển tự co giãn/xuống dòng trên màn hình hẹp.
+- Chỉ thay đổi lớp trình bày; giữ nguyên logic bản đồ, nhiệm vụ và bán hàng.

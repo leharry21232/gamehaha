@@ -115,3 +115,9 @@
 - Bảng Hướng dẫn phải luôn hiển thị cách di chuyển, tương tác, điều khiển cảm ứng, đường quay lại xe bánh tráng và danh sách các điểm có thể ghé.
 - Khi mở Hướng dẫn, nội dung chỉ dẫn được ưu tiên; thông tin địa điểm gần nhất chỉ là phần bổ sung, không được thay thế hướng dẫn.
 - Đây là lớp thông tin tĩnh, không cấp thưởng, không thay đổi trạng thái nhiệm vụ, kinh tế, thời gian hay save.
+
+
+## M6 – Quy tắc responsive cho HUD Map 1
+- Hai thẻ thông tin phía trên phải có giới hạn chiều rộng theo viewport trên điện thoại; thẻ trạng thái ngày/tiền và thẻ nhịp sống không được chiếm cùng vùng ngang.
+- Các tab và nút hành động phía dưới phải được phép co giãn/xuống dòng; không được cắt nhãn tương tác dài hoặc đẩy nút ra ngoài viewport.
+- Ưu tiên thay đổi trình bày responsive; không sửa logic điều khiển, tương tác, nhiệm vụ hoặc gameplay chỉ để xử lý tràn giao diện.

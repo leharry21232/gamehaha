@@ -154,3 +154,10 @@
 - [x] Liệt kê 10 điểm khám phá và giải thích cách chọn mục tiêu gần nhất.
 - [x] Ưu tiên hiển thị nội dung hướng dẫn khi người chơi mở bảng, không để lời thoại NPC che mất hướng dẫn.
 - [ ] Kiểm tra thủ công bảng hướng dẫn trên desktop/mobile và xác nhận không ảnh hưởng gameplay.
+
+
+### M6 – Rà soát HUD responsive trên Map 1
+- [x] Thu gọn và giới hạn chiều rộng hai thẻ thông tin phía trên để không chồng lấn trên điện thoại hẹp.
+- [x] Cho bốn tab điều hướng và hàng nút hành động tự xuống dòng khi không đủ chiều ngang.
+- [x] Giữ nguyên hành vi di chuyển, tương tác, nhiệm vụ và vòng lặp bán hàng.
+- [ ] Kiểm tra thủ công ở viewport 320×640, 360×640, 390×844 và điện thoại xoay ngang; xác nhận không có nút bị cắt hoặc che.
