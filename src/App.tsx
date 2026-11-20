@@ -1332,7 +1332,6 @@ export default function App() {
             <p className="mt-1 text-[9px] leading-relaxed text-slate-200">{neighborhoodEvent.description}</p>
             <p className="mt-1 text-[8px] font-bold text-emerald-200">● {neighborhoodEvent.trafficLabel}</p>
           </div>
-          <button type="button" onClick={() => { setWorldHubOpen(false); setWorldPanel(null); }} className="absolute right-3 top-3 z-30 border-[3px] border-[#35291f] bg-[#b95343] px-3 py-2 font-mono text-xs font-black text-[#fff0c7] shadow-[4px_4px_0_#172126]">ĐÓNG KHU PHỐ ✕</button>
           <div className="absolute left-[18%] top-[38%] z-10 flex items-end gap-2" style={{animation:"walkEast 24s linear infinite"}}>
             <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#d99b70"/><rect x="10" y="0" width="22" height="8" fill="#292b31"/><rect x="8" y="20" width="26" height="22" fill="#3d78a0"/><rect x="10" y="42" width="9" height="18" fill="#343d4c"/><rect x="23" y="42" width="9" height="18" fill="#343d4c"/></svg>
             <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#bd805d"/><rect x="9" y="0" width="24" height="8" fill="#4d332b"/><rect x="8" y="20" width="26" height="22" fill="#d16c4e"/><rect x="10" y="42" width="9" height="18" fill="#384b42"/><rect x="23" y="42" width="9" height="18" fill="#384b42"/></svg>

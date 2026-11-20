@@ -186,3 +186,19 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] Nhận nhiệm vụ Chú Bảy/Tí; xác nhận lời mời, nhắc lại, hoàn thành và hội thoại sau hoàn thành vẫn ưu tiên hơn hội thoại thường.
 - [ ] Mở lại bản đồ/phiên chơi mới; xác nhận số lần ghé không được lưu vào save.
 - [ ] So sánh tiền, tồn kho, XP, thời gian, nhiệm vụ chính và trạng thái bán hàng trước/sau khi trò chuyện; không giá trị nào bị thay đổi.
+
+## Map 1 – Final full walkthrough (after economy rebalance)
+- [ ] Start a fresh game and confirm the player spawns at the intended sidewalk position.
+- [ ] Walk from spawn to all 10 locations without Tester Panel teleport: bánh tráng cart, Tạp hóa đầu ngõ, Sạp ăn vặt, Quán nước chú Ba, Cổng chợ, Cô Năm, Cô Sáu, Tí, Chú Bảy, and Bà Tư.
+- [ ] At each stop, verify the visible E target and the resulting dialogue belong to the nearest correct location.
+- [ ] Walk around the cart, drink stall, and both trees from multiple directions; confirm collision blocks entry while allowing sliding along the edge.
+- [ ] Test overlapping interaction ranges near the cart/Cô Năm and drink stall/Chú Bảy; confirm the nearer target is selected and changes naturally as the player moves.
+- [ ] Visit all nine non-cart stops twice; verify first-visit and return dialogue differ, and morning/noon/afternoon context is appropriate.
+- [ ] Accept, defer, resume, and complete both side quests; verify only Cô Sáu completes Chú Bảy's message and only Bà Tư completes Tí's delivery.
+- [ ] Check the Chapter 1 journal and Cô Năm's dialogue before and after claiming a mission reward.
+- [ ] Check morning/noon/afternoon lighting and neighborhood event card readability.
+- [ ] Open Map/Bag/Journal/Phone panels, close with × or Escape, and verify movement and E do not affect hidden targets while a panel/dialog is open.
+- [ ] Confirm there is no shortcut to leave the neighborhood: only interact with the bánh tráng cart to return to preparation.
+- [ ] On mobile portrait and landscape, verify the player/NPCs remain aligned with the background, all touch controls are reachable, and panels/quest dialogs scroll without covering essential controls.
+- [ ] Compare money, stock, XP, story progress, day time, and save before/after optional neighborhood conversations; none should change except the explicitly claimed Chapter 1 reward.
+- [ ] After returning to preparation from the cart, complete one ordinary order and verify the existing cooking loop still works.

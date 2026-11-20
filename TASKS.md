@@ -4,8 +4,9 @@
 - [x] Centralize high-impact reward tuning in `src/game/economy.ts`.
 - [x] Reduce extreme one-off payouts and stacked reward multipliers without changing recipe steps or ingredient costs.
 - [x] Update reward callouts/dialogue and add regression tests for economy tuning.
-- [ ] Manually compare a normal two-order shift with a boss/bonus shift on the deployed build.
-- [ ] After economy validation, perform the planned full Map 1 walkthrough.
+- [x] Manually compare a normal two-order shift with a boss/bonus shift on the deployed build (player confirmed complete).
+- [x] Begin the planned full Map 1 walkthrough with a code audit; removed the anywhere-exit shortcut so the cart is the sole in-world exit.
+- [ ] Complete the final manual walkthrough on desktop and mobile, including route, NPC dialogue, quests, dayparts, collision sliding, and cart return.
 
 
 ## Current milestone: Neighborhood exploration foundation (M4.x, approved extension before official M5)
