@@ -1,5 +1,13 @@
 # Tasks
 
+## Economy rebalance – gameplay polish
+- [x] Centralize high-impact reward tuning in `src/game/economy.ts`.
+- [x] Reduce extreme one-off payouts and stacked reward multipliers without changing recipe steps or ingredient costs.
+- [x] Update reward callouts/dialogue and add regression tests for economy tuning.
+- [ ] Manually compare a normal two-order shift with a boss/bonus shift on the deployed build.
+- [ ] After economy validation, perform the planned full Map 1 walkthrough.
+
+
 ## Current milestone: Neighborhood exploration foundation (M4.x, approved extension before official M5)
 - [x] Preserve existing story mission IDs so browser saves from earlier builds remain valid.
 - [x] Group the existing first-customer, lifetime-earnings, and level-three missions into Chapter 1.

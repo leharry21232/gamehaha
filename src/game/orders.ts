@@ -17,6 +17,7 @@ import type {
   ToppingDef,
   ToppingId,
 } from './types';
+import { ECONOMY_TUNING } from './economy';
 
 export const TOPPINGS: ToppingDef[] = [
   {
@@ -552,7 +553,7 @@ export function getTarotOptionsForCard(card: TarotCardDef): TarotDialogueOption[
     {
       choiceKey: 'C',
       tone: 'UPSELL',
-      label: 'C. Chốt Tarot Combo (Upsell x3)',
+      label: 'C. Chốt Tarot Combo (Upsell x1.5)',
       speech: card.advice.C,
     },
   ];
@@ -595,10 +596,10 @@ export function resolveTarotInterpretation(
     outcomeKind: 'COMBO_3X',
     customerLeft: false,
     tipAmount: 0,
-    priceMultiplier: 3,
+    priceMultiplier: ECONOMY_TUNING.tarotComboMultiplier,
     upgradedToCombo: true,
     resultMessage:
-      'Khách Gen Z gật đầu lia lịa: "Chốt luôn Tarot Combo 3x giá nha thầy! Miễn sao đổi vận tình duyên là em chơi tới bến!"',
+      'Khách Gen Z gật đầu lia lịa: "Chốt luôn Tarot Combo 1.5x giá nha thầy! Miễn sao đổi vận tình duyên là em chơi tới bến!"',
   };
 }
 
@@ -764,10 +765,10 @@ export function generateCustomerOrder(
     requiredToppings.kho_bo = 5;
     requiredToppings.trung_cut = 5;
     requiredToppings.xoai = 5;
-    dialogue = 'ĐƠN BOSS 500K! Trộn cho anh Thau Bánh Tráng Khổng Lồ ngay trong 10 giây!';
+    dialogue = 'ĐƠN BOSS 120K! Trộn cho anh Thau Bánh Tráng Khổng Lồ ngay trong 10 giây!';
     patienceDrainRate = 0;
     maxPatience = 99;
-    baseReward = 500000;
+    baseReward = ECONOMY_TUNING.bossReward;
     baseXu = 1000;
   } else if (customerType === 'APP_SHIPPER') {
     shipperBrand = forceShipperBrand ?? (Math.random() < 0.5 ? 'GREEN' : 'ORANGE');
@@ -866,8 +867,8 @@ export function generateCustomerOrder(
     chiliTarget = 'VUA';
     dialogue =
       dishType === 'CUON'
-        ? `Cuốn ${targetSlices} khúc thật bén để anh đi chốt căn Penthouse! Nhớ bớt anh 2k lấy lộc nha, chốt xong anh bo 100k!`
-        : `Trộn ${targetSlices} khúc cho anh đi gặp khách VIP! Bớt anh 2k lấy hên lúc thối tiền, có lộc anh bo hẳn 100k!`;
+        ? `Cuốn ${targetSlices} khúc thật bén để anh đi chốt căn Penthouse! Nhớ bớt anh 2k lấy lộc nha, chốt xong anh bo 30k!`
+        : `Trộn ${targetSlices} khúc cho anh đi gặp khách VIP! Bớt anh 2k lấy hên lúc thối tiền, có lộc anh bo hẳn 30k!`;
     patienceDrainRate = 1.05;
     maxPatience = 54;
     baseReward = 52000;

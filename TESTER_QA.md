@@ -57,6 +57,14 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] Mở save phiên bản cũ không có bốn trường tồn kho mới; xác nhận game tiếp tục bình thường và sáu nguyên liệu cũ giữ nguyên.
 - [ ] HUD trên desktop/mobile hiển thị cấp, thanh XP, nhiệm vụ, tiền và thời gian mà không che thao tác.
 
+## Economy balance regression
+- [ ] Complete two ordinary orders without a special event; confirm earnings stay close to the displayed order prices, not hundreds of thousands.
+- [ ] Win the end-of-day Mukbang boss; confirm the reward is 120,000đ and the result text matches.
+- [ ] Trigger Flow State masterpiece; confirm the order payout uses x2 and the HUD/callout no longer says x5.
+- [ ] Trigger Tarot Combo and Viral orders; confirm both use x1.5 consistently for money and Xu.
+- [ ] Check Real Estate/Bát Tự tips, lottery, cash pickup and raid-survival rewards against their reduced displayed amounts.
+- [ ] Confirm ingredient purchase prices, inventory consumption/refunds, XP, mission rewards and saved data are unchanged.
+
 ## Release gate
 - [ ] GitHub Actions: progression tests pass.
 - [ ] GitHub Actions: TypeScript check passes.

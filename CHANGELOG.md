@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Rebalanced large economy windfalls: boss reward 500k→120k, Flow masterpiece x5→x2, Tarot/Viral multipliers x3→x1.5, and reduced lottery, VIP tips, raid and cash-pickup payouts. Cooking inputs, ingredient prices, save data and progression requirements remain unchanged.
 - Expanded Map 1 conversations with first-visit and return-visit dialogue plus morning/noon/afternoon context at nine non-cart stops; clarified the grocery shopkeeper as a separate character from Cô Năm. Visit counts are session-only and narrative-only.
 
 ## Unreleased

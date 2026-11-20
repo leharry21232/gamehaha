@@ -1,4 +1,5 @@
 import { GameAudio } from './audio';
+import { ECONOMY_TUNING } from './economy';
 import { addProgress, getDecorationAttraction, getUnlockedSkills, getIngredientUnlockLevel, INITIAL_PLAYER_PROGRESS, resetWalletForNewGame, loadPlayerProgress, savePlayerProgress, xpRequiredForLevel, type PlayerProgress, type DecorationId, buyDecoration as purchaseDecoration, equipDecoration as applyDecoration, DIFFICULTY_SETTINGS, type GameDifficulty } from './progression';
 import { DayManager } from './dayManager';
 import { claimStoryMissionReward, getStoryMissionSnapshot, loadCompletedMissionIds, saveCompletedMissionIds } from './missions';
@@ -1372,11 +1373,11 @@ export class GameEngine {
   private endCurrentDay(closedEarlyReason: string): void {
     if (this.screen === 'END_OF_DAY' || this.screen === 'GAME_OVER') return;
 
-    // Mechanic 3: Draw Lottery Tickets (2% chance per ticket to win 500,000 VND!)
+    // Mechanic 3: Draw Lottery Tickets (2% chance per ticket to win 100,000 VND!)
     let lotteryWin = 0;
     for (let i = 0; i < this.lotteryTicketsToday; i++) {
-      if (Math.random() < 0.02) {
-        lotteryWin += 500000;
+      if (Math.random() < ECONOMY_TUNING.lotteryWinChance) {
+        lotteryWin += ECONOMY_TUNING.lotteryPayout;
       }
     }
     if (lotteryWin > 0) {
@@ -2346,7 +2347,7 @@ export class GameEngine {
       this.order.hasTraTacCombo = true;
       this.order.baseReward *= outcome.priceMultiplier;
       this.order.baseXu *= outcome.priceMultiplier;
-      this.order.dialogue = `Đã chốt Tarot Combo (x3 Giá)! Trộn liền cho em đổi vận nha thầy!`;
+      this.order.dialogue = `Đã chốt Tarot Combo (x1.5 Giá)! Trộn liền cho em đổi vận nha thầy!`;
       this.score += 350;
       this.audio.playRaidWin();
     }
@@ -2379,7 +2380,7 @@ export class GameEngine {
       );
     } else if (outcomeKind === 'COMBO_3X') {
       this.spawnCallout(
-        '🔮 CHỐT TAROT COMBO (x3 GIÁ)!',
+        '🔮 CHỐT TAROT COMBO (x1.5 GIÁ)!',
         'Trộn chuẩn để hốt trọn doanh thu gấp 3 lần!',
         this.width * 0.5,
         this.height * 0.32,
@@ -2453,7 +2454,7 @@ export class GameEngine {
     this.audio.playRaidWin();
     this.spawnCallout(
       '✂️ FLOW STATE ĐÃ KÍCH HOẠT!',
-      'Bắt nhịp Kéo Cắt tạo Tuyệt Tác x5 Giá Bán!',
+      'Bắt nhịp Kéo Cắt tạo Tuyệt Tác x2 Giá Bán!',
       this.width * 0.5,
       this.height * 0.34,
       '#FACC15'
@@ -2518,7 +2519,7 @@ export class GameEngine {
     if (!fr.active || fr.finishingTimer > 0) return;
     fr.finishingTimer = 0.55;
     const isMasterpiece = fr.hitsPerfect >= 5 && fr.missed <= 1;
-    fr.lastJudgmentText = isMasterpiece ? '🌟 TUYỆT TÁC x5!' : '✂️ HOÀN TẤT NHỊP KÉO!';
+    fr.lastJudgmentText = isMasterpiece ? '🌟 TUYỆT TÁC x2!' : '✂️ HOÀN TẤT NHỊP KÉO!';
     fr.lastJudgmentColor = isMasterpiece ? '#FACC15' : '#38BDF8';
     fr.lastJudgmentTimer = 0.65;
     if (isMasterpiece) {
@@ -2536,20 +2537,20 @@ export class GameEngine {
 
     const isMasterpiece = fr.hitsPerfect >= 5 && fr.missed <= 1;
     const order = this.order;
-    const viralMult = this.viralOrdersLeft > 0 ? 3 : 1;
+    const viralMult = this.viralOrdersLeft > 0 ? ECONOMY_TUNING.viralMultiplier : 1;
     const tipMult = this.dailyBuffs.luckyCharm ? 1.1 : 1.0;
 
     if (isMasterpiece) {
       order.isMasterpiece = true;
-      const earned = Math.round((order.baseReward * 5 * tipMult * viralMult) / 1000) * 1000;
-      const earnedXu = Math.round(order.baseXu * 3 * viralMult);
+      const earned = Math.round((order.baseReward * ECONOMY_TUNING.flowMasterpieceMultiplier * tipMult * viralMult) / 1000) * 1000;
+      const earnedXu = Math.round(order.baseXu * ECONOMY_TUNING.flowMasterpieceMultiplier * viralMult);
       const pts = 2500 * viralMult;
       this.combo += 1;
       this.perfectOrders += 1;
       this.audio.playRaidWin();
       this.spawnParticles(this.width * 0.5, this.height * 0.5, 32, '#FACC15', 'rect');
       this.spawnCallout(
-        '🌟 TUYỆT TÁC BÁNH TRÁNG (x5 GIÁ)!',
+        '🌟 TUYỆT TÁC BÁNH TRÁNG (x2 GIÁ)!',
         `${fr.hitsPerfect}/8 Perfect · Giá trị ${earned.toLocaleString('vi-VN')}đ!`,
         this.width * 0.5,
         this.height * 0.34,
@@ -2871,7 +2872,7 @@ export class GameEngine {
         this.spawnParticles(this.width * 0.5, this.height * 0.45, 22, '#FACC15', 'rect');
         this.spawnCallout(
           '🔥 VIRAL TÓP TÓP!',
-          'Hoàn hảo! x3 tiền & xu trong 5 đơn tới!',
+          'Hoàn hảo! x1.5 tiền & xu trong 5 đơn tới!',
           this.width * 0.5,
           this.height * 0.36,
           '#10B981'
@@ -3091,7 +3092,7 @@ export class GameEngine {
     this.audio.playRaidWin();
     this.shakeIntensity = Math.max(this.shakeIntensity, 8);
     this.spawnCallout(
-      '🔥 BOSS CUỐI NGÀY: THAU KHỔNG LỒ 500K!',
+      '🔥 BOSS CUỐI NGÀY: THAU KHỔNG LỒ 120K!',
       'Bấm 50 lần đổ mồi + Xoay tròn trộn trong 10s!',
       this.width * 0.5,
       this.height * 0.32,
@@ -3103,8 +3104,8 @@ export class GameEngine {
   private completeBossFight(won: boolean): void {
     this.bossFight.active = false;
     if (won) {
-      this.money += 500000;
-      this.dayRevenue += 500000;
+      this.money += ECONOMY_TUNING.bossReward;
+      this.dayRevenue += ECONOMY_TUNING.bossReward;
       this.xu += 1000;
       this.score += 2500;
       this.ordersServed += 1;
@@ -3115,8 +3116,8 @@ export class GameEngine {
       const layout = computePrepLayout(this.width, this.height);
       this.spawnParticles(layout.bowlCenterX, layout.bowlCenterY, 35, '#FACC15', 'bill');
       this.spawnCallout(
-        '🏆 PHÁ ĐẢO THAU 500K!',
-        '+500.000đ · +1.000 Xu · Thánh Mukbang mãn nhãn!',
+        '🏆 PHÁ ĐẢO THAU 120K!',
+        '+120.000đ · +1.000 Xu · Thánh Mukbang mãn nhãn!',
         this.width * 0.5,
         this.height * 0.34,
         '#10B981'
@@ -3555,7 +3556,7 @@ export class GameEngine {
         this.spawnParticles(this.lotterySeller.x, this.lotterySeller.y - 50, 12, '#22C55E', 'circle');
         this.spawnCallout(
           '🎟️ +1 Tờ Vé Số (-10.000đ)!',
-          'Chờ xổ số 500.000đ cuối ngày!',
+          'Chờ xổ số 100.000đ cuối ngày!',
           this.lotterySeller.x,
           this.lotterySeller.y - 90,
           '#22C55E'
@@ -4458,23 +4459,23 @@ export class GameEngine {
       this.spawnCallout(
         `+${finalPayout.toLocaleString('vi-VN')}đ · +${c.pendingXu} Xu`,
         c.viralMult > 1
-          ? `CHING! Thối chuẩn! VIRAL x3 (+${speedBonus}đ tốc độ)`
+          ? `CHING! Thối chuẩn! VIRAL x1.5 (+${speedBonus}đ tốc độ)`
           : `CHING! Thối chuẩn từng đồng! (+${speedBonus}đ tốc độ)`,
         layout.customerX + 120,
         layout.customerY - 60,
         '#10B981'
       );
 
-      // Mechanic 8: Real Estate Agent 20% chance to close a deal and tip 100k if 2k discount accepted!
+      // Mechanic 8: Real Estate Agent 20% chance to close a deal and tip 30k if 2k discount accepted!
       if (c.customerType === 'REAL_ESTATE' && c.discountAccepted) {
         if (Math.random() < 0.2) {
-          this.money += 100000;
-          this.dayRevenue += 100000;
+          this.money += ECONOMY_TUNING.realEstateTip;
+          this.dayRevenue += ECONOMY_TUNING.realEstateTip;
           this.score += 1000;
           this.audio.playCashChing();
           this.spawnParticles(layout.customerX + 24, layout.customerY - 40, 32, '#22C55E', 'bill');
           this.spawnCallout(
-            '🏠 CHỐT DEAL BĐS! +100.000đ TIP!',
+            '🏠 CHỐT DEAL BĐS! +30.000đ TIP!',
             'Khách Sale BĐS chốt căn Penthouse, bo cực đậm!',
             this.width * 0.5,
             this.height * 0.3,
@@ -4584,7 +4585,7 @@ export class GameEngine {
     const toppingScore = reqTotal > 0 ? Math.max(0, 1 - penalty / (reqTotal + 1)) : 1;
     const seasonScore = (this.limeMeter.accuracy + this.chiliMeter.accuracy) * 0.5;
     const totalAccuracy = sliceScore * 0.35 + toppingScore * 0.35 + seasonScore * 0.3;
-    const viralMult = this.viralOrdersLeft > 0 ? 3 : 1;
+    const viralMult = this.viralOrdersLeft > 0 ? ECONOMY_TUNING.viralMultiplier : 1;
 
     const tipMult =
       (this.dailyBuffs.luckyCharm ? 1.1 : 1.0) *
@@ -4605,7 +4606,7 @@ export class GameEngine {
         this.dailyBuffs.karmaBuff = true;
         this.combo += 1;
         this.perfectOrders += 1;
-        const massiveTip = 95000;
+        const massiveTip = ECONOMY_TUNING.baziPerfectTip;
         const earned = Math.round(((order.baseReward + massiveTip) * tipMult * viralMult) / 1000) * 1000;
         const earnedXu = (order.baseXu + 320) * viralMult;
         const pts = 1400 * viralMult;
@@ -4613,7 +4614,7 @@ export class GameEngine {
         this.spawnParticles(this.width * 0.5, this.height * 0.45, 28, '#FACC15', 'bill');
         this.spawnCallout(
           '☯️ CẢI VẬN ĐẠI CÁT! +HỒNG PHÚC (+15% BO)!',
-          `Chuẩn Bát Tự ${order.baziProfile.dayMaster}! Tip cực khủng +95.000đ!`,
+          `Chuẩn Bát Tự ${order.baziProfile.dayMaster}! Tip cực khủng +50.000đ!`,
           this.width * 0.5,
           this.height * 0.28,
           '#10B981'
@@ -4696,7 +4697,7 @@ export class GameEngine {
       const earnedXu = Math.round((order.baseXu + this.combo * 40) * viralMult);
       const pts = (Math.round(totalAccuracy * 1000) + this.combo * 150) * viralMult;
       if (this.flowPerfectCount >= 5) {
-        this.spawnCallout('⚡ ĐẠT 5 ĐƠN HOÀN HẢO!', 'Khách kế tiếp kích hoạt FLOW STATE (x5 Giá)!', this.width * 0.5, this.height * 0.26, '#FACC15');
+        this.spawnCallout('⚡ ĐẠT 5 ĐƠN HOÀN HẢO!', 'Khách kế tiếp kích hoạt FLOW STATE (x2 Giá)!', this.width * 0.5, this.height * 0.26, '#FACC15');
       }
       this.openCheckoutModal(order, earned, earnedXu, pts, viralMult);
     } else if (totalAccuracy >= 0.5) {
@@ -5001,7 +5002,7 @@ export class GameEngine {
       height = 34;
     } else {
       type = 'PICKUP_CASH';
-      label = '+20.000đ';
+      label = '+5.000đ';
       width = 40;
       height = 26;
     }
@@ -6000,12 +6001,12 @@ export class GameEngine {
             this.obstacles.splice(i, 1);
             continue;
           } else if (obs.type === 'PICKUP_CASH') {
-            this.money += 20000;
-            this.dayRevenue += 20000;
+            this.money += ECONOMY_TUNING.cashPickupReward;
+            this.dayRevenue += ECONOMY_TUNING.cashPickupReward;
             this.xu += 150;
             this.score += 200;
             this.audio.playPickup();
-            this.spawnCallout('+20.000đ · +150 Xu', 'Lượm được tiền rơi!', obs.x, obs.y - 20, '#22C55E');
+            this.spawnCallout('+5.000đ · +150 Xu', 'Lượm được tiền rơi!', obs.x, obs.y - 20, '#22C55E');
             this.obstacles.splice(i, 1);
             continue;
           } else if (obs.type === 'PICKUP_SHIELD') {
@@ -6080,8 +6081,8 @@ export class GameEngine {
 
     if (this.raidTimeLeft <= 0) {
       this.raidsSurvived += 1;
-      this.money += 50000;
-      this.dayRevenue += 50000;
+      this.money += ECONOMY_TUNING.raidSurvivalReward;
+      this.dayRevenue += ECONOMY_TUNING.raidSurvivalReward;
       this.xu += 250;
       this.score += 500;
       this.ordersSinceRaid = 0;
@@ -6092,7 +6093,7 @@ export class GameEngine {
       } else {
         this.spawnNextOrder(true);
         this.spawnCallout(
-          '+50.000đ · +250 Xu Cắt Đuôi!',
+          '+15.000đ · +250 Xu Cắt Đuôi!',
           'Trật tự bỏ cuộc rồi, bán tiếp thôi!',
           this.width * 0.5,
           this.height * 0.5,
