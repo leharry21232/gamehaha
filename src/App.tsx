@@ -1274,7 +1274,7 @@ export default function App() {
               .world-daypart-card .world-event-description, .world-daypart-card .world-event-traffic { display: none; }
               .world-daypart-card > div { align-items: flex-start; flex-wrap: wrap; gap: 3px; }
               .world-daypart-card p { font-size: 9px; line-height: 1.2; }
-              .world-controls-panel { left: 8px; bottom: max(8px, env(safe-area-inset-bottom)); width: calc(100% - 16px); max-height: 42dvh; overflow-y: auto; padding: 9px 8px calc(9px + env(safe-area-inset-bottom)); border-width: 3px; box-shadow: 3px 3px 0 #172126; transform: none; }
+              .world-controls-panel { left: 8px; bottom: max(8px, env(safe-area-inset-bottom)); width: calc(100% - 16px); max-height: 42dvh; overflow-y: auto; padding: 9px 8px calc(9px + env(safe-area-inset-bottom)); border-width: 3px; box-shadow: 3px 3px 0 #172126; transform: none; translate: none; }
               .world-tab-row { gap: 5px; margin-bottom: 6px; }
               .world-tab-button { min-width: 0; padding: 4px 2px; border-width: 2px; font-size: 9px; line-height: 1.15; }
               .world-tab-button span:first-child { font-size: 16px; line-height: 1.1; }
@@ -1282,13 +1282,13 @@ export default function App() {
               .world-dpad { gap: 8px; }
               .world-dpad-button { width: 44px; height: 42px; padding: 0; touch-action: none; user-select: none; }
               .world-action-row button { min-height: 38px; flex: 1 1 auto; padding: 7px 9px; font-size: 9px; }
-              .world-info-panel { top: max(72px, calc(env(safe-area-inset-top) + 64px)); bottom: calc(42dvh + 16px + env(safe-area-inset-bottom)); left: 10px; width: calc(100% - 20px); max-height: calc(100dvh - 160px); padding: 10px; transform: none; }
+              .world-info-panel { top: max(72px, calc(env(safe-area-inset-top) + 64px)); bottom: calc(42dvh + 16px + env(safe-area-inset-bottom)); left: 10px; width: calc(100% - 20px); max-height: calc(100dvh - 160px); padding: 10px; transform: none; translate: none; }
             }
             @media (max-height: 620px) and (orientation: landscape) {
               .world-status-card { top: max(6px, env(safe-area-inset-top)); }
               .world-daypart-card { top: max(6px, env(safe-area-inset-top)); }
-              .world-controls-panel { left: auto; right: max(8px, env(safe-area-inset-right)); bottom: max(8px, env(safe-area-inset-bottom)); width: min(46vw, 420px); max-height: calc(100dvh - 16px); }
-              .world-info-panel { left: 8px; top: max(64px, calc(env(safe-area-inset-top) + 56px)); bottom: 8px; width: min(50vw, 520px); max-height: calc(100dvh - 80px); }
+              .world-controls-panel { left: auto; right: max(8px, env(safe-area-inset-right)); bottom: max(8px, env(safe-area-inset-bottom)); width: min(46vw, 420px); max-height: calc(100dvh - 16px); transform: none; translate: none; }
+              .world-info-panel { left: 8px; top: max(64px, calc(env(safe-area-inset-top) + 56px)); bottom: 8px; width: min(50vw, 520px); max-height: calc(100dvh - 80px); transform: none; translate: none; }
             }
           `}</style>
           <svg className="absolute inset-0 h-full w-full [image-rendering:pixelated]" viewBox="0 0 1200 720" preserveAspectRatio="none" shapeRendering="crispEdges" role="img" aria-label="Khu phố bán bánh tráng trộn phong cách pixel art">
