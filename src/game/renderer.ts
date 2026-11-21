@@ -3063,7 +3063,7 @@ function renderCuonStation(ctx: CanvasRenderingContext2D, state: RenderState, la
       );
       drawButton(
         ctx,
-        { ...layout.primaryBtn, x: w * 0.5 - layout.primaryBtn.w * 0.5 },
+        { ...layout.primaryBtn, x: w < 680 ? layout.primaryBtn.x : w * 0.5 - layout.primaryBtn.w * 0.5 },
         'Xong Topping · Nêm Gia Vị →',
         '#F59E0B',
         INK,
@@ -3118,14 +3118,7 @@ function renderCuonStation(ctx: CanvasRenderingContext2D, state: RenderState, la
     }
   } else {
     // CUTTING step for Bánh Tráng Cuốn: FREE 2D polygon slicing (horizontal, vertical, diagonal!)
-    const bw = Math.max(layout.rollRect.w + 84, layout.boardRadius * 2.85);
-    const bh = layout.boardRadius * 2.05;
-    const boardRect: Rect = {
-      x: layout.boardCenterX - bw * 0.5,
-      y: layout.boardCenterY - bh * 0.5,
-      w: bw,
-      h: bh,
-    };
+    const boardRect = layout.cuonCutBoardRect;
     drawComicBox(ctx, boardRect, '#E6C79C', 24, 6, 3);
     ctx.strokeStyle = 'rgba(146, 64, 14, 0.16)';
     ctx.lineWidth = 2;
@@ -3348,7 +3341,7 @@ function renderTronStation(ctx: CanvasRenderingContext2D, state: RenderState, la
       renderToppingTrays(ctx, state, layout);
       drawButton(
         ctx,
-        { ...layout.primaryBtn, x: w * 0.5 - layout.primaryBtn.w * 0.5 },
+        { ...layout.primaryBtn, x: w < 680 ? layout.primaryBtn.x : w * 0.5 - layout.primaryBtn.w * 0.5 },
         'Xong Topping · Nêm Gia Vị →',
         '#F59E0B',
         INK,
@@ -3390,7 +3383,7 @@ function renderTronStation(ctx: CanvasRenderingContext2D, state: RenderState, la
       } else {
         drawButton(
           ctx,
-          { ...layout.primaryBtn, x: w * 0.5 - layout.primaryBtn.w * 0.5 },
+          { ...layout.primaryBtn, x: w < 680 ? layout.primaryBtn.x : w * 0.5 - layout.primaryBtn.w * 0.5 },
           'Giao Hàng Ngay! (Enter)',
           '#10B981',
           '#FFFFFF',
@@ -3441,7 +3434,7 @@ function renderSeasoningPanel(
   const bothDone = state.limeMeter.locked && state.chiliMeter.locked;
   drawButton(
     ctx,
-    { ...layout.primaryBtn, x: w * 0.5 - layout.primaryBtn.w * 0.5 },
+    { ...layout.primaryBtn, x: w < 680 ? layout.primaryBtn.x : w * 0.5 - layout.primaryBtn.w * 0.5 },
     bothDone ? nextLabel : 'Hãy Vắt Chanh & Rưới Sa Tế',
     bothDone ? '#10B981' : '#CBD5E1',
     bothDone ? '#FFFFFF' : '#475569',

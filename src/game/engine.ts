@@ -3673,7 +3673,9 @@ export class GameEngine {
         this.undoLastTopping();
         return;
       }
-      const primRect = { ...layout.primaryBtn, x: this.width * 0.5 - layout.primaryBtn.w * 0.5 };
+      const primRect = this.width < 680
+        ? layout.primaryBtn
+        : { ...layout.primaryBtn, x: this.width * 0.5 - layout.primaryBtn.w * 0.5 };
       if (pointInRect(pt.x, pt.y, primRect)) {
         this.prepStep = 'SEASONING';
         this.audio.playDropTopping();
@@ -3688,7 +3690,9 @@ export class GameEngine {
         }
       }
     } else if (this.prepStep === 'SEASONING') {
-      const primRect = { ...layout.primaryBtn, x: this.width * 0.5 - layout.primaryBtn.w * 0.5 };
+      const primRect = this.width < 680
+        ? layout.primaryBtn
+        : { ...layout.primaryBtn, x: this.width * 0.5 - layout.primaryBtn.w * 0.5 };
       if (pointInRect(pt.x, pt.y, primRect) && this.limeMeter.locked && this.chiliMeter.locked) {
         if (this.dishType === 'CUON') {
           this.prepStep = 'ROLLING';
@@ -3724,7 +3728,9 @@ export class GameEngine {
         this.addShakeProgress(20, pt.x, pt.y);
       }
     } else if (this.prepStep === 'READY') {
-      const primRect = { ...layout.primaryBtn, x: this.width * 0.5 - layout.primaryBtn.w * 0.5 };
+      const primRect = this.width < 680
+        ? layout.primaryBtn
+        : { ...layout.primaryBtn, x: this.width * 0.5 - layout.primaryBtn.w * 0.5 };
       if (pointInRect(pt.x, pt.y, primRect)) {
         this.serveCurrentOrder();
       }
@@ -6377,10 +6383,12 @@ export class GameEngine {
       }
     }
 
-    const centeredPrimary = {
-      ...layout.primaryBtn,
-      x: this.width * 0.5 - layout.primaryBtn.w * 0.5,
-    };
+    const centeredPrimary = this.width < 680
+      ? layout.primaryBtn
+      : {
+          ...layout.primaryBtn,
+          x: this.width * 0.5 - layout.primaryBtn.w * 0.5,
+        };
     const activePrimary = this.prepStep === 'CUTTING' ? layout.primaryBtn : centeredPrimary;
     const dayProgress =
       this.dayDuration > 0

@@ -18,6 +18,7 @@ export interface PrepLayout {
   boardCenterX: number;
   boardCenterY: number;
   boardRadius: number;
+  cuonCutBoardRect: Rect;
   matRect: Rect;
   rollRect: Rect;
   bowlCenterX: number;
@@ -265,6 +266,17 @@ export function computePrepLayout(w: number, h: number): PrepLayout {
     w: rollW,
     h: rollH,
   };
+  // The visual cutting board must fit the viewport including its comic shadow.
+  // The rice-paper polygon keeps its existing rollRect dimensions and hit-testing.
+  const cuonBoardW = isPortrait
+    ? Math.min(width - 24, Math.max(rollW + 84, boardRadius * 2.85))
+    : Math.max(rollW + 84, boardRadius * 2.85);
+  const cuonCutBoardRect: Rect = {
+    x: (width - cuonBoardW) * 0.5,
+    y: boardCenterY - (boardRadius * 2.05) * 0.5,
+    w: cuonBoardW,
+    h: boardRadius * 2.05,
+  };
 
   const trayRects = {} as Record<ToppingId, Rect>;
   if (isPortrait) {
@@ -352,6 +364,7 @@ export function computePrepLayout(w: number, h: number): PrepLayout {
     boardCenterX,
     boardCenterY,
     boardRadius,
+    cuonCutBoardRect,
     matRect,
     rollRect,
     bowlCenterX,
@@ -381,6 +394,10 @@ export function getToppingRemoveRect(layout: PrepLayout, id: ToppingId): Rect {
 
 export function getToppingUndoRect(layout: PrepLayout): Rect {
   const centeredPrimaryX = layout.width * 0.5 - layout.primaryBtn.w * 0.5;
+  if (layout.width < 680) {
+    // On phones, keep undo in the left slot and the primary action in the right slot.
+    return { ...layout.secondaryBtn, y: layout.primaryBtn.y };
+  }
   return {
     ...layout.secondaryBtn,
     x: Math.max(12, centeredPrimaryX - layout.secondaryBtn.w - 12),

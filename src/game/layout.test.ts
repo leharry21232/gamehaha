@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { computePrepLayout } from './layout';
+import { computePrepLayout, getToppingUndoRect } from './layout';
 
 const phoneViewports = [
   [280, 480], [320, 568], [320, 640], [360, 740], [375, 667],
@@ -61,5 +61,29 @@ test('mobile order card sits below the reserved HUD and keeps a readable card he
     assert.ok(layout.bubbleRect.x >= 0);
     assert.ok(layout.bubbleRect.x + layout.bubbleRect.w <= width);
     assert.ok(layout.bubbleRect.y + layout.bubbleRect.h < layout.counterY);
+  }
+});
+
+
+test('mobile topping undo and continue buttons occupy separate thumb-friendly slots', () => {
+  for (const width of [280, 300, 320, 360, 375, 390, 414]) {
+    const layout = computePrepLayout(width, 844);
+    const undo = getToppingUndoRect(layout);
+    const next = layout.primaryBtn;
+    assert.ok(undo.x >= 0 && undo.x + undo.w <= width, `undo stays inside ${width}px`);
+    assert.ok(next.x >= 0 && next.x + next.w <= width, `next stays inside ${width}px`);
+    assert.ok(undo.x + undo.w <= next.x + 1, `undo and next do not overlap at ${width}px`);
+    assert.ok(undo.h >= 42 && next.h >= 42, `touch targets remain usable at ${width}px`);
+  }
+});
+
+test('Bánh cuốn cutting board including shadow fits narrow phone widths', () => {
+  for (const [width, height] of phoneViewports.filter(([w]) => w < 680)) {
+    const layout = computePrepLayout(width, height);
+    const board = layout.cuonCutBoardRect;
+    assert.ok(board.x >= 12, `board left edge including shadow at ${width}x${height}`);
+    assert.ok(board.x + board.w + 6 <= width - 6, `board right edge including shadow at ${width}x${height}`);
+    assert.ok(board.y >= layout.counterY, `board starts below counter at ${width}x${height}`);
+    assert.ok(board.y + board.h + 6 < layout.primaryBtn.y, `board does not overlap action buttons at ${width}x${height}`);
   }
 });
