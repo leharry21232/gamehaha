@@ -1001,8 +1001,8 @@ export class GameEngine {
     const rect = parent
       ? parent.getBoundingClientRect()
       : { width: window.innerWidth, height: window.innerHeight };
-    const nextW = Math.max(320, Math.floor(rect.width || window.innerWidth));
-    const nextH = Math.max(320, Math.floor(rect.height || window.innerHeight));
+    const nextW = Math.max(1, Math.floor(rect.width || window.innerWidth));
+    const nextH = Math.max(1, Math.floor(rect.height || window.innerHeight));
     const prevW = this.width || nextW;
     const prevH = this.height || nextH;
 

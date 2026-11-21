@@ -3135,7 +3135,7 @@ function renderTronStation(ctx: CanvasRenderingContext2D, state: RenderState, la
     const count = state.slices.length;
     const isPortrait = w < 680;
     const instruction = isPortrait
-      ? `Vuốt ngón tay qua bánh để cắt thành ${target} phần · ${count}/${target}`
+      ? `Vuốt trên bánh để cắt · ${count}/${target}`
       : `Kéo chuột cắt tự do tấm bánh thành ${target} khúc (Hiện tại: ${count} khúc)`;
     ctx.font = isPortrait
       ? '800 10px "Bricolage Grotesque", sans-serif'
@@ -3144,16 +3144,9 @@ function renderTronStation(ctx: CanvasRenderingContext2D, state: RenderState, la
     ctx.textBaseline = 'middle';
     ctx.fillStyle = count === target ? '#059669' : count > target ? '#E11D48' : INK;
     if (isPortrait) {
-      const instructionLines = wrapText(ctx, instruction, Math.max(180, w - 28)).slice(0, 2);
-      const lineHeight = 12;
-      instructionLines.forEach((line, index) => {
-        ctx.fillText(
-          line,
-          layout.boardCenterX,
-          boardRect.y - 10 - (instructionLines.length - 1 - index) * lineHeight,
-          w - 24
-        );
-      });
+      const banner = { x: boardRect.x + 10, y: boardRect.y + 8, w: Math.max(1, boardRect.w - 20), h: 22 };
+      drawComicBox(ctx, banner, '#FFFDF5', 6, 1, 1.5);
+      ctx.fillText(instruction, layout.boardCenterX, banner.y + banner.h * 0.5, banner.w - 8);
     } else {
       ctx.fillText(instruction, layout.boardCenterX, boardRect.y - 16);
     }
