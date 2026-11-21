@@ -51,3 +51,15 @@ test('landscape cooking layout retains wider workstation controls', () => {
     assert.ok(layout.boardCenterX + layout.boardRadius * 1.3 <= width);
   }
 });
+
+
+test('mobile order card sits below the reserved HUD and keeps a readable card height', () => {
+  for (const [width, height] of [[280, 480], [320, 568], [360, 740], [375, 812], [390, 844], [414, 896]]) {
+    const layout = computePrepLayout(width, height);
+    assert.ok(layout.bubbleRect.y >= 148, `order card starts below mobile HUD at ${width}x${height}`);
+    assert.ok(layout.bubbleRect.h >= 120, `order card retains readable height at ${width}x${height}`);
+    assert.ok(layout.bubbleRect.x >= 0);
+    assert.ok(layout.bubbleRect.x + layout.bubbleRect.w <= width);
+    assert.ok(layout.bubbleRect.y + layout.bubbleRect.h < layout.counterY);
+  }
+});

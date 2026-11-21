@@ -986,6 +986,65 @@ function drawOrderBubble(
 
   const padX = 16;
   const innerW = b.w - padX * 2;
+  if (layout.width < 680) {
+    // Phone card uses two compact header rows so special labels never collide with the timer.
+    const barY = b.y + 12;
+    ctx.font = '800 8px "Bricolage Grotesque", sans-serif';
+    const dishTag = order.dishType === 'CUON' ? 'BÁNH CUỐN' : 'BÁNH TRÁNG TRỘN';
+    const dishW = Math.min(innerW * 0.58, ctx.measureText(dishTag).width + 14);
+    drawComicBox(ctx, { x: b.x + padX, y: barY - 2, w: dishW, h: 18 }, order.dishType === 'CUON' ? '#DBEAFE' : '#FEF3C7', 5, 0, 1.5);
+    ctx.fillStyle = order.dishType === 'CUON' ? '#1E40AF' : '#92400E';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(dishTag, b.x + padX + dishW * 0.5, barY + 7, dishW - 6);
+    ctx.font = '700 8px "JetBrains Mono", monospace';
+    ctx.fillStyle = order.patience / order.maxPatience < 0.28 ? '#BE123C' : '#334155';
+    ctx.textAlign = 'right';
+    ctx.fillText(`Chờ ${Math.ceil(order.patience)}s`, b.x + b.w - padX, barY + 7);
+
+    let specialTag = '';
+    if (order.baziProfile) specialTag = `☯ ${order.baziProfile.dayMaster}`;
+    else if (order.hasTraTacCombo) specialTag = 'COMBO TRÀ TẮC L';
+    else if (order.elementTag) specialTag = `☯ Mệnh ${ELEMENT_META[order.elementTag].shortLabel}`;
+    else if (order.hexagramBoosted) specialTag = '☯ HỢP QUẺ +35%';
+    const specialY = barY + 20;
+    ctx.font = '800 7px "Bricolage Grotesque", sans-serif';
+    const specialW = specialTag ? Math.min(innerW * 0.55, ctx.measureText(specialTag).width + 12) : 0;
+    if (specialTag) {
+      drawComicBox(ctx, { x: b.x + padX, y: specialY - 1, w: specialW, h: 15 }, '#F3E8FF', 5, 0, 1);
+      ctx.fillStyle = '#7E22CE'; ctx.textAlign = 'center';
+      ctx.fillText(specialTag, b.x + padX + specialW * 0.5, specialY + 6, specialW - 5);
+    }
+    const progressX = specialTag ? b.x + padX + specialW + 6 : b.x + padX;
+    const progressW = Math.max(24, b.x + b.w - padX - progressX);
+    const pRatio = Math.max(0, Math.min(1, order.patience / order.maxPatience));
+    ctx.fillStyle = '#E2E8F0'; roundRectPath(ctx, progressX, specialY + 3, progressW, 6, 3); ctx.fill();
+    ctx.fillStyle = pRatio > 0.5 ? '#10B981' : pRatio > 0.25 ? '#F59E0B' : '#E11D48';
+    if (pRatio > 0.02) { roundRectPath(ctx, progressX + 1, specialY + 4, Math.max(3, (progressW - 2) * pRatio), 4, 2); ctx.fill(); }
+
+    ctx.font = '700 9px "Plus Jakarta Sans", sans-serif';
+    ctx.fillStyle = INK; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    const lines = wrapText(ctx, `"${order.dialogue}"`, innerW);
+    let textY = barY + 39;
+    for (let i = 0; i < Math.min(3, lines.length); i++) { ctx.fillText(lines[i], b.x + padX, textY, innerW); textY += 11; }
+
+    const checkY = b.y + b.h - 34;
+    ctx.strokeStyle = '#E2E8F0'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(b.x + padX, checkY - 8); ctx.lineTo(b.x + b.w - padX, checkY - 8); ctx.stroke();
+    const sliceText = order.targetSlices === 0 ? 'Low-Carb' : `Cắt ${cutCount}/${order.targetSlices}`;
+    const reqEntries = (Object.keys(order.requiredToppings) as ToppingId[]).filter((k) => order.requiredToppings[k] > 0);
+    const toppingText = reqEntries.slice(0, 2).map((tid) => {
+      const need = order.requiredToppings[tid]; const got = addedToppings[tid] || 0;
+      return `${TOPPING_MAP[tid].shortName} ${got}/${need}`;
+    }).join(' · ');
+    ctx.font = '700 7px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = prepStep === 'CUTTING' ? '#D97706' : (order.targetSlices === 0 || cutCount === order.targetSlices) ? '#059669' : '#334155';
+    ctx.fillText(toppingText ? `${sliceText} · ${toppingText}` : sliceText, b.x + padX, checkY + 1, innerW);
+    ctx.fillStyle = '#0F172A';
+    ctx.fillText(`Chanh ${SEASONING_LABEL[order.limeTarget]} · Sa tế ${SEASONING_LABEL[order.chiliTarget]}`, b.x + padX, checkY + 14, innerW);
+    return;
+  }
+
 
   const barY = b.y + 12;
   const dishTag = order.dishType === 'CUON' ? 'BÁNH TRÁNG CUỐN' : 'BÁNH TRÁNG TRỘN';

@@ -938,8 +938,8 @@ export default function App() {
 
       {/* Lightweight Top HUD Bar during active play / prep / end-of-day / pause / game over */}
       {hud.screen !== 'TITLE_MENU' && (
-        <div className="pointer-events-none safe-top-bar px-3 pb-2 pt-1 absolute top-0 left-0 right-0 z-10 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 bg-[#181920]/95 border-b-[3px] border-[#111318]">
-          <div className="basis-full flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-xs">
+        <div data-game-hud="true" className="game-top-hud pointer-events-none safe-top-bar px-3 pb-2 pt-1 absolute top-0 left-0 right-0 z-10 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 bg-[#181920]/95 border-b-[3px] border-[#111318]">
+          <div className="game-top-hud__progress basis-full flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-xs">
             <span className="shrink-0 font-display font-black text-amber-300">⭐ CẤP {hud.playerLevel}</span>
             <div className="h-2 min-w-20 max-w-36 flex-1 overflow-hidden rounded-full border border-slate-500 bg-slate-700">
               <div className="h-full bg-amber-400 transition-[width]" style={{ width: `${Math.min(100, hud.playerXp / Math.max(1, hud.playerXpToNext) * 100)}%` }} />
@@ -947,7 +947,7 @@ export default function App() {
             <span className="shrink-0 font-mono-tabular text-amber-100">{hud.playerXp}/{hud.playerXpToNext} XP</span>
             <span className="min-w-0 truncate text-slate-200" title={hud.storyMission.title}>📖 {hud.storyMission.title} · {hud.storyMission.progress}/{hud.storyMission.target}</span>
           </div>
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs sm:text-sm font-semibold whitespace-nowrap overflow-hidden">
+          <div className="game-top-hud__stats flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs sm:text-sm font-semibold whitespace-nowrap overflow-hidden">
             <span className="font-display font-extrabold text-[#F59E0B] tracking-tight">
               Ngày {hud.day}
             </span>
@@ -1070,7 +1070,7 @@ export default function App() {
             )}
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="game-top-hud__controls flex items-center gap-3 shrink-0">
             {/* Police Raid Heat Bar */}
             {hud.screen === 'PLAYING' && (
               <div
@@ -1115,7 +1115,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="pointer-events-auto flex items-center gap-2">
+            <div className="game-top-hud__actions pointer-events-auto flex items-center gap-2">
               {hud.screen === 'PLAYING' && hud.phase === 'COOKING' && hud.hasAngryCustomer && !hud.checkout.active && (
                 <button
                   type="button"

@@ -198,10 +198,12 @@ export function computePrepLayout(w: number, h: number): PrepLayout {
   const width = Math.max(1, w);
   const height = Math.max(1, h);
   const isPortrait = width < 680;
-  const safeTop = Math.max(isPortrait ? 72 : 48, insets.top + (isPortrait ? 64 : 44));
+  const safeTop = isPortrait
+    ? Math.max(width <= 360 ? 168 : 152, insets.top + 144)
+    : Math.max(48, insets.top + 44);
   const safeBottom = Math.max(10, insets.bottom + 8);
   const counterY = isPortrait
-    ? Math.max(safeTop + 112, Math.min(height * 0.34, safeTop + 148))
+    ? safeTop + 148
     : Math.max(safeTop + 150, Math.min(height * 0.38, 280));
 
   const maxSceneW = Math.max(1, Math.min(width - (isPortrait ? 12 : 24), 1080));
