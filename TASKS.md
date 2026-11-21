@@ -184,3 +184,12 @@
 - [ ] Người chơi kiểm tra lời thoại lần đầu, quay lại và cả ba thời điểm trong ngày tại đủ chín điểm.
 - [ ] Xác nhận hội thoại nhiệm vụ của Chú Bảy/Tí và lời thoại tiến trình Chương 1 của Cô Năm vẫn được ưu tiên đúng lúc.
 - [ ] Xác nhận số lần ghé chỉ tồn tại trong phiên bản đồ hiện tại, không được ghi vào save hoặc thay đổi gameplay.
+
+## M7 – Mobile usability and movement feel
+- [x] Show the full Map 1 scene on narrow portrait and landscape viewports without cropping the neighborhood edges.
+- [x] Reflow Map 1 HUD, journal/map panels, touch controls, and safe-area spacing for phones.
+- [x] Remove forced portrait locking and allow the viewport to follow device orientation.
+- [x] Replace keyboard repeat/tap-step movement with frame-rate-independent movement and press-and-hold touch controls.
+- [x] Add automated tests for movement speed, diagonal normalization, and long-frame teleport prevention.
+- [ ] Manually verify the map on a narrow phone in portrait and landscape, including panel scrolling and holding each direction button.
+- [ ] Confirm movement remains smooth when moving diagonally and sliding against obstacles on a real mobile device.

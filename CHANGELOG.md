@@ -81,3 +81,10 @@
 ## M6 – Ánh sáng khu phố theo thời điểm
 - Thêm sắc độ ánh sáng môi trường nhẹ cho buổi sáng, buổi trưa và buổi chiều, đồng bộ với thẻ nhịp sống khu phố.
 - Lớp phủ chỉ trang trí, không chặn thao tác và không tác động gameplay.
+
+
+## M7 – Mobile layout and neighborhood movement
+- Made the Map 1 scene show the complete neighborhood on narrow and tall screens instead of cropping the edges of the map.
+- Reworked the top HUD cards, information panels, tabs, and touch controls for phone safe areas and short landscape viewports.
+- Removed the automatic portrait-orientation lock so the game follows the player's actual phone orientation.
+- Replaced one-step keyboard/tap jumps with elapsed-time movement, normalized diagonal speed, and press-and-hold touch controls. Player rendering updates between lightweight UI position commits rather than forcing a full game render on every animation frame.

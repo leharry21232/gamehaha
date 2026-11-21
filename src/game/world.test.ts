@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, isWorldPositionWalkable, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES, getNeighborhoodEvent, getNeighborhoodDialogue, isNeighborhoodDialogueLocationId, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, NEIGHBORHOOD_PARCEL_QUEST, type WorldInteractable } from './world';
+import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, isWorldPositionWalkable, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES, getNeighborhoodEvent, getNeighborhoodDialogue, isNeighborhoodDialogueLocationId, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, NEIGHBORHOOD_PARCEL_QUEST, getWorldMovementDelta, WORLD_PLAYER_SPEED, type WorldInteractable } from './world';
 
 test('all five vendor locations have distinct grounded costs and valid multipliers', () => {
   assert.equal(VENDOR_LOCATIONS.length, 5);
@@ -83,6 +83,23 @@ test('pedestrian routes have unique ids and movement animations', () => {
   }
 });
 
+
+test('world movement speed is frame-rate independent and no longer depends on keyboard repeat', () => {
+  const oneFrame = getWorldMovementDelta(1, 0, 1 / 60);
+  assert.ok(Math.abs(oneFrame.x - (WORLD_PLAYER_SPEED.x / 60)) < 0.000001);
+  assert.equal(oneFrame.y, 0);
+  const twoFrames = getWorldMovementDelta(1, 0, 1 / 30);
+  assert.ok(Math.abs(twoFrames.x - oneFrame.x * 2) < 0.000001);
+});
+
+test('diagonal world movement is normalized and background-tab frame gaps cannot teleport the player', () => {
+  const diagonal = getWorldMovementDelta(1, 1, 1 / 60);
+  assert.ok(Math.abs(diagonal.x / diagonal.y - WORLD_PLAYER_SPEED.x / WORLD_PLAYER_SPEED.y) < 0.000001);
+  const delayedFrame = getWorldMovementDelta(1, 0, 5);
+  assert.equal(delayedFrame.x, WORLD_PLAYER_SPEED.x * 0.05);
+  assert.equal(delayedFrame.y, 0);
+  assert.deepEqual(getWorldMovementDelta(0, 0, 1 / 60), { x: 0, y: 0 });
+});
 
 test('neighborhood movement stays inside the walkable sidewalk bounds', () => {
   const moved = moveWorldPlayer({ x: 48, y: 45 }, 100, -100);

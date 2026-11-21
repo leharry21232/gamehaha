@@ -4,7 +4,7 @@ import { GameEngine } from './game/engine';
 import { TesterPanel } from './TesterPanel';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
 import { DECORATIONS, getUnlockedSkills } from './game/progression';
-import { findNearbyWorldLocation, getNeighborhoodEvent, getNeighborhoodDialogue, isNeighborhoodDialogueLocationId, getVendorLocation, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, getNeighborhoodQuestFollowUpDialogue, NEIGHBORHOOD_PARCEL_QUEST, moveWorldPlayer, WORLD_INTERACTABLES, type NeighborhoodHelpQuestStatus, type NeighborhoodParcelQuestStatus, type WorldInteractable } from './game/world';
+import { findNearbyWorldLocation, getNeighborhoodEvent, getNeighborhoodDialogue, isNeighborhoodDialogueLocationId, getVendorLocation, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, getNeighborhoodQuestFollowUpDialogue, NEIGHBORHOOD_PARCEL_QUEST, getWorldMovementDelta, moveWorldPlayer, WORLD_INTERACTABLES, type NeighborhoodHelpQuestStatus, type NeighborhoodParcelQuestStatus, type WorldInteractable } from './game/world';
 import type { BestRecord, CityDistrictId, CustomerType, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
 import heroBgUrl from './assets/images/saigon_sidewalk_hero_1794649926456.jpg';
 
@@ -536,6 +536,14 @@ export default function App() {
   const [worldHudOpen, setWorldHudOpen] = useState(true);
   const [worldPanel, setWorldPanel] = useState<'MAP' | 'BAG' | 'JOURNAL' | 'PHONE' | null>(null);
   const [worldPlayer, setWorldPlayer] = useState({ x: 48, y: 45 });
+  const worldPlayerRef = useRef(worldPlayer);
+  const worldPlayerElementRef = useRef<HTMLDivElement | null>(null);
+  const worldKeyboardDirectionsRef = useRef(new Set<string>());
+  const worldTouchDirectionsRef = useRef(new Set<string>());
+  const updateWorldPlayerPosition = (position: { x: number; y: number }) => {
+    worldPlayerRef.current = position;
+    setWorldPlayer(position);
+  };
   const [worldNotice, setWorldNotice] = useState('');
   const [cartVisitorEventSeen, setCartVisitorEventSeen] = useState(false);
   const [neighborhoodVisitCounts, setNeighborhoodVisitCounts] = useState<Partial<Record<Exclude<WorldInteractable['id'], 'cart'>, number>>>({});
@@ -629,17 +637,17 @@ export default function App() {
 
   useEffect(() => {
     if (!worldHubOpen) return;
+    const directionKeys = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright']);
     const move = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
       const questOfferOpen = neighborhoodHelpQuestOfferOpen || neighborhoodParcelQuestOfferOpen;
 
-      // Keep keyboard movement and interaction behind an active quest dialog disabled.
       if (questOfferOpen) {
         if (key === 'escape') {
           event.preventDefault();
           setNeighborhoodHelpQuestOfferOpen(false);
           setNeighborhoodParcelQuestOfferOpen(false);
-        } else if (['e','w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) {
+        } else if (key === 'e' || directionKeys.has(key)) {
           event.preventDefault();
         }
         return;
@@ -651,16 +659,14 @@ export default function App() {
         return;
       }
 
-      // E must not interact with an NPC hidden behind the open map/journal panel.
-      if (key === 'e' && worldPanel) {
-        event.preventDefault();
-        setWorldPanel(null);
-        return;
-      }
-
       if (key === 'e') {
         event.preventDefault();
-        const nearby = findNearbyWorldLocation(worldPlayer.x, worldPlayer.y);
+        if (worldPanel) {
+          setWorldPanel(null);
+          return;
+        }
+        const current = worldPlayerRef.current;
+        const nearby = findNearbyWorldLocation(current.x, current.y);
         if (!nearby) {
           setWorldNotice('Chưa có địa điểm nào đủ gần. Hãy đi đến gần cửa tiệm, hàng xóm hoặc xe bánh tráng rồi nhấn E.');
           return;
@@ -668,17 +674,77 @@ export default function App() {
         handleWorldLocationInteraction(nearby);
         return;
       }
-      if (!['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) return;
+
+      if (!directionKeys.has(key)) return;
       event.preventDefault();
-      const deltaX = key === 'a' || key === 'arrowleft' ? -2.5 : key === 'd' || key === 'arrowright' ? 2.5 : 0;
-      const deltaY = key === 'w' || key === 'arrowup' ? -1.5 : key === 's' || key === 'arrowdown' ? 1.5 : 0;
+      worldKeyboardDirectionsRef.current.add(key);
       setWorldPanel(null);
       setWorldNotice('');
-      setWorldPlayer((p) => moveWorldPlayer(p, deltaX, deltaY));
     };
+    const stopMove = (event: KeyboardEvent) => worldKeyboardDirectionsRef.current.delete(event.key.toLowerCase());
+    const clearMovement = () => worldKeyboardDirectionsRef.current.clear();
+
     window.addEventListener('keydown', move);
-    return () => window.removeEventListener('keydown', move);
-  }, [worldHubOpen, worldPlayer, worldPanel, neighborhoodHelpQuestOfferOpen, neighborhoodParcelQuestOfferOpen, hud.playerLevel, hud.cityTycoon.totalStaff, hud.storyMission, neighborhoodHelpQuestStatus, neighborhoodParcelQuestStatus]);
+    window.addEventListener('keyup', stopMove);
+    window.addEventListener('blur', clearMovement);
+    return () => {
+      window.removeEventListener('keydown', move);
+      window.removeEventListener('keyup', stopMove);
+      window.removeEventListener('blur', clearMovement);
+      worldKeyboardDirectionsRef.current.clear();
+    };
+  }, [worldHubOpen, worldPanel, neighborhoodHelpQuestOfferOpen, neighborhoodParcelQuestOfferOpen, hud.playerLevel, hud.cityTycoon.totalStaff, hud.storyMission, neighborhoodHelpQuestStatus, neighborhoodParcelQuestStatus]);
+
+  useEffect(() => {
+    if (!worldHubOpen) return;
+    let frameId = 0;
+    let lastFrameTime = 0;
+    let lastUiCommit = 0;
+    let hasUncommittedPosition = false;
+
+    const tick = (timestamp: number) => {
+      const elapsedSeconds = lastFrameTime === 0 ? 0 : Math.min((timestamp - lastFrameTime) / 1000, 0.05);
+      lastFrameTime = timestamp;
+      const movementBlocked = Boolean(worldPanel || neighborhoodHelpQuestOfferOpen || neighborhoodParcelQuestOfferOpen);
+
+      if (!movementBlocked && elapsedSeconds > 0) {
+        const keys = worldKeyboardDirectionsRef.current;
+        const touch = worldTouchDirectionsRef.current;
+        const horizontal = Number(keys.has('d') || keys.has('arrowright') || touch.has('right'))
+          - Number(keys.has('a') || keys.has('arrowleft') || touch.has('left'));
+        const vertical = Number(keys.has('s') || keys.has('arrowdown') || touch.has('down'))
+          - Number(keys.has('w') || keys.has('arrowup') || touch.has('up'));
+        const delta = getWorldMovementDelta(horizontal, vertical, elapsedSeconds);
+
+        if (delta.x !== 0 || delta.y !== 0) {
+          const next = moveWorldPlayer(worldPlayerRef.current, delta.x, delta.y);
+          if (next.x !== worldPlayerRef.current.x || next.y !== worldPlayerRef.current.y) {
+            worldPlayerRef.current = next;
+            const playerElement = worldPlayerElementRef.current;
+            if (playerElement) {
+              playerElement.style.left = next.x + '%';
+              playerElement.style.top = next.y + '%';
+            }
+            hasUncommittedPosition = true;
+          }
+        }
+      }
+
+      if (hasUncommittedPosition && (timestamp - lastUiCommit >= 100 || movementBlocked)) {
+        setWorldPlayer(worldPlayerRef.current);
+        lastUiCommit = timestamp;
+        hasUncommittedPosition = false;
+      }
+
+      frameId = window.requestAnimationFrame(tick);
+    };
+
+    frameId = window.requestAnimationFrame(tick);
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      worldTouchDirectionsRef.current.clear();
+    };
+  }, [worldHubOpen, worldPanel, neighborhoodHelpQuestOfferOpen, neighborhoodParcelQuestOfferOpen]);
 
   // Persist high scores cleanly whenever money or ordersServed increases
   useEffect(() => {
@@ -802,12 +868,24 @@ export default function App() {
   }
 
   const handleWorldInteract = () => {
-    const nearby = findNearbyWorldLocation(worldPlayer.x, worldPlayer.y);
+    const current = worldPlayerRef.current;
+    const nearby = findNearbyWorldLocation(current.x, current.y);
     if (!nearby) {
       setWorldNotice('Chưa có địa điểm nào đủ gần. Hãy đi đến gần cửa tiệm, hàng xóm hoặc xe bánh tráng rồi nhấn E.');
       return;
     }
     handleWorldLocationInteraction(nearby);
+  };
+
+  const startWorldTouchMove = (direction: 'up' | 'down' | 'left' | 'right') => {
+    if (neighborhoodHelpQuestOfferOpen || neighborhoodParcelQuestOfferOpen) return;
+    worldTouchDirectionsRef.current.add(direction);
+    setWorldPanel(null);
+    setWorldNotice('');
+  };
+
+  const stopWorldTouchMove = (direction: 'up' | 'down' | 'left' | 'right') => {
+    worldTouchDirectionsRef.current.delete(direction);
   };
 
   const handleStart = () => {
@@ -1174,7 +1252,7 @@ export default function App() {
               })()}
               <div className="mt-5 flex flex-wrap justify-between gap-3">
                 <button type="button" onClick={() => setOnboardingStep(hud.screen === 'TITLE_MENU' ? 'STORY' : null)} className="rounded-xl border-2 border-slate-500 px-5 py-3 font-bold text-slate-200 hover:bg-slate-700">← Quay lại</button>
-                <button type="button" onClick={() => { const location = getVendorLocation(selectedVendorSpot); try { localStorage.setItem('banhtrang_vendor_spot_v1', selectedVendorSpot); } catch {} if (hud.screen === 'TITLE_MENU') { engineRef.current?.startNewGame(); setHasSavedGame(true); engineRef.current?.setVendorLocationRent(location.rentPerDay); setWorldPlayer({ x: 48, y: 45 }); setWorldHubOpen(true); } else { engineRef.current?.setVendorLocationRent(location.rentPerDay); } setOnboardingStep(null); }} className="rounded-xl border-[3px] border-[#111318] bg-emerald-400 px-6 py-3 font-extrabold text-slate-950 hover:bg-emerald-300">{hud.screen === 'TITLE_MENU' ? 'Xác nhận địa điểm & vào chợ →' : 'Lưu địa điểm này'}</button>
+                <button type="button" onClick={() => { const location = getVendorLocation(selectedVendorSpot); try { localStorage.setItem('banhtrang_vendor_spot_v1', selectedVendorSpot); } catch {} if (hud.screen === 'TITLE_MENU') { engineRef.current?.startNewGame(); setHasSavedGame(true); engineRef.current?.setVendorLocationRent(location.rentPerDay); updateWorldPlayerPosition({ x: 48, y: 45 }); setWorldHubOpen(true); } else { engineRef.current?.setVendorLocationRent(location.rentPerDay); } setOnboardingStep(null); }} className="rounded-xl border-[3px] border-[#111318] bg-emerald-400 px-6 py-3 font-extrabold text-slate-950 hover:bg-emerald-300">{hud.screen === 'TITLE_MENU' ? 'Xác nhận địa điểm & vào chợ →' : 'Lưu địa điểm này'}</button>
               </div>
             </div>
           )}
@@ -1183,8 +1261,37 @@ export default function App() {
 
       {worldHubOpen && (
         <div className="absolute inset-0 z-[80] overflow-hidden bg-[#26343a] text-white">
-          <style>{`@keyframes npcBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } } @keyframes walkEast { from { transform: translateX(-24vw); } to { transform: translateX(42vw); } } @keyframes walkWest { from { transform: translateX(34vw); } to { transform: translateX(-26vw); } } @keyframes trafficEast { from { transform: translateX(-180px); } to { transform: translateX(calc(100vw + 180px)); } } @keyframes trafficWest { from { transform: translateX(calc(100vw + 180px)); } to { transform: translateX(-180px); } }`}</style>
-          <svg className="absolute inset-0 h-full w-full [image-rendering:pixelated]" viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid slice" shapeRendering="crispEdges" role="img" aria-label="Khu phố bán bánh tráng trộn phong cách pixel art">
+          <style>{`
+            @keyframes npcBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+            @keyframes walkEast { from { transform: translateX(-24vw); } to { transform: translateX(42vw); } }
+            @keyframes walkWest { from { transform: translateX(34vw); } to { transform: translateX(-26vw); } }
+            @keyframes trafficEast { from { transform: translateX(-180px); } to { transform: translateX(calc(100vw + 180px)); } }
+            @keyframes trafficWest { from { transform: translateX(calc(100vw + 180px)); } to { transform: translateX(-180px); } }
+            @media (max-width: 640px) {
+              .world-status-card { left: max(8px, env(safe-area-inset-left)); top: max(8px, env(safe-area-inset-top)); width: calc(50% - 14px); padding: 7px 8px; border-width: 2px; box-shadow: 2px 2px 0 #172126; }
+              .world-status-card .world-status-detail { font-size: 8px; line-height: 1.2; }
+              .world-daypart-card { right: max(8px, env(safe-area-inset-right)); top: max(8px, env(safe-area-inset-top)); width: calc(50% - 14px); padding: 7px 8px; border-width: 2px; box-shadow: 2px 2px 0 #172126; }
+              .world-daypart-card .world-event-description, .world-daypart-card .world-event-traffic { display: none; }
+              .world-daypart-card > div { align-items: flex-start; flex-wrap: wrap; gap: 3px; }
+              .world-daypart-card p { font-size: 9px; line-height: 1.2; }
+              .world-controls-panel { left: 8px; bottom: max(8px, env(safe-area-inset-bottom)); width: calc(100% - 16px); max-height: 42dvh; overflow-y: auto; padding: 9px 8px calc(9px + env(safe-area-inset-bottom)); border-width: 3px; box-shadow: 3px 3px 0 #172126; transform: none; }
+              .world-tab-row { gap: 5px; margin-bottom: 6px; }
+              .world-tab-button { min-width: 0; padding: 4px 2px; border-width: 2px; font-size: 9px; line-height: 1.15; }
+              .world-tab-button span:first-child { font-size: 16px; line-height: 1.1; }
+              .world-hint { font-size: 10px; line-height: 1.25; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+              .world-dpad { gap: 8px; }
+              .world-dpad-button { width: 44px; height: 42px; padding: 0; touch-action: none; user-select: none; }
+              .world-action-row button { min-height: 38px; flex: 1 1 auto; padding: 7px 9px; font-size: 9px; }
+              .world-info-panel { top: max(72px, calc(env(safe-area-inset-top) + 64px)); bottom: calc(42dvh + 16px + env(safe-area-inset-bottom)); left: 10px; width: calc(100% - 20px); max-height: calc(100dvh - 160px); padding: 10px; transform: none; }
+            }
+            @media (max-height: 620px) and (orientation: landscape) {
+              .world-status-card { top: max(6px, env(safe-area-inset-top)); }
+              .world-daypart-card { top: max(6px, env(safe-area-inset-top)); }
+              .world-controls-panel { left: auto; right: max(8px, env(safe-area-inset-right)); bottom: max(8px, env(safe-area-inset-bottom)); width: min(46vw, 420px); max-height: calc(100dvh - 16px); }
+              .world-info-panel { left: 8px; top: max(64px, calc(env(safe-area-inset-top) + 56px)); bottom: 8px; width: min(50vw, 520px); max-height: calc(100dvh - 80px); }
+            }
+          `}</style>
+          <svg className="absolute inset-0 h-full w-full [image-rendering:pixelated]" viewBox="0 0 1200 720" preserveAspectRatio="none" shapeRendering="crispEdges" role="img" aria-label="Khu phố bán bánh tráng trộn phong cách pixel art">
             <defs>
               <pattern id="sidewalkTiles" width="32" height="32" patternUnits="userSpaceOnUse">
                 <rect width="32" height="32" fill="#c9b995"/>
@@ -1318,19 +1425,19 @@ export default function App() {
                   : 'linear-gradient(180deg, rgba(255,155,100,.17) 0%, rgba(255,155,100,.05) 56%, transparent 82%)',
             }}
           />
-          <div className="absolute left-2 top-2 z-20 w-[min(46%,250px)] border-[3px] border-[#35291f] bg-[#263b3b] px-2 py-2 font-mono shadow-[4px_4px_0_#172126] [image-rendering:pixelated] sm:left-[2%] sm:top-[2%] sm:w-auto sm:px-4 sm:py-3">
+          <div className="world-status-card absolute left-2 top-2 z-20 w-[min(46%,250px)] border-[3px] border-[#35291f] bg-[#263b3b] px-2 py-2 font-mono shadow-[4px_4px_0_#172126] [image-rendering:pixelated] sm:left-[2%] sm:top-[2%] sm:w-auto sm:px-4 sm:py-3">
             <p className="text-[9px] font-black tracking-[.1em] text-amber-300 sm:text-[10px] sm:tracking-[.16em]">GÓC PHỐ BÁNH TRÁNG</p>
             <p className="text-[11px] font-extrabold sm:text-sm">Ngày {hud.day} · {hud.money.toLocaleString('vi-VN')}đ</p>
-            <p className="text-[8px] leading-relaxed text-slate-200 sm:text-[10px]">Cấp {hud.playerLevel} · Đi bộ đến xe để bán hàng</p>
+            <p className="world-status-detail text-[8px] leading-relaxed text-slate-200 sm:text-[10px]">Cấp {hud.playerLevel} · Đi bộ đến xe để bán hàng</p>
           </div>
-          <div className="absolute right-2 top-16 z-20 w-[min(48%,270px)] border-[3px] border-[#35291f] bg-[#263b3b]/95 p-2 font-mono shadow-[4px_4px_0_#172126] sm:right-5 sm:top-16 sm:w-[270px] sm:p-2.5">
+          <div className="world-daypart-card absolute right-2 top-16 z-20 w-[min(48%,270px)] border-[3px] border-[#35291f] bg-[#263b3b]/95 p-2 font-mono shadow-[4px_4px_0_#172126] sm:right-5 sm:top-16 sm:w-[270px] sm:p-2.5">
             <div className="flex items-center justify-between gap-2">
               <p className="text-[9px] font-black tracking-[.12em] text-amber-300">NHỊP SỐNG KHU PHỐ</p>
               <span className="shrink-0 border border-amber-200/40 bg-amber-100/10 px-1.5 py-0.5 text-[8px] font-bold text-amber-100">{neighborhoodEvent.dayPartLabel}</span>
             </div>
             <p className="mt-1 text-[11px] font-extrabold text-white">{neighborhoodEvent.title}</p>
-            <p className="mt-1 text-[9px] leading-relaxed text-slate-200">{neighborhoodEvent.description}</p>
-            <p className="mt-1 text-[8px] font-bold text-emerald-200">● {neighborhoodEvent.trafficLabel}</p>
+            <p className="world-event-description mt-1 text-[9px] leading-relaxed text-slate-200">{neighborhoodEvent.description}</p>
+            <p className="world-event-traffic mt-1 text-[8px] font-bold text-emerald-200">● {neighborhoodEvent.trafficLabel}</p>
           </div>
           <div className="absolute left-[18%] top-[38%] z-10 flex items-end gap-2" style={{animation:"walkEast 24s linear infinite"}}>
             <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#d99b70"/><rect x="10" y="0" width="22" height="8" fill="#292b31"/><rect x="8" y="20" width="26" height="22" fill="#3d78a0"/><rect x="10" y="42" width="9" height="18" fill="#343d4c"/><rect x="23" y="42" width="9" height="18" fill="#343d4c"/></svg>
@@ -1357,14 +1464,14 @@ export default function App() {
             </svg>
             <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap border border-[#4b3428] bg-[#ffe3a6] px-1.5 py-0.5 text-[8px] font-black text-[#35291f]">CÔ NĂM</span>
           </div>
-          <div className="absolute z-20 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]" style={{left:worldPlayer.x+"%",top:worldPlayer.y+"%",transition:"left 120ms steps(3,end), top 120ms steps(3,end)"}}>
+          <div className="absolute z-20 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]" ref={worldPlayerElementRef} style={{left:worldPlayer.x+"%",top:worldPlayer.y+"%",willChange:"left, top"}}>
             <svg viewBox="0 0 48 72" className="h-14 w-10 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label="Nhân vật người chơi">
               <rect x="14" y="3" width="20" height="19" fill="#d99b76"/><rect x="11" y="0" width="26" height="9" fill="#292b31"/><rect x="8" y="22" width="32" height="25" fill="#2f83a0"/><rect x="1" y="25" width="8" height="21" fill="#d99b76"/><rect x="39" y="25" width="8" height="21" fill="#d99b76"/><rect x="11" y="47" width="10" height="21" fill="#303947"/><rect x="27" y="47" width="10" height="21" fill="#303947"/><rect x="9" y="66" width="13" height="5" fill="#392c27"/><rect x="26" y="66" width="13" height="5" fill="#392c27"/>
             </svg>
             <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap border border-[#243d36] bg-[#9ee4a8] px-2 py-0.5 text-[8px] font-black text-[#17251e]">BẠN</span>
           </div>
           {worldPanel && (
-            <div className="absolute top-[14%] bottom-[32%] left-1/2 z-30 w-[min(92%,520px)] -translate-x-1/2 overflow-y-auto overscroll-contain touch-pan-y border-2 border-[#e7c77e] bg-[#18262b]/95 p-4 shadow-[6px_6px_0_#111]">
+            <div className="world-info-panel absolute top-[14%] bottom-[32%] left-1/2 z-30 w-[min(92%,520px)] -translate-x-1/2 overflow-y-auto overscroll-contain touch-pan-y border-2 border-[#e7c77e] bg-[#18262b]/95 p-4 shadow-[6px_6px_0_#111]">
               <div className="flex items-center justify-between gap-3">
                 <p className="font-black text-amber-200">{worldPanel === 'MAP' ? '🗺 BẢN ĐỒ KHU PHỐ' : worldPanel === 'BAG' ? '🎒 TÚI ĐỒ' : worldPanel === 'JOURNAL' ? '📖 NHẬT KÝ' : '📱 ĐIỆN THOẠI'}</p>
                 <button type="button" onClick={() => setWorldPanel(null)} aria-label="Đóng khung thông tin" title="Đóng khung thông tin" className="flex h-9 w-9 shrink-0 items-center justify-center border-[3px] border-[#5b2d25] bg-[#b95343] text-lg font-black text-white shadow-[2px_2px_0_#111] hover:bg-[#d46654]">×</button>
@@ -1435,27 +1542,40 @@ export default function App() {
             </div>
           )}
           {worldHudOpen ? (
-          <div className="absolute bottom-3 left-1/2 z-30 w-[min(94%,620px)] border-[4px] border-[#35291f] bg-[#263b3b]/[.97] p-3 pt-5 font-mono shadow-[6px_6px_0_#172126]">
+          <div className="world-controls-panel absolute bottom-3 left-1/2 z-30 w-[min(94%,620px)] border-[4px] border-[#35291f] bg-[#263b3b]/[.97] p-3 pt-5 font-mono shadow-[6px_6px_0_#172126]">
             <button type="button" onClick={() => { setWorldHudOpen(false); setWorldPanel(null); }} aria-label="Ẩn bảng điều khiển" title="Ẩn bảng điều khiển" className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center border-2 border-[#5b2d25] bg-[#b95343] text-lg font-black leading-none text-white shadow-[2px_2px_0_#111] hover:bg-[#d46654]">×</button>
-            <div className="mb-2 flex flex-wrap items-center justify-center gap-2">
+            <div className="world-tab-row mb-2 flex flex-wrap items-center justify-center gap-2">
               {([{id:'MAP',icon:'🗺️',label:'Bản đồ'},{id:'BAG',icon:'🎒',label:'Túi đồ'},{id:'JOURNAL',icon:'📖',label:'Nhiệm vụ'},{id:'PHONE',icon:'📱',label:'Điện thoại'}] as const).map((item) => (
-                <button key={item.id} type="button" onClick={() => setWorldPanel((current) => current === item.id ? null : item.id)} className={"flex min-w-[58px] flex-1 flex-col items-center border-[3px] px-2 py-1.5 font-mono text-[10px] font-bold shadow-[3px_3px_0_#111] sm:min-w-[62px] sm:flex-none sm:px-3 sm:py-2 " + (worldPanel === item.id ? "border-[#f6cf70] bg-[#8d633e] text-[#fff2c7]" : "border-[#8c9a83] bg-[#405653] text-[#f8edcf] hover:bg-[#587268]")}>
+                <button key={item.id} type="button" onClick={() => setWorldPanel((current) => current === item.id ? null : item.id)} className={"world-tab-button flex min-w-[58px] flex-1 flex-col items-center border-[3px] px-2 py-1.5 font-mono text-[10px] font-bold shadow-[3px_3px_0_#111] sm:min-w-[62px] sm:flex-none sm:px-3 sm:py-2 " + (worldPanel === item.id ? "border-[#f6cf70] bg-[#8d633e] text-[#fff2c7]" : "border-[#8c9a83] bg-[#405653] text-[#f8edcf] hover:bg-[#587268]")}>
                   <span className="text-xl">{item.icon}</span>{item.label}
                 </button>
               ))}
             </div>
-            <p className="text-center text-xs leading-relaxed text-slate-200">{worldNotice || (nearbyWorldLocation ? 'Đang ở gần: ' + nearbyWorldLocation.name + ' · Nhấn E để tương tác' : 'Dùng WASD / phím mũi tên để đi trên vỉa hè · Đến gần các địa điểm rồi nhấn E')}</p>
+            <p className="world-hint text-center text-xs leading-relaxed text-slate-200">{worldNotice || (nearbyWorldLocation ? 'Đang ở gần: ' + nearbyWorldLocation.name + ' · Nhấn E để tương tác' : 'Dùng WASD / phím mũi tên để đi trên vỉa hè · Đến gần các địa điểm rồi nhấn E')}</p>
             {neighborhoodHelpQuestStatus === 'ACCEPTED' && <p className="mt-1 text-center text-[10px] font-black text-amber-200">📌 NHIỆM VỤ PHỤ: {NEIGHBORHOOD_HELP_QUEST.objective}</p>}
             {neighborhoodHelpQuestStatus === 'COMPLETED' && <p className="mt-1 text-center text-[10px] font-black text-emerald-200">✓ ĐÃ HOÀN THÀNH: {NEIGHBORHOOD_HELP_QUEST.title}</p>}
             {neighborhoodParcelQuestStatus === 'ACCEPTED' && <p className="mt-1 text-center text-[10px] font-black text-amber-200">📌 NHIỆM VỤ PHỤ: {NEIGHBORHOOD_PARCEL_QUEST.objective}</p>}
             {neighborhoodParcelQuestStatus === 'COMPLETED' && <p className="mt-1 text-center text-[10px] font-black text-emerald-200">✓ ĐÃ HOÀN THÀNH: {NEIGHBORHOOD_PARCEL_QUEST.title}</p>}
-            <div className="mt-2 flex items-center justify-center gap-2">
-              <button type="button" onClick={() => { setWorldPanel(null); setWorldNotice(''); setWorldPlayer((p) => moveWorldPlayer(p, 0, -2)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi lên">↑</button>
-              <button type="button" onClick={() => { setWorldPanel(null); setWorldNotice(''); setWorldPlayer((p) => moveWorldPlayer(p, -3, 0)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi trái">←</button>
-              <button type="button" onClick={() => { setWorldPanel(null); setWorldNotice(''); setWorldPlayer((p) => moveWorldPlayer(p, 0, 2)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi xuống">↓</button>
-              <button type="button" onClick={() => { setWorldPanel(null); setWorldNotice(''); setWorldPlayer((p) => moveWorldPlayer(p, 3, 0)); }} className="border border-white/30 bg-white/10 px-3 py-2 text-lg" aria-label="Đi phải">→</button>
+            <div className="world-dpad mt-2 flex items-center justify-center gap-2">
+              {([
+                { direction: 'up', label: 'Đi lên', symbol: '↑' },
+                { direction: 'left', label: 'Đi trái', symbol: '←' },
+                { direction: 'down', label: 'Đi xuống', symbol: '↓' },
+                { direction: 'right', label: 'Đi phải', symbol: '→' },
+              ] as const).map((item) => (
+                <button
+                  key={item.direction}
+                  type="button"
+                  onPointerDown={(event) => { event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); startWorldTouchMove(item.direction); }}
+                  onPointerUp={() => stopWorldTouchMove(item.direction)}
+                  onPointerCancel={() => stopWorldTouchMove(item.direction)}
+                  onLostPointerCapture={() => stopWorldTouchMove(item.direction)}
+                  className="world-dpad-button touch-none select-none border border-white/30 bg-white/10 px-3 py-2 text-lg active:bg-amber-300/30"
+                  aria-label={item.label}
+                >{item.symbol}</button>
+              ))}
             </div>
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+            <div className="world-action-row mt-2 flex flex-wrap items-center justify-center gap-2">
               {nearbyWorldLocation?.id === 'cart' && !cartVisitorEventSeen && <button type="button" onClick={() => { setCartVisitorEventSeen(true); setWorldNotice(CURIOUS_CART_VISITOR_EVENT.dialogue); setWorldPanel(null); }} className="max-w-full border-[3px] border-[#6b5430] bg-[#f6dfa0] px-3 py-2 font-mono text-[10px] font-black text-[#392819] shadow-[3px_3px_0_#111] hover:bg-[#ffe9b2]">💬 KHÁCH TÒ MÒ</button>}
               <button type="button" onClick={handleWorldInteract} className="max-w-full whitespace-normal break-words border-[3px] border-[#543a25] bg-[#f1c65e] px-4 py-2 text-center font-mono text-xs font-black text-[#392819] shadow-[4px_4px_0_#111] hover:bg-[#ffda79]">E · {nearbyWorldLocation ? nearbyWorldLocation.name.toUpperCase() : 'TƯƠNG TÁC'}</button>
               <button type="button" onClick={() => { setWorldPanel((current) => current === 'MAP' ? null : 'MAP'); setWorldNotice('Bạn đang ở khu phố bán bánh tráng. Hãy đi dọc vỉa hè, gặp khách và đến xe bánh tráng để bắt đầu ca bán hàng.'); }} className="max-w-full border-[3px] border-[#9cae91] bg-[#405653] px-3 py-2 font-mono text-[10px] font-bold text-[#fff2d1] shadow-[3px_3px_0_#111]">Hướng dẫn</button>
@@ -1760,7 +1880,7 @@ export default function App() {
                   <h2 className="font-display font-extrabold text-2xl text-[#111318]">
                     Chợ Sớm Ngày {hud.day} · Nhập Nguyên Liệu
                   </h2>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-600"><span>📍 Điểm bán: <strong className="text-emerald-800">{getVendorLocation(selectedVendorSpot).name}</strong></span><button type="button" onClick={() => { setWorldPlayer({ x: 48, y: 45 }); setWorldHubOpen(true); }} className="rounded-md border border-emerald-700 bg-emerald-50 px-2 py-1 font-bold text-emerald-800">🚶 Đi dạo khu phố</button><button type="button" onClick={() => engineRef.current?.returnToTitle()} className="rounded-md border border-slate-500 px-2 py-1 font-bold text-slate-700">← Quay lại menu</button></div>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-600"><span>📍 Điểm bán: <strong className="text-emerald-800">{getVendorLocation(selectedVendorSpot).name}</strong></span><button type="button" onClick={() => { updateWorldPlayerPosition({ x: 48, y: 45 }); setWorldHubOpen(true); }} className="rounded-md border border-emerald-700 bg-emerald-50 px-2 py-1 font-bold text-emerald-800">🚶 Đi dạo khu phố</button><button type="button" onClick={() => engineRef.current?.returnToTitle()} className="rounded-md border border-slate-500 px-2 py-1 font-bold text-slate-700">← Quay lại menu</button></div>
                   <p className="text-xs text-slate-600 mt-0.5">
                     Phương tiện: <strong className="text-[#111318]">{vehicleMeta.name}</strong> (Tối đa{' '}
                     <span className="font-mono-tabular font-bold">{hud.maxStockPerItem}</span> phần/món) ·{' '}
@@ -4019,7 +4139,7 @@ export default function App() {
         onTriggerRain={() => engineRef.current?.debugTriggerRain() ?? false}
         worldPosition={worldPlayer}
         onOpenWorld={() => { setTesterPanelOpen(false); setWorldHubOpen(true); setWorldPanel(null); }}
-        onTeleportWorld={(x, y) => setWorldPlayer({ x, y })}
+        onTeleportWorld={(x, y) => updateWorldPlayerPosition({ x, y })}
       />}
     </div>
   );

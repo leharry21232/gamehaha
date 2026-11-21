@@ -172,6 +172,20 @@ export interface WorldPosition {
   y: number;
 }
 
+export const WORLD_PLAYER_SPEED = { x: 12, y: 7.2 } as const;
+
+export function getWorldMovementDelta(inputX: number, inputY: number, elapsedSeconds: number): WorldPosition {
+  const x = Number.isFinite(inputX) ? Math.max(-1, Math.min(1, inputX)) : 0;
+  const y = Number.isFinite(inputY) ? Math.max(-1, Math.min(1, inputY)) : 0;
+  const magnitude = Math.hypot(x, y);
+  const seconds = Number.isFinite(elapsedSeconds) ? Math.max(0, Math.min(0.05, elapsedSeconds)) : 0;
+  if (magnitude === 0 || seconds === 0) return { x: 0, y: 0 };
+  return {
+    x: (x / magnitude) * WORLD_PLAYER_SPEED.x * seconds,
+    y: (y / magnitude) * WORLD_PLAYER_SPEED.y * seconds,
+  };
+}
+
 export interface WorldInteractable {
   id: 'cart' | 'grocery' | 'snack_shop' | 'drink_stall' | 'market_stall' | 'co_nam' | 'co_sau' | 'shipper_ti' | 'chu_bay' | 'ba_tu';
   name: string;

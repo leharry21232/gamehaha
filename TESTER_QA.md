@@ -202,3 +202,15 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] On mobile portrait and landscape, verify the player/NPCs remain aligned with the background, all touch controls are reachable, and panels/quest dialogs scroll without covering essential controls.
 - [ ] Compare money, stock, XP, story progress, day time, and save before/after optional neighborhood conversations; none should change except the explicitly claimed Chapter 1 reward.
 - [ ] After returning to preparation from the cart, complete one ordinary order and verify the existing cooking loop still works.
+
+
+## Mobile layout and movement regression
+- [ ] On a narrow phone in portrait, confirm the full neighborhood is visible (including both side edges), top cards do not overlap, and the bottom controls fit within the safe area.
+- [ ] Rotate to landscape; confirm no forced portrait rotation, no clipped HUD, and the control panel remains reachable.
+- [ ] Open Map, Bag, Journal, and Phone panels; scroll long content and close each panel without the page itself scrolling.
+- [ ] Press and hold each on-screen direction button; the player should move continuously at a steady pace and stop immediately on release/cancel.
+- [ ] Hold two directions together; diagonal speed should not be faster than straight movement.
+- [ ] Hold a keyboard direction; movement should be smooth and independent of browser key-repeat rate.
+- [ ] Move into each obstacle at an angle; collision should block entry and preserve sliding along the edge.
+- [ ] Background the browser while holding a direction, return, and confirm there is no large position jump.
+- [ ] Interact immediately after releasing movement; the nearest-location prompt and E interaction must use the player's latest position.
