@@ -214,3 +214,12 @@ Run this checklist on a disposable test save or a fresh test session. Do not use
 - [ ] Move into each obstacle at an angle; collision should block entry and preserve sliding along the edge.
 - [ ] Background the browser while holding a direction, return, and confirm there is no large position jump.
 - [ ] Interact immediately after releasing movement; the nearest-location prompt and E interaction must use the player's latest position.
+
+
+## Mobile cooking screen regression checks (portrait + landscape)
+- [ ] Portrait (320×640, 375×812, 390×844): top action buttons wrap and remain tappable; none are clipped horizontally.
+- [ ] Portrait: order dialogue, ingredient requirements, and patience bar remain readable without overlapping the customer or cutting station.
+- [ ] Portrait: four compact step labels do not collide; cutting instruction wraps inside the screen.
+- [ ] Portrait: rice-paper board and both action buttons remain fully visible; swipe cutting still registers across the board.
+- [ ] Landscape (844×390 or similar): desktop-style wider layout remains intact and controls do not overlap.
+- [ ] Verify topping, seasoning, rolling/shaking, and checkout stages after completing cutting.

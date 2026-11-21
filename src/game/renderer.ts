@@ -1059,15 +1059,19 @@ function drawOrderBubble(
   ctx.textBaseline = 'middle';
   ctx.fillText(`Chờ: ${Math.ceil(order.patience)}s`, b.x + b.w - padX, barY + 8);
 
-  ctx.font = '700 15px "Plus Jakarta Sans", sans-serif';
+  const compactOrderCard = layout.width < 680;
+  ctx.font = compactOrderCard
+    ? '700 10px "Plus Jakarta Sans", sans-serif'
+    : '700 15px "Plus Jakarta Sans", sans-serif';
   ctx.fillStyle = INK;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   const lines = wrapText(ctx, `"${order.dialogue}"`, innerW);
-  let textY = barY + 26;
-  for (let i = 0; i < Math.min(2, lines.length); i++) {
-    ctx.fillText(lines[i], b.x + padX, textY);
-    textY += 20;
+  let textY = barY + (compactOrderCard ? 22 : 26);
+  const orderLineHeight = compactOrderCard ? 13 : 20;
+  for (let i = 0; i < Math.min(compactOrderCard ? 3 : 2, lines.length); i++) {
+    ctx.fillText(lines[i], b.x + padX, textY, innerW);
+    textY += orderLineHeight;
   }
 
   const checkY = b.y + b.h - 34;
@@ -1079,7 +1083,9 @@ function drawOrderBubble(
   ctx.stroke();
 
   let cx = b.x + padX;
-  ctx.font = '700 13px "Plus Jakarta Sans", sans-serif';
+  ctx.font = compactOrderCard
+    ? '700 8px "Plus Jakarta Sans", sans-serif'
+    : '700 13px "Plus Jakarta Sans", sans-serif';
   ctx.textBaseline = 'middle';
 
   const sliceDone = order.targetSlices === 0 || cutCount === order.targetSlices;
@@ -1684,19 +1690,23 @@ function renderCookingPhase(
             { key: 'SHAKING', label: '4. Lắc & Giao' },
           ];
 
-    ctx.font = '700 14px "Plus Jakarta Sans", sans-serif';
+    const isPortrait = w < 680;
+    ctx.font = isPortrait
+      ? '800 9px "Plus Jakarta Sans", sans-serif'
+      : '700 14px "Plus Jakarta Sans", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const stepY = layout.counterY + 42;
-    const totalStepSpan = Math.min(580, w - 80);
+    const stepY = layout.counterY + (isPortrait ? 34 : 42);
+    const totalStepSpan = Math.max(0, Math.min(isPortrait ? w - 48 : 580, w - (isPortrait ? 48 : 80)));
+    const compactLabels = ['1. Cắt', '2. Topping', '3. Nêm', '4. Lắc'];
     stepNames.forEach((s, idx) => {
       const sx = w * 0.5 - totalStepSpan * 0.5 + (idx / 3) * totalStepSpan;
       const isActive = state.prepStep === s.key || (state.prepStep === 'READY' && idx === 3);
       ctx.fillStyle = isActive ? '#D97706' : '#64748B';
-      ctx.fillText(s.label, sx, stepY);
+      ctx.fillText(isPortrait ? compactLabels[idx] : s.label, sx, stepY, isPortrait ? Math.max(48, totalStepSpan / 3) : undefined);
       if (isActive) {
-        const tw = ctx.measureText(s.label).width;
-        ctx.fillRect(sx - tw * 0.5, stepY + 11, tw, 3);
+        const tw = Math.min(ctx.measureText(isPortrait ? compactLabels[idx] : s.label).width, isPortrait ? 42 : 580);
+        ctx.fillRect(sx - tw * 0.5, stepY + (isPortrait ? 8 : 11), tw, 3);
       }
     });
 
@@ -3123,14 +3133,30 @@ function renderTronStation(ctx: CanvasRenderingContext2D, state: RenderState, la
 
     const target = state.order?.targetSlices ?? 4;
     const count = state.slices.length;
-    ctx.font = '800 17px "Bricolage Grotesque", sans-serif';
+    const isPortrait = w < 680;
+    const instruction = isPortrait
+      ? `Vuốt ngón tay qua bánh để cắt thành ${target} phần · ${count}/${target}`
+      : `Kéo chuột cắt tự do tấm bánh thành ${target} khúc (Hiện tại: ${count} khúc)`;
+    ctx.font = isPortrait
+      ? '800 10px "Bricolage Grotesque", sans-serif'
+      : '800 17px "Bricolage Grotesque", sans-serif';
     ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     ctx.fillStyle = count === target ? '#059669' : count > target ? '#E11D48' : INK;
-    ctx.fillText(
-      `Kéo chuột cắt tự do tấm bánh thành ${target} khúc (Hiện tại: ${count} khúc)`,
-      layout.boardCenterX,
-      boardRect.y - 16
-    );
+    if (isPortrait) {
+      const instructionLines = wrapText(ctx, instruction, Math.max(180, w - 28)).slice(0, 2);
+      const lineHeight = 12;
+      instructionLines.forEach((line, index) => {
+        ctx.fillText(
+          line,
+          layout.boardCenterX,
+          boardRect.y - 10 - (instructionLines.length - 1 - index) * lineHeight,
+          w - 24
+        );
+      });
+    } else {
+      ctx.fillText(instruction, layout.boardCenterX, boardRect.y - 16);
+    }
 
     drawButton(ctx, layout.secondaryBtn, 'Cắt Lại', '#FFFFFF', INK, state.hoverSecondary);
     drawButton(

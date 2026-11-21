@@ -193,3 +193,4 @@
 - [x] Add automated tests for movement speed, diagonal normalization, and long-frame teleport prevention.
 - [ ] Manually verify the map on a narrow phone in portrait and landscape, including panel scrolling and holding each direction button.
 - [ ] Confirm movement remains smooth when moving diagonally and sliding against obstacles on a real mobile device.
+\n- [x] Map 1 cooking screen: portrait order card typography, compact four-step progress labels, touch-specific cutting instruction, and mobile HUD action wrapping.\n
