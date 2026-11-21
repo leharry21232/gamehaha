@@ -87,3 +87,25 @@ test('Bánh cuốn cutting board including shadow fits narrow phone widths', () 
     assert.ok(board.y + board.h + 6 < layout.primaryBtn.y, `board does not overlap action buttons at ${width}x${height}`);
   }
 });
+
+
+test('short landscape phones use compact layout and keep topping trays above actions', () => {
+  for (const [width, height] of [[568, 320], [667, 375], [740, 360], [844, 390], [932, 430]]) {
+    const layout = computePrepLayout(width, height);
+    assert.equal(layout.isCompact, true, `${width}x${height} is compact`);
+    assert.ok(layout.counterY < height * 0.65, `counter leaves room for cooking at ${width}x${height}`);
+    for (const tray of Object.values(layout.trayRects)) {
+      assert.ok(tray.x >= 0 && tray.x + tray.w <= width, `tray stays inside ${width}x${height}`);
+      assert.ok(tray.y + tray.h <= layout.primaryBtn.y, `tray does not overlap action row at ${width}x${height}`);
+    }
+    assert.ok(layout.primaryBtn.y + layout.primaryBtn.h <= height);
+  }
+});
+
+test('very short portrait phones keep two topping rows above the action buttons', () => {
+  const layout = computePrepLayout(280, 480);
+  for (const tray of Object.values(layout.trayRects)) {
+    assert.ok(tray.y + tray.h <= layout.primaryBtn.y, 'tiny-phone tray does not overlap action row');
+    assert.ok(tray.h >= 16, 'tiny-phone tray remains tappable');
+  }
+});

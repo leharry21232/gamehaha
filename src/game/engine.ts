@@ -3673,7 +3673,7 @@ export class GameEngine {
         this.undoLastTopping();
         return;
       }
-      const primRect = this.width < 680
+      const primRect = layout.isCompact
         ? layout.primaryBtn
         : { ...layout.primaryBtn, x: this.width * 0.5 - layout.primaryBtn.w * 0.5 };
       if (pointInRect(pt.x, pt.y, primRect)) {
@@ -3690,7 +3690,7 @@ export class GameEngine {
         }
       }
     } else if (this.prepStep === 'SEASONING') {
-      const primRect = this.width < 680
+      const primRect = layout.isCompact
         ? layout.primaryBtn
         : { ...layout.primaryBtn, x: this.width * 0.5 - layout.primaryBtn.w * 0.5 };
       if (pointInRect(pt.x, pt.y, primRect) && this.limeMeter.locked && this.chiliMeter.locked) {
@@ -3728,7 +3728,7 @@ export class GameEngine {
         this.addShakeProgress(20, pt.x, pt.y);
       }
     } else if (this.prepStep === 'READY') {
-      const primRect = this.width < 680
+      const primRect = layout.isCompact
         ? layout.primaryBtn
         : { ...layout.primaryBtn, x: this.width * 0.5 - layout.primaryBtn.w * 0.5 };
       if (pointInRect(pt.x, pt.y, primRect)) {
@@ -6383,7 +6383,7 @@ export class GameEngine {
       }
     }
 
-    const centeredPrimary = this.width < 680
+    const centeredPrimary = layout.isCompact
       ? layout.primaryBtn
       : {
           ...layout.primaryBtn,

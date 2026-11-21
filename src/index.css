@@ -152,7 +152,7 @@
   .game-top-hud__actions > button { font-size:7px; }
 }
 
-@media (max-width:680px) and (orientation:landscape) and (max-height:420px) {
+@media (orientation:landscape) and (max-height:520px) {
   .game-top-hud { min-height:80px; display:flex; flex-wrap:wrap; gap:2px 6px; padding:3px 8px 4px; }
   .game-top-hud__progress { display:none; }
   .game-top-hud__stats { flex:1 1 100%; max-height:16px; overflow:hidden; font-size:8px; }

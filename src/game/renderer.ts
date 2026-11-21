@@ -986,7 +986,7 @@ function drawOrderBubble(
 
   const padX = 16;
   const innerW = b.w - padX * 2;
-  if (layout.width < 680) {
+  if (layout.isCompact) {
     // Phone card uses two compact header rows so special labels never collide with the timer.
     const barY = b.y + 12;
     ctx.font = '800 8px "Bricolage Grotesque", sans-serif';
@@ -1118,7 +1118,7 @@ function drawOrderBubble(
   ctx.textBaseline = 'middle';
   ctx.fillText(`Chờ: ${Math.ceil(order.patience)}s`, b.x + b.w - padX, barY + 8);
 
-  const compactOrderCard = layout.width < 680;
+  const compactOrderCard = layout.isCompact;
   ctx.font = compactOrderCard
     ? '700 10px "Plus Jakarta Sans", sans-serif'
     : '700 15px "Plus Jakarta Sans", sans-serif';
@@ -1304,11 +1304,12 @@ function drawButton(
   const offset = hovered && !disabled ? -2 : 0;
   const rect = { x: r.x, y: r.y + offset, w: r.w, h: r.h };
   drawComicBox(ctx, rect, disabled ? '#CBD5E1' : bg, 12, disabled ? 2 : 4, 3);
-  ctx.font = '800 15px "Bricolage Grotesque", sans-serif';
+  const buttonFontSize = rect.w < 100 ? 11 : rect.w < 140 ? 13 : 15;
+  ctx.font = `800 ${buttonFontSize}px "Bricolage Grotesque", sans-serif`;
   ctx.fillStyle = disabled ? '#64748B' : textColor;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(label, rect.x + rect.w * 0.5, rect.y + rect.h * 0.5 + 1);
+  ctx.fillText(label, rect.x + rect.w * 0.5, rect.y + rect.h * 0.5 + 1, Math.max(8, rect.w - 12));
 }
 
 function drawPowerBar(
@@ -2874,7 +2875,15 @@ function renderToppingTrays(ctx: CanvasRenderingContext2D, state: RenderState, l
 
     drawComicBox(ctx, drawRect, trayBg, 12, 3, 2.5);
 
-    if (drawRect.w < 112) {
+    if (drawRect.h < 32) {
+      const progressStr = need > 0 ? `${count}/${need}` : `${count}`;
+      const compactLabel = levelLocked ? `🔒 Cấp ${unlockLevel}` : `${t.shortName} ${progressStr}`;
+      ctx.font = '700 8px "Bricolage Grotesque", sans-serif';
+      ctx.fillStyle = levelLocked || outOfStock ? '#64748B' : outOfStock ? '#E11D48' : INK;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(compactLabel, drawRect.x + drawRect.w * 0.5, drawRect.y + drawRect.h * 0.5, drawRect.w - 6);
+    } else if (drawRect.w < 112) {
       // Compact Portrait Tray (fits 4-column iPhone/Android thumb grid cleanly)
       drawToppingIcon(ctx, t.id, drawRect.x + drawRect.w * 0.5, drawRect.y + 15, 0.65);
 
@@ -3056,15 +3065,15 @@ function renderCuonStation(ctx: CanvasRenderingContext2D, state: RenderState, la
       drawButton(
         ctx,
         getToppingUndoRect(layout),
-        hasToppings ? '↶ Hoàn Tác (Ctrl+Z)' : 'Chưa có món để rút',
+        hasToppings ? (layout.width < 360 ? '↶ Rút' : '↶ Hoàn tác') : (layout.width < 360 ? 'Chưa có' : 'Chưa có món'),
         hasToppings ? '#DBEAFE' : '#E2E8F0',
         INK,
         hasToppings && state.hoverSecondary
       );
       drawButton(
         ctx,
-        { ...layout.primaryBtn, x: w < 680 ? layout.primaryBtn.x : w * 0.5 - layout.primaryBtn.w * 0.5 },
-        'Xong Topping · Nêm Gia Vị →',
+        { ...layout.primaryBtn, x: layout.isCompact ? layout.primaryBtn.x : w * 0.5 - layout.primaryBtn.w * 0.5 },
+        (layout.isCompact ? 'Xong Topping →' : 'Xong Topping · Nêm Gia Vị →'),
         '#F59E0B',
         INK,
         state.hoverPrimary
@@ -3341,7 +3350,7 @@ function renderTronStation(ctx: CanvasRenderingContext2D, state: RenderState, la
       renderToppingTrays(ctx, state, layout);
       drawButton(
         ctx,
-        { ...layout.primaryBtn, x: w < 680 ? layout.primaryBtn.x : w * 0.5 - layout.primaryBtn.w * 0.5 },
+        { ...layout.primaryBtn, x: layout.isCompact ? layout.primaryBtn.x : w * 0.5 - layout.primaryBtn.w * 0.5 },
         'Xong Topping · Nêm Gia Vị →',
         '#F59E0B',
         INK,
@@ -3383,7 +3392,7 @@ function renderTronStation(ctx: CanvasRenderingContext2D, state: RenderState, la
       } else {
         drawButton(
           ctx,
-          { ...layout.primaryBtn, x: w < 680 ? layout.primaryBtn.x : w * 0.5 - layout.primaryBtn.w * 0.5 },
+          { ...layout.primaryBtn, x: layout.isCompact ? layout.primaryBtn.x : w * 0.5 - layout.primaryBtn.w * 0.5 },
           'Giao Hàng Ngay! (Enter)',
           '#10B981',
           '#FFFFFF',
@@ -3434,7 +3443,7 @@ function renderSeasoningPanel(
   const bothDone = state.limeMeter.locked && state.chiliMeter.locked;
   drawButton(
     ctx,
-    { ...layout.primaryBtn, x: w < 680 ? layout.primaryBtn.x : w * 0.5 - layout.primaryBtn.w * 0.5 },
+    { ...layout.primaryBtn, x: layout.isCompact ? layout.primaryBtn.x : w * 0.5 - layout.primaryBtn.w * 0.5 },
     bothDone ? nextLabel : 'Hãy Vắt Chanh & Rưới Sa Tế',
     bothDone ? '#10B981' : '#CBD5E1',
     bothDone ? '#FFFFFF' : '#475569',
