@@ -93,16 +93,7 @@
           );
         });
 
-        // Attempt Portrait orientation lock on first interaction when supported
-        var tryLockPortrait = function () {
-          if (window.screen && window.screen.orientation && typeof window.screen.orientation.lock === 'function') {
-            window.screen.orientation.lock('portrait').catch(function () {});
-          }
-          window.removeEventListener('pointerdown', tryLockPortrait);
-          window.removeEventListener('touchstart', tryLockPortrait);
-        };
-        window.addEventListener('pointerdown', tryLockPortrait, { passive: true });
-        window.addEventListener('touchstart', tryLockPortrait, { passive: true });
+        // Keep the layout responsive to the device's actual orientation.
       })();
     </script>
     <script type="module" src="/src/main.tsx"></script>

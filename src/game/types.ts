@@ -43,7 +43,11 @@ export type RawIngredientId =
   | 'trung_cut'
   | 'xoai'
   | 'rau_ram'
-  | 'tac';
+  | 'tac'
+  | 'pho_mai'
+  | 'tran_chau'
+  | 'sau_rieng'
+  | 'nuoc_cot_dua';
 
 export type InventoryState = Record<RawIngredientId, number>;
 
@@ -607,7 +611,40 @@ export interface DailyPacingSnapshot {
   speedMultiplierLabel: string;
 }
 
+export interface StoryMissionSnapshot {
+  id: string;
+  chapter: string;
+  title: string;
+  description: string;
+  npcName: string;
+  storyText: string;
+  progress: number;
+  target: number;
+  reward: number;
+  completed: boolean;
+  allCompleted: boolean;
+}
+
+export interface NpcEncounterSnapshot {
+  name: string;
+  role: string;
+  customerLabel: string;
+  dialogue: string;
+  interacted: boolean;
+}
+
 export interface GameHudSnapshot {
+  playerLevel: number;
+  playerXp: number;
+  playerXpToNext: number;
+  lifetimeEarnings: number;
+  completedOrdersLifetime: number;
+  decorationAttraction: number;
+  ownedDecorations: string[];
+  equippedDecorations: string[];
+  difficulty: 'EASY' | 'NORMAL' | 'HARD';
+  storyMission: StoryMissionSnapshot;
+  npcEncounter: NpcEncounterSnapshot | null;
   screen: GameScreenState;
   phase: PlayPhase;
   dishType: DishType;

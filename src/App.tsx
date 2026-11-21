@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Volume2, VolumeX, Pause, Play, RotateCcw, Home, Store, X, Check, Newspaper, TrendingUp, TrendingDown, Truck, Zap, Wrench, Scissors, Clock, LogOut, Map as MapIcon, Swords, Shield, Sparkles, Users, AlertTriangle, Trash2, Megaphone, Smartphone } from 'lucide-react';
 import { GameEngine } from './game/engine';
+import { TesterPanel } from './TesterPanel';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
-import type { BestRecord, CityDistrictId, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
+import { DECORATIONS, getUnlockedSkills } from './game/progression';
+import { findNearbyWorldLocation, getNeighborhoodEvent, getNeighborhoodDialogue, isNeighborhoodDialogueLocationId, getVendorLocation, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, getNeighborhoodQuestFollowUpDialogue, NEIGHBORHOOD_PARCEL_QUEST, getWorldMovementDelta, moveWorldPlayer, WORLD_INTERACTABLES, type NeighborhoodHelpQuestStatus, type NeighborhoodParcelQuestStatus, type WorldInteractable } from './game/world';
+import type { BestRecord, CityDistrictId, CustomerType, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
 import heroBgUrl from './assets/images/saigon_sidewalk_hero_1794649926456.jpg';
 
 const STORAGE_KEY = 'banh_trang_tron_sinh_ton_record_v1';
@@ -46,80 +49,45 @@ function formatClock(sec: number): string {
   return `${m}:${rem.toString().padStart(2, '0')}`;
 }
 
-const DURATION_PRESETS = [
-  { label: '2 phút', seconds: 120 },
-  { label: '3 phút', seconds: 180 },
-  { label: '5 phút', seconds: 300 },
-  { label: '10 phút', seconds: 600 },
-  { label: 'Tự do ∞', seconds: 0 },
-];
+function WorldNpcSprite({ npc }: { npc: WorldInteractable }) {
+  const palette = npc.id === 'co_sau'
+    ? { shirt: '#b86b91', hair: '#5b392e', accent: '#f4c6d8', hat: false }
+    : npc.id === 'shipper_ti'
+      ? { shirt: '#2d8d9c', hair: '#292b31', accent: '#f2c94c', hat: true }
+      : npc.id === 'chu_bay'
+        ? { shirt: '#63865a', hair: '#554235', accent: '#d6b47a', hat: true }
+        : { shirt: '#8467a8', hair: '#77706a', accent: '#f0d99b', hat: false };
 
-function ShiftDurationSelector({
-  dayDuration,
-  onSelect,
-  dark = false,
-}: {
-  dayDuration: number;
-  onSelect: (seconds: number) => void;
-  dark?: boolean;
-}) {
-  const minutes = dayDuration > 0 ? Math.max(1, Math.round(dayDuration / 60)) : 3;
   return (
-    <div
-      className={`rounded-xl border-2 border-[#111318] px-3 py-2.5 flex flex-wrap items-center justify-between gap-2.5 ${
-        dark ? 'bg-[#181920]/90 text-slate-100' : 'bg-slate-100 text-[#111318]'
-      }`}
-    >
-      <div className="flex items-center gap-1.5 text-xs font-extrabold whitespace-nowrap">
-        <Clock className={`w-4 h-4 ${dark ? 'text-[#FBBF24]' : 'text-amber-600'}`} />
-        <span>Thời lượng mỗi ngày:</span>
+    <div className="absolute z-10 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]" style={{ left: npc.x + '%', top: npc.y + '%' }} title={npc.name}>
+      <svg viewBox="0 0 42 64" className="h-11 w-8 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label={npc.name}>
+        {palette.hat && <rect x="6" y="2" width="30" height="7" fill={palette.accent} stroke="#46352b" strokeWidth="2" />}
+        <rect x="12" y="5" width="18" height="17" fill="#d39a78" />
+        <path d="M8 15Q8 0 21 0Q34 0 34 15L29 18H13Z" fill={palette.hair} />
+        <rect x="8" y="22" width="26" height="22" fill={palette.shirt} stroke="#49382d" strokeWidth="2" />
+        <rect x="10" y="44" width="9" height="16" fill="#344052" />
+        <rect x="23" y="44" width="9" height="16" fill="#344052" />
+        <rect x="8" y="59" width="13" height="5" fill="#49352b" />
+        <rect x="21" y="59" width="13" height="5" fill="#49352b" />
+        {npc.id === 'co_sau' && <><rect x="2" y="28" width="5" height="13" fill="#6f9b53" /><rect x="1" y="23" width="7" height="6" fill="#f2b8c7" /></>}
+        {npc.id === 'shipper_ti' && <rect x="31" y="25" width="9" height="13" fill="#f2c94c" stroke="#49382d" strokeWidth="2" />}
+        {npc.id === 'chu_bay' && <rect x="2" y="28" width="6" height="12" fill="#b6b1a2" />}
+        {npc.id === 'ba_tu' && <rect x="7" y="19" width="28" height="5" fill="#e7d8b7" />}
+      </svg>
+      <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap border border-[#4b3428] bg-[#ffe3a6] px-1.5 py-0.5 text-[8px] font-black text-[#35291f]">{npc.name.toUpperCase()}</span>
+    </div>
+  );
+}
+
+function BusinessDayInfo({ dark = false }: { dark?: boolean }) {
+  return (
+    <div className={`w-full rounded-xl border-2 border-[#111318] px-3 py-3 flex items-center gap-3 ${dark ? 'bg-[#181920]/90 text-slate-100' : 'bg-slate-100 text-[#111318]'}`}>
+      <Clock className={`w-5 h-5 shrink-0 ${dark ? 'text-[#FBBF24]' : 'text-amber-600'}`} />
+      <div>
+        <p className="text-xs font-extrabold">MÔ HÌNH KINH DOANH DÀI HẠN</p>
+        <p className={`text-[11px] ${dark ? 'text-slate-300' : 'text-slate-600'}`}>Mỗi ngày kinh doanh kéo dài 10 phút trong game. Ví tiền, cấp độ và đồ trang trí được lưu lại khi bạn quay lại.</p>
       </div>
-      <div className="flex flex-wrap items-center gap-1.5">
-        {DURATION_PRESETS.map((preset) => {
-          const active = dayDuration === preset.seconds;
-          return (
-            <button
-              key={preset.seconds}
-              type="button"
-              onClick={() => onSelect(preset.seconds)}
-              className={`px-2.5 py-1 rounded-lg border-2 border-[#111318] font-display font-bold text-xs whitespace-nowrap transition-transform active:translate-y-0.5 cursor-pointer ${
-                active
-                  ? 'bg-[#F59E0B] text-[#111318]'
-                  : dark
-                  ? 'bg-[#272A36] hover:bg-[#343848] text-slate-200'
-                  : 'bg-white hover:bg-amber-50 text-[#111318]'
-              }`}
-            >
-              {preset.label}
-            </button>
-          );
-        })}
-        <div className="flex items-center gap-1 ml-1">
-          <button
-            type="button"
-            aria-label="Giảm 1 phút"
-            onClick={() => onSelect(Math.max(60, (dayDuration > 0 ? minutes - 1 : 2) * 60))}
-            className={`w-7 h-7 rounded-lg border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer ${
-              dark ? 'bg-[#272A36] hover:bg-[#343848] text-white' : 'bg-white hover:bg-slate-200 text-[#111318]'
-            }`}
-          >
-            -
-          </button>
-          <span className="font-mono-tabular font-extrabold text-xs px-1.5 min-w-[54px] text-center">
-            {dayDuration === 0 ? 'Tự do ∞' : `${minutes} phút`}
-          </span>
-          <button
-            type="button"
-            aria-label="Tăng 1 phút"
-            onClick={() => onSelect(Math.min(3600, (dayDuration > 0 ? minutes + 1 : 3) * 60))}
-            className={`w-7 h-7 rounded-lg border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer ${
-              dark ? 'bg-[#272A36] hover:bg-[#343848] text-white' : 'bg-white hover:bg-slate-200 text-[#111318]'
-            }`}
-          >
-            +
-          </button>
-        </div>
-      </div>
+      <span className="ml-auto shrink-0 rounded-lg bg-amber-400 px-2.5 py-1 text-xs font-extrabold text-slate-950">10 PHÚT / NGÀY</span>
     </div>
   );
 }
@@ -171,7 +139,7 @@ const SHOP_ITEMS: ShopItemMeta[] = [
     key: 'cursedMenu',
     name: 'Nguyên Liệu Hắc Ám',
     cost: 600,
-    desc: 'Mở khóa Sầu Riêng, Trân Châu & Nước Cốt Dừa. Khách Gen Z trả gấp 3 (126k), nhưng 50% bị ngộ độc (-20% khách ngày hôm sau).',
+    desc: 'Mở khóa khách Gen Z và xu hướng món Hắc Ám. Khách trả gấp 3 (126k), nhưng 50% bị ngộ độc (-20% khách ngày hôm sau).',
     accent: '#F5F3FF',
   },
   {
@@ -203,6 +171,17 @@ const BILL_STYLES: Record<number, { label: string; bg: string; border: string; t
 const REGISTER_BILLS = [1, 2, 5, 10, 20, 50];
 
 const INITIAL_HUD: GameHudSnapshot = {
+  playerLevel: 1,
+  playerXp: 0,
+  playerXpToNext: 100,
+  lifetimeEarnings: 0,
+  completedOrdersLifetime: 0,
+  decorationAttraction: 0,
+  ownedDecorations: [],
+  equippedDecorations: [],
+  difficulty: 'NORMAL',
+  npcEncounter: null,
+  storyMission: { id: 'story_first_customers', chapter: 'Chương 1 · Khởi nghiệp', title: 'Ba vị khách đầu tiên', description: 'Hoàn thành 3 đơn hàng để chứng minh xe bánh tráng của bạn có thể trụ vững.', npcName: 'Cô Sáu', storyText: 'Cứ làm ngon, sạch sẽ, khách quen sẽ tự tìm tới.', progress: 0, target: 3, reward: 15000, completed: false, allCompleted: false },
   screen: 'TITLE_MENU',
   phase: 'COOKING',
   dishType: 'CUON',
@@ -307,6 +286,10 @@ const INITIAL_HUD: GameHudSnapshot = {
     xoai: 0,
     rau_ram: 0,
     tac: 0,
+    pho_mai: 0,
+    tran_chau: 0,
+    sau_rieng: 0,
+    nuoc_cot_dua: 0,
   },
   maxStockPerItem: 12,
   marketPrices: { ...BASE_MARKET_PRICES },
@@ -544,6 +527,36 @@ export default function App() {
   const engineRef = useRef<GameEngine | null>(null);
 
   const [hud, setHud] = useState<GameHudSnapshot>(INITIAL_HUD);
+  const [testerPanelOpen, setTesterPanelOpen] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === '1');
+  const [hasSavedGame, setHasSavedGame] = useState(() => {
+    try { return Boolean(localStorage.getItem('banh_trang_session_save_v1')); } catch { return false; }
+  });
+  const [onboardingStep, setOnboardingStep] = useState<'STORY' | 'MAP' | null>(null);
+  const [worldHubOpen, setWorldHubOpen] = useState(false);
+  const [worldHudOpen, setWorldHudOpen] = useState(true);
+  const [worldPanel, setWorldPanel] = useState<'MAP' | 'BAG' | 'JOURNAL' | 'PHONE' | null>(null);
+  const [worldPlayer, setWorldPlayer] = useState({ x: 48, y: 45 });
+  const worldPlayerRef = useRef(worldPlayer);
+  const worldPlayerElementRef = useRef<HTMLDivElement | null>(null);
+  const worldKeyboardDirectionsRef = useRef(new Set<string>());
+  const worldTouchDirectionsRef = useRef(new Set<string>());
+  const updateWorldPlayerPosition = (position: { x: number; y: number }) => {
+    worldPlayerRef.current = position;
+    setWorldPlayer(position);
+  };
+  const [worldNotice, setWorldNotice] = useState('');
+  const [cartVisitorEventSeen, setCartVisitorEventSeen] = useState(false);
+  const [neighborhoodVisitCounts, setNeighborhoodVisitCounts] = useState<Partial<Record<Exclude<WorldInteractable['id'], 'cart'>, number>>>({});
+  const [neighborhoodHelpQuestStatus, setNeighborhoodHelpQuestStatus] = useState<NeighborhoodHelpQuestStatus>('AVAILABLE');
+  const [neighborhoodHelpQuestOfferOpen, setNeighborhoodHelpQuestOfferOpen] = useState(false);
+  const [neighborhoodParcelQuestStatus, setNeighborhoodParcelQuestStatus] = useState<NeighborhoodParcelQuestStatus>('AVAILABLE');
+  const [neighborhoodParcelQuestOfferOpen, setNeighborhoodParcelQuestOfferOpen] = useState(false);
+  const [tutorialDismissed, setTutorialDismissed] = useState(() => {
+    try { return localStorage.getItem('banhtrang_tutorial_v1') === 'done'; } catch { return false; }
+  });
+  const [selectedVendorSpot, setSelectedVendorSpot] = useState(() => {
+    try { return localStorage.getItem('banhtrang_vendor_spot_v1') || 'CHO_BEN_THANH'; } catch { return 'CHO_BEN_THANH'; }
+  });
   const [bestRecord, setBestRecord] = useState<BestRecord>(() => loadBestRecord());
   const [heroImgFailed, setHeroImgFailed] = useState(false);
   const [draggingSquadId, setDraggingSquadId] = useState<string | null>(null);
@@ -622,6 +635,117 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!worldHubOpen) return;
+    const directionKeys = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright']);
+    const move = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+      const questOfferOpen = neighborhoodHelpQuestOfferOpen || neighborhoodParcelQuestOfferOpen;
+
+      if (questOfferOpen) {
+        if (key === 'escape') {
+          event.preventDefault();
+          setNeighborhoodHelpQuestOfferOpen(false);
+          setNeighborhoodParcelQuestOfferOpen(false);
+        } else if (key === 'e' || directionKeys.has(key)) {
+          event.preventDefault();
+        }
+        return;
+      }
+
+      if (key === 'escape' && worldPanel) {
+        event.preventDefault();
+        setWorldPanel(null);
+        return;
+      }
+
+      if (key === 'e') {
+        event.preventDefault();
+        if (worldPanel) {
+          setWorldPanel(null);
+          return;
+        }
+        const current = worldPlayerRef.current;
+        const nearby = findNearbyWorldLocation(current.x, current.y);
+        if (!nearby) {
+          setWorldNotice('Chưa có địa điểm nào đủ gần. Hãy đi đến gần cửa tiệm, hàng xóm hoặc xe bánh tráng rồi nhấn E.');
+          return;
+        }
+        handleWorldLocationInteraction(nearby);
+        return;
+      }
+
+      if (!directionKeys.has(key)) return;
+      event.preventDefault();
+      worldKeyboardDirectionsRef.current.add(key);
+      setWorldPanel(null);
+      setWorldNotice('');
+    };
+    const stopMove = (event: KeyboardEvent) => worldKeyboardDirectionsRef.current.delete(event.key.toLowerCase());
+    const clearMovement = () => worldKeyboardDirectionsRef.current.clear();
+
+    window.addEventListener('keydown', move);
+    window.addEventListener('keyup', stopMove);
+    window.addEventListener('blur', clearMovement);
+    return () => {
+      window.removeEventListener('keydown', move);
+      window.removeEventListener('keyup', stopMove);
+      window.removeEventListener('blur', clearMovement);
+      worldKeyboardDirectionsRef.current.clear();
+    };
+  }, [worldHubOpen, worldPanel, neighborhoodHelpQuestOfferOpen, neighborhoodParcelQuestOfferOpen, hud.playerLevel, hud.cityTycoon.totalStaff, hud.storyMission, neighborhoodHelpQuestStatus, neighborhoodParcelQuestStatus]);
+
+  useEffect(() => {
+    if (!worldHubOpen) return;
+    let frameId = 0;
+    let lastFrameTime = 0;
+    let lastUiCommit = 0;
+    let hasUncommittedPosition = false;
+
+    const tick = (timestamp: number) => {
+      const elapsedSeconds = lastFrameTime === 0 ? 0 : Math.min((timestamp - lastFrameTime) / 1000, 0.05);
+      lastFrameTime = timestamp;
+      const movementBlocked = Boolean(worldPanel || neighborhoodHelpQuestOfferOpen || neighborhoodParcelQuestOfferOpen);
+
+      if (!movementBlocked && elapsedSeconds > 0) {
+        const keys = worldKeyboardDirectionsRef.current;
+        const touch = worldTouchDirectionsRef.current;
+        const horizontal = Number(keys.has('d') || keys.has('arrowright') || touch.has('right'))
+          - Number(keys.has('a') || keys.has('arrowleft') || touch.has('left'));
+        const vertical = Number(keys.has('s') || keys.has('arrowdown') || touch.has('down'))
+          - Number(keys.has('w') || keys.has('arrowup') || touch.has('up'));
+        const delta = getWorldMovementDelta(horizontal, vertical, elapsedSeconds);
+
+        if (delta.x !== 0 || delta.y !== 0) {
+          const next = moveWorldPlayer(worldPlayerRef.current, delta.x, delta.y);
+          if (next.x !== worldPlayerRef.current.x || next.y !== worldPlayerRef.current.y) {
+            worldPlayerRef.current = next;
+            const playerElement = worldPlayerElementRef.current;
+            if (playerElement) {
+              playerElement.style.left = next.x + '%';
+              playerElement.style.top = next.y + '%';
+            }
+            hasUncommittedPosition = true;
+          }
+        }
+      }
+
+      if (hasUncommittedPosition && (timestamp - lastUiCommit >= 100 || movementBlocked)) {
+        setWorldPlayer(worldPlayerRef.current);
+        lastUiCommit = timestamp;
+        hasUncommittedPosition = false;
+      }
+
+      frameId = window.requestAnimationFrame(tick);
+    };
+
+    frameId = window.requestAnimationFrame(tick);
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      worldTouchDirectionsRef.current.clear();
+    };
+  }, [worldHubOpen, worldPanel, neighborhoodHelpQuestOfferOpen, neighborhoodParcelQuestOfferOpen]);
+
   // Persist high scores cleanly whenever money or ordersServed increases
   useEffect(() => {
     if (hud.money > bestRecord.bestMoney || hud.ordersServed > bestRecord.bestOrders) {
@@ -634,12 +758,24 @@ export default function App() {
     }
   }, [hud.money, hud.ordersServed, bestRecord.bestMoney, bestRecord.bestOrders]);
 
+  // Toggle Tester Panel with F2. Query string ?debug=1 opens it on load.
+  useEffect(() => {
+    const onDebugKey = (event: KeyboardEvent) => {
+      if (event.code !== 'F2') return;
+      event.preventDefault();
+      event.stopPropagation();
+      setTesterPanelOpen((open) => !open);
+    };
+    window.addEventListener('keydown', onDebugKey);
+    return () => window.removeEventListener('keydown', onDebugKey);
+  }, []);
+
   // Enter / Space starts game on Title Screen; Checkout modal keyboard shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (hud.screen === 'TITLE_MENU' && (e.code === 'Enter' || e.code === 'Space')) {
         e.preventDefault();
-        engineRef.current?.startNewGame();
+        handleStart();
         return;
       }
       if (hud.screen === 'PLAYING' && hud.checkout.active && !hud.shopOpen) {
@@ -673,8 +809,99 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [hud.screen, hud.checkout.active, hud.shopOpen]);
 
+  const nearbyWorldLocation = findNearbyWorldLocation(worldPlayer.x, worldPlayer.y);
+  const neighborhoodEvent = getNeighborhoodEvent(hud.day, hud.dayTimeLeft, hud.dayDuration);
+  const getWorldDialogue = (location: NonNullable<typeof nearbyWorldLocation>) => {
+    if (!isNeighborhoodDialogueLocationId(location.id)) return location.interactionText;
+    const visitCount = neighborhoodVisitCounts[location.id] ?? 0;
+    const neighborhoodDialogue = getNeighborhoodDialogue(location.id, neighborhoodEvent.dayPart, visitCount);
+    if (location.id !== 'co_nam') return neighborhoodDialogue;
+    const storyDialogue = hud.storyMission.allCompleted
+      ? 'Chương đầu con làm tốt lắm, cả xóm đều biết xe bánh tráng của con rồi!'
+      : `Cứ tập trung nhiệm vụ “${hud.storyMission.title}” nha. ${hud.storyMission.storyText.replace(/[“”]/g, '')} Tiến độ hiện tại ${hud.storyMission.progress}/${hud.storyMission.target}.`;
+    return `${neighborhoodDialogue} Cô Năm: “${storyDialogue}”`;
+  };
+
+  function handleWorldLocationInteraction(location: WorldInteractable) {
+    if (!isNeighborhoodDialogueLocationId(location.id)) {
+      setWorldHubOpen(false);
+      setWorldPanel(null);
+      setWorldNotice('');
+      return;
+    }
+
+    const dialogueLocationId = location.id as Exclude<WorldInteractable['id'], 'cart'>;
+    setNeighborhoodVisitCounts((counts) => ({
+      ...counts,
+      [dialogueLocationId]: (counts[dialogueLocationId] ?? 0) + 1,
+    }));
+
+    const questAction = getNeighborhoodHelpQuestAction(location.id, neighborhoodHelpQuestStatus);
+    if (questAction === 'OFFER') {
+      setWorldNotice(NEIGHBORHOOD_HELP_QUEST.offerDialogue);
+      setNeighborhoodHelpQuestOfferOpen(true);
+    } else if (questAction === 'REMIND') {
+      setWorldNotice(NEIGHBORHOOD_HELP_QUEST.reminderDialogue);
+    } else if (questAction === 'DELIVER') {
+      setNeighborhoodHelpQuestStatus('COMPLETED');
+      setWorldNotice(NEIGHBORHOOD_HELP_QUEST.completedDialogue);
+    } else {
+      const parcelQuestAction = getNeighborhoodParcelQuestAction(location.id, neighborhoodParcelQuestStatus);
+      if (parcelQuestAction === 'OFFER') {
+        setWorldNotice(NEIGHBORHOOD_PARCEL_QUEST.offerDialogue);
+        setNeighborhoodParcelQuestOfferOpen(true);
+      } else if (parcelQuestAction === 'REMIND') {
+        setWorldNotice(NEIGHBORHOOD_PARCEL_QUEST.reminderDialogue);
+      } else if (parcelQuestAction === 'DELIVER') {
+        setNeighborhoodParcelQuestStatus('COMPLETED');
+        setWorldNotice(NEIGHBORHOOD_PARCEL_QUEST.completedDialogue);
+      } else {
+        const followUpDialogue = getNeighborhoodQuestFollowUpDialogue(
+          location.id,
+          neighborhoodHelpQuestStatus,
+          neighborhoodParcelQuestStatus,
+        );
+        setWorldNotice(followUpDialogue ?? getWorldDialogue(location));
+      }
+    }
+    setWorldPanel(null);
+  }
+
+  const handleWorldInteract = () => {
+    const current = worldPlayerRef.current;
+    const nearby = findNearbyWorldLocation(current.x, current.y);
+    if (!nearby) {
+      setWorldNotice('Chưa có địa điểm nào đủ gần. Hãy đi đến gần cửa tiệm, hàng xóm hoặc xe bánh tráng rồi nhấn E.');
+      return;
+    }
+    handleWorldLocationInteraction(nearby);
+  };
+
+  const startWorldTouchMove = (direction: 'up' | 'down' | 'left' | 'right') => {
+    if (neighborhoodHelpQuestOfferOpen || neighborhoodParcelQuestOfferOpen) return;
+    worldTouchDirectionsRef.current.add(direction);
+    setWorldPanel(null);
+    setWorldNotice('');
+  };
+
+  const stopWorldTouchMove = (direction: 'up' | 'down' | 'left' | 'right') => {
+    worldTouchDirectionsRef.current.delete(direction);
+  };
+
   const handleStart = () => {
-    engineRef.current?.startNewGame();
+    if (hasSavedGame && !window.confirm('Bạn đang có một hành trình đã lưu. Bắt đầu trò chơi mới sẽ thay thế bản lưu này. Bạn có chắc chắn muốn tiếp tục?')) return;
+    setOnboardingStep('STORY');
+  };
+
+  const handleContinue = () => {
+    const resumed = engineRef.current?.continueGame() ?? false;
+    if (resumed) {
+      setOnboardingStep(null);
+      setWorldHubOpen(false);
+      setHasSavedGame(true);
+    } else {
+      setHasSavedGame(false);
+    }
   };
 
   const handleTogglePause = () => {
@@ -687,6 +914,7 @@ export default function App() {
 
   const handleReturnTitle = () => {
     engineRef.current?.returnToTitle();
+    setHasSavedGame(engineRef.current?.hasSavedGame() ?? false);
   };
 
   const handleOpenShop = () => {
@@ -710,8 +938,16 @@ export default function App() {
 
       {/* Lightweight Top HUD Bar during active play / prep / end-of-day / pause / game over */}
       {hud.screen !== 'TITLE_MENU' && (
-        <div className="pointer-events-none safe-top-bar pb-2 absolute top-0 left-0 right-0 z-10 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 bg-[#181920]/95 border-b-[3px] border-[#111318]">
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs sm:text-sm font-semibold whitespace-nowrap overflow-hidden">
+        <div data-game-hud="true" className="game-top-hud pointer-events-none safe-top-bar px-3 pb-2 pt-1 absolute top-0 left-0 right-0 z-10 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 bg-[#181920]/95 border-b-[3px] border-[#111318]">
+          <div className="game-top-hud__progress basis-full flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-xs">
+            <span className="shrink-0 font-display font-black text-amber-300">⭐ CẤP {hud.playerLevel}</span>
+            <div className="h-2 min-w-20 max-w-36 flex-1 overflow-hidden rounded-full border border-slate-500 bg-slate-700">
+              <div className="h-full bg-amber-400 transition-[width]" style={{ width: `${Math.min(100, hud.playerXp / Math.max(1, hud.playerXpToNext) * 100)}%` }} />
+            </div>
+            <span className="shrink-0 font-mono-tabular text-amber-100">{hud.playerXp}/{hud.playerXpToNext} XP</span>
+            <span className="min-w-0 truncate text-slate-200" title={hud.storyMission.title}>📖 {hud.storyMission.title} · {hud.storyMission.progress}/{hud.storyMission.target}</span>
+          </div>
+          <div className="game-top-hud__stats flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs sm:text-sm font-semibold whitespace-nowrap overflow-hidden">
             <span className="font-display font-extrabold text-[#F59E0B] tracking-tight">
               Ngày {hud.day}
             </span>
@@ -834,7 +1070,7 @@ export default function App() {
             )}
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="game-top-hud__controls flex items-center gap-3 shrink-0">
             {/* Police Raid Heat Bar */}
             {hud.screen === 'PLAYING' && (
               <div
@@ -879,7 +1115,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="pointer-events-auto flex items-center gap-2">
+            <div className="game-top-hud__actions pointer-events-auto flex items-center gap-2">
               {hud.screen === 'PLAYING' && hud.phase === 'COOKING' && hud.hasAngryCustomer && !hud.checkout.active && (
                 <button
                   type="button"
@@ -963,6 +1199,423 @@ export default function App() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* STORY INTRO + REAL VENDOR LOCATION SELECTOR */}
+      {onboardingStep && (
+        <div className="absolute inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-[#080B12]/95 p-4 allow-touch-scroll">
+          {onboardingStep === 'STORY' ? (
+            <div className="w-full max-w-2xl rounded-2xl border-[3px] border-amber-400 bg-[#171923] p-6 sm:p-8 shadow-2xl">
+              <p className="text-xs font-extrabold tracking-[0.2em] text-amber-300">MỞ ĐẦU · SÀI GÒN, 6:00 SÁNG</p>
+              <h2 className="mt-2 font-display text-3xl font-extrabold text-white">Một chiếc xe, một cơ hội đổi đời</h2>
+              <div className="mt-5 space-y-3 text-sm leading-relaxed text-slate-200">
+                <p>Ba tháng trước, nhân vật chính vừa nghỉ việc ở xưởng in. Tiền trọ đến hạn, mẹ ở quê lại đang cần tiền thuốc. Những công việc xin được đều trả công bèo bọt, còn khoản tiết kiệm cuối cùng chỉ đủ để bắt đầu một việc nhỏ.</p>
+                <p>Một buổi sáng, người bạn cũ để lại chiếc xe bánh tráng và chỉ cho bạn mối lấy nguyên liệu ở chợ đầu mối. Bạn quyết định thử bán bánh tráng trộn trên vỉa hè: tự tay chuẩn bị từng phần, kiếm những vị khách đầu tiên và gây dựng lại cuộc sống.</p>
+                <p className="rounded-xl border border-amber-400/40 bg-amber-400/10 p-3 text-amber-100 italic">“Không cần giàu ngay hôm nay. Chỉ cần bán được những hộp đầu tiên, rồi ngày mai sẽ có hy vọng.”</p>
+                <p className="text-xs text-slate-400">Bạn bắt đầu với 120.000đ vốn, một chiếc rổ nhựa và quyết tâm tự làm chủ.</p>
+              </div>
+              <div className="mt-6 flex flex-wrap justify-between gap-3">
+                <button type="button" onClick={() => setOnboardingStep(null)} className="rounded-xl border-2 border-slate-500 px-5 py-3 font-bold text-slate-200 hover:bg-slate-700">← Quay lại màn hình chính</button>
+                <button type="button" onClick={() => setOnboardingStep('MAP')} className="rounded-xl border-[3px] border-[#111318] bg-amber-400 px-6 py-3 font-extrabold text-slate-950 hover:bg-amber-300">Chọn nơi bắt đầu →</button>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full max-w-3xl rounded-2xl border-[3px] border-emerald-400 bg-[#171923] p-5 sm:p-7 shadow-2xl">
+              <div className="flex items-start justify-between gap-3">
+                <div><p className="text-xs font-extrabold tracking-widest text-emerald-300">BẢN ĐỒ SÀI GÒN</p><h2 className="mt-1 font-display text-2xl font-extrabold">Chọn chỗ dựng xe bán hàng</h2><p className="mt-1 text-xs text-slate-300">{hud.screen === 'TITLE_MENU' ? 'Chọn khu vực kinh doanh đầu tiên. Sau khi xác nhận, bạn sẽ vào khu phố ngay.' : 'Bạn chỉ có thể đổi địa điểm tại màn hình tổng kết cuối ngày. Xác nhận để áp dụng từ ngày tiếp theo.'}</p></div>
+                <button type="button" onClick={() => setOnboardingStep(hud.screen === 'TITLE_MENU' ? 'STORY' : null)} className="rounded-lg border border-slate-500 px-3 py-2 text-sm font-bold">← Quay lại</button>
+              </div>
+              <div className="relative mt-5 h-56 overflow-hidden rounded-xl border-2 border-slate-500 bg-[linear-gradient(35deg,#1f493d_0%,#284c43_35%,#243b50_36%,#243b50_62%,#344a38_63%,#1f493d_100%)]">
+                <div className="absolute inset-0 opacity-30" style={{backgroundImage:'linear-gradient(90deg,transparent 48%,#cbd5e1 49%,#cbd5e1 51%,transparent 52%),linear-gradient(0deg,transparent 48%,#cbd5e1 49%,#cbd5e1 51%,transparent 52%)',backgroundSize:'90px 90px'}} />
+                <span className="absolute left-[8%] top-[12%] text-[10px] font-bold text-white">KÊNH NHIÊU LỘC</span><span className="absolute right-[8%] bottom-[10%] text-[10px] font-bold text-white">TRUNG TÂM SÀI GÒN</span>
+                {[
+                  {id:'CONG_VIEN',name:'Công viên 23/9',x:'18%',y:'62%',traffic:'Khách ổn định',rent:'15.000đ/ngày',risk:'Ít cạnh tranh'},
+                  {id:'DAI_HOC',name:'Khu đại học',x:'48%',y:'18%',traffic:'Đông sinh viên',rent:'20.000đ/ngày',risk:'Cạnh tranh vừa'},
+                  {id:'CHO_BEN_THANH',name:'Chợ Bến Thành',x:'75%',y:'38%',traffic:'Rất đông khách',rent:'30.000đ/ngày',risk:'Cạnh tranh cao'},
+                  {id:'NGA_TU',name:'Ngã tư Hàng Xanh',x:'80%',y:'75%',traffic:'Nhiều người đi đường',rent:'22.000đ/ngày',risk:'Rủi ro trật tự vừa'},
+                  {id:'PHO_DI_BO',name:'Phố đi bộ Nguyễn Huệ',x:'48%',y:'72%',traffic:'Khách đông buổi tối',rent:'35.000đ/ngày',risk:'Rủi ro cao'},
+                ].map((spot) => (
+                  <button key={spot.id} type="button" onClick={() => setSelectedVendorSpot(spot.id)} style={{left:spot.x,top:spot.y}} className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 px-2.5 py-1.5 text-[10px] font-extrabold shadow-lg ${selectedVendorSpot===spot.id?'border-amber-300 bg-amber-400 text-slate-950 scale-110':'border-white bg-slate-900/90 text-white'}`} aria-pressed={selectedVendorSpot===spot.id}>📍 {spot.name}</button>
+                ))}
+              </div>
+              {(() => {
+                const spots = [
+                  {id:'CONG_VIEN',name:'Công viên 23/9',traffic:'Khách ổn định',rent:'15.000đ/ngày',risk:'Ít cạnh tranh'},
+                  {id:'DAI_HOC',name:'Khu đại học',traffic:'Đông sinh viên',rent:'20.000đ/ngày',risk:'Cạnh tranh vừa'},
+                  {id:'CHO_BEN_THANH',name:'Chợ Bến Thành',traffic:'Rất đông khách',rent:'30.000đ/ngày',risk:'Cạnh tranh cao'},
+                  {id:'NGA_TU',name:'Ngã tư Hàng Xanh',traffic:'Nhiều người đi đường',rent:'22.000đ/ngày',risk:'Rủi ro trật tự vừa'},
+                  {id:'PHO_DI_BO',name:'Phố đi bộ Nguyễn Huệ',traffic:'Khách đông buổi tối',rent:'35.000đ/ngày',risk:'Rủi ro cao'},
+                ];
+                const chosen = spots.find((spot) => spot.id === selectedVendorSpot) ?? spots[2];
+                return <div className="mt-4 rounded-xl border border-emerald-400/50 bg-emerald-400/10 p-4"><p className="font-extrabold text-emerald-200">{chosen.name}</p><p className="mt-1 text-xs text-slate-200">{chosen.traffic} · {chosen.risk}</p><p className="mt-1 text-sm font-bold text-amber-300">Chi phí chỗ dự kiến: {chosen.rent}</p></div>;
+              })()}
+              <div className="mt-5 flex flex-wrap justify-between gap-3">
+                <button type="button" onClick={() => setOnboardingStep(hud.screen === 'TITLE_MENU' ? 'STORY' : null)} className="rounded-xl border-2 border-slate-500 px-5 py-3 font-bold text-slate-200 hover:bg-slate-700">← Quay lại</button>
+                <button type="button" onClick={() => { const location = getVendorLocation(selectedVendorSpot); try { localStorage.setItem('banhtrang_vendor_spot_v1', selectedVendorSpot); } catch {} if (hud.screen === 'TITLE_MENU') { engineRef.current?.startNewGame(); setHasSavedGame(true); engineRef.current?.setVendorLocationRent(location.rentPerDay); updateWorldPlayerPosition({ x: 48, y: 45 }); setWorldHubOpen(true); } else { engineRef.current?.setVendorLocationRent(location.rentPerDay); } setOnboardingStep(null); }} className="rounded-xl border-[3px] border-[#111318] bg-emerald-400 px-6 py-3 font-extrabold text-slate-950 hover:bg-emerald-300">{hud.screen === 'TITLE_MENU' ? 'Xác nhận địa điểm & vào chợ →' : 'Lưu địa điểm này'}</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {worldHubOpen && (
+        <div className="absolute inset-0 z-[80] overflow-hidden bg-[#26343a] text-white">
+          <style>{`
+            @keyframes npcBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+            @keyframes walkEast { from { transform: translateX(-24vw); } to { transform: translateX(42vw); } }
+            @keyframes walkWest { from { transform: translateX(34vw); } to { transform: translateX(-26vw); } }
+            @keyframes trafficEast { from { transform: translateX(-180px); } to { transform: translateX(calc(100vw + 180px)); } }
+            @keyframes trafficWest { from { transform: translateX(calc(100vw + 180px)); } to { transform: translateX(-180px); } }
+            @media (max-width: 640px) {
+              .world-status-card { left: max(8px, env(safe-area-inset-left)); top: max(8px, env(safe-area-inset-top)); width: calc(50% - 14px); padding: 7px 8px; border-width: 2px; box-shadow: 2px 2px 0 #172126; }
+              .world-status-card .world-status-detail { font-size: 8px; line-height: 1.2; }
+              .world-daypart-card { right: max(8px, env(safe-area-inset-right)); top: max(8px, env(safe-area-inset-top)); width: calc(50% - 14px); padding: 7px 8px; border-width: 2px; box-shadow: 2px 2px 0 #172126; }
+              .world-daypart-card .world-event-description, .world-daypart-card .world-event-traffic { display: none; }
+              .world-daypart-card > div { align-items: flex-start; flex-wrap: wrap; gap: 3px; }
+              .world-daypart-card p { font-size: 9px; line-height: 1.2; }
+              .world-controls-panel { left: 8px; bottom: max(8px, env(safe-area-inset-bottom)); width: calc(100% - 16px); max-height: 42dvh; overflow-y: auto; padding: 9px 8px calc(9px + env(safe-area-inset-bottom)); border-width: 3px; box-shadow: 3px 3px 0 #172126; transform: none; translate: none; }
+              .world-tab-row { gap: 5px; margin-bottom: 6px; }
+              .world-tab-button { min-width: 0; padding: 4px 2px; border-width: 2px; font-size: 9px; line-height: 1.15; }
+              .world-tab-button span:first-child { font-size: 16px; line-height: 1.1; }
+              .world-hint { font-size: 10px; line-height: 1.25; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+              .world-dpad { gap: 8px; }
+              .world-dpad-button { width: 44px; height: 42px; padding: 0; touch-action: none; user-select: none; }
+              .world-action-row button { min-height: 38px; flex: 1 1 auto; padding: 7px 9px; font-size: 9px; }
+              .world-info-panel { top: max(72px, calc(env(safe-area-inset-top) + 64px)); bottom: calc(42dvh + 16px + env(safe-area-inset-bottom)); left: 10px; width: calc(100% - 20px); max-height: calc(100dvh - 160px); padding: 10px; transform: none; translate: none; }
+            }
+            @media (max-height: 620px) and (orientation: landscape) {
+              .world-status-card { top: max(6px, env(safe-area-inset-top)); }
+              .world-daypart-card { top: max(6px, env(safe-area-inset-top)); }
+              .world-controls-panel { left: auto; right: max(8px, env(safe-area-inset-right)); bottom: max(8px, env(safe-area-inset-bottom)); width: min(46vw, 420px); max-height: calc(100dvh - 16px); transform: none; translate: none; }
+              .world-info-panel { left: 8px; top: max(64px, calc(env(safe-area-inset-top) + 56px)); bottom: 8px; width: min(50vw, 520px); max-height: calc(100dvh - 80px); transform: none; translate: none; }
+            }
+          `}</style>
+          <svg className="absolute inset-0 h-full w-full [image-rendering:pixelated]" viewBox="0 0 1200 720" preserveAspectRatio="none" shapeRendering="crispEdges" role="img" aria-label="Khu phố bán bánh tráng trộn phong cách pixel art">
+            <defs>
+              <pattern id="sidewalkTiles" width="32" height="32" patternUnits="userSpaceOnUse">
+                <rect width="32" height="32" fill="#c9b995"/>
+                <path d="M0 0H32V32H0Z" fill="none" stroke="#9d8969" strokeWidth="2"/>
+                <path d="M16 0V16H32M0 16H16V32" fill="none" stroke="#e0d0ad" strokeWidth="2"/>
+                <rect x="3" y="3" width="3" height="3" fill="#b09d7c"/>
+              </pattern>
+              <pattern id="roadTexture" width="64" height="64" patternUnits="userSpaceOnUse">
+                <rect width="64" height="64" fill="#566267"/>
+                <path d="M8 10h8v3H8zM42 42h5v3h-5zM26 25h3v3h-3z" fill="#68767a"/>
+                <path d="M0 63H64" stroke="#4b585d" strokeWidth="2"/>
+              </pattern>
+              <pattern id="brickWall" width="48" height="24" patternUnits="userSpaceOnUse">
+                <rect width="48" height="24" fill="#bd7951"/>
+                <path d="M0 0H48M0 12H48M24 0V12M0 12V24" stroke="#995d40" strokeWidth="2"/>
+                <rect x="4" y="4" width="4" height="2" fill="#d99565"/>
+              </pattern>
+              <pattern id="awningStripe" width="24" height="24" patternUnits="userSpaceOnUse">
+                <rect width="24" height="24" fill="#f1d9a5"/>
+                <rect width="12" height="24" fill="#bd5548"/>
+                <path d="M0 20H24" stroke="#76503b" strokeWidth="3"/>
+              </pattern>
+              <filter id="pixelShadow" x="-30%" y="-30%" width="160%" height="160%">
+                <feDropShadow dx="0" dy="7" stdDeviation="0" floodColor="#172126" floodOpacity=".5"/>
+              </filter>
+            </defs>
+            <rect width="1200" height="720" fill="#7f9b82"/>
+            <rect y="0" width="1200" height="222" fill="url(#brickWall)"/>
+            <rect y="0" width="1200" height="20" fill="#754a3b"/>
+            <rect y="210" width="1200" height="24" fill="#79523d"/>
+            <rect y="218" width="1200" height="5" fill="#e4b77b"/>
+            <g fill="#f0d5a1" opacity=".8"><rect x="18" y="30" width="7" height="7"/><rect x="280" y="28" width="7" height="7"/><rect x="548" y="30" width="7" height="7"/><rect x="810" y="28" width="7" height="7"/><rect x="1170" y="30" width="7" height="7"/></g>
+            <g stroke="#543c32" strokeWidth="8" filter="url(#pixelShadow)">
+              <rect x="28" y="42" width="250" height="166" fill="#e9c58d"/>
+              <rect x="292" y="42" width="250" height="166" fill="#e9d4a8"/>
+              <rect x="556" y="42" width="250" height="166" fill="#d8b88b"/>
+              <rect x="820" y="42" width="350" height="166" fill="#e9c58d"/>
+            </g>
+            <g>
+              <rect x="28" y="42" width="250" height="38" fill="#276d77"/><path d="M28 80h250l-14 18H42z" fill="#e7c36e"/>
+              <rect x="292" y="42" width="250" height="38" fill="#b94e3e"/><path d="M292 80h250l-14 18H306z" fill="#f2d18a"/>
+              <rect x="556" y="42" width="250" height="38" fill="#4b7651"/><path d="M556 80h250l-14 18H570z" fill="#e4bd73"/>
+              <rect x="820" y="42" width="350" height="38" fill="#a64f47"/><path d="M820 80h350l-14 18H834z" fill="#f0c779"/>
+              <g fill="#fff0cf" fontFamily="monospace" fontWeight="bold" fontSize="18" textAnchor="middle">
+                <text x="153" y="68">TẠP HÓA</text><text x="417" y="68">ĂN VẶT</text><text x="681" y="68">NƯỚC GIẢI KHÁT</text><text x="995" y="68">SẠP CHỢ</text>
+              </g>
+            </g>
+            <g fill="#6e4937" stroke="#4b382f" strokeWidth="7">
+              <rect x="66" y="112" width="76" height="90" fill="#8bc2c0"/><rect x="162" y="112" width="76" height="90" fill="#e6d5a7"/>
+              <rect x="330" y="112" width="78" height="90" fill="#9ac8c2"/><rect x="426" y="112" width="78" height="90" fill="#e7b87c"/>
+              <rect x="594" y="112" width="78" height="90" fill="#a5c9bd"/><rect x="690" y="112" width="78" height="90" fill="#e4c18e"/>
+              <rect x="858" y="112" width="94" height="90" fill="#a9c9c0"/><rect x="974" y="112" width="150" height="90" fill="#e7bd83"/>
+            </g>
+            <g fill="#d9e9dd" stroke="#6b5947" strokeWidth="4">
+              <path d="M75 124h58v68H75zM339 124h60v68h-60zM603 124h60v68h-60zM867 124h76v68h-76z"/>
+            </g>
+            <g shapeRendering="crispEdges">
+              <path d="M28 98H278V108H28zM292 98H542V108H292zM556 98H806V108H556zM820 98H1170V108H820z" fill="#714832"/>
+              <path d="M28 42H278V80H28zM292 42H542V80H292zM556 42H806V80H556zM820 42H1170V80H820z" fill="none" stroke="#4c382d" strokeWidth="5"/>
+              <rect x="88" y="136" width="34" height="4" fill="#e9f2dc"/><rect x="352" y="136" width="34" height="4" fill="#e9f2dc"/><rect x="616" y="136" width="34" height="4" fill="#e9f2dc"/><rect x="884" y="136" width="42" height="4" fill="#e9f2dc"/>
+              <rect x="78" y="178" width="52" height="8" fill="#548c82"/><rect x="342" y="178" width="54" height="8" fill="#548c82"/><rect x="606" y="178" width="54" height="8" fill="#548c82"/><rect x="876" y="178" width="58" height="8" fill="#548c82"/>
+              <rect x="156" y="118" width="8" height="84" fill="#654632"/><rect x="420" y="118" width="8" height="84" fill="#654632"/><rect x="684" y="118" width="8" height="84" fill="#654632"/>
+              <rect x="952" y="118" width="8" height="84" fill="#654632"/>
+              <g fill="#f8d77e"><rect x="46" y="112" width="10" height="10"/><rect x="310" y="112" width="10" height="10"/><rect x="574" y="112" width="10" height="10"/><rect x="838" y="112" width="10" height="10"/></g>
+            </g>
+            <g fill="#d8c8a8"><rect y="232" width="1200" height="174"/></g>
+            <rect y="232" width="1200" height="174" fill="url(#sidewalkTiles)"/>
+            <path d="M0 232H1200M0 406H1200" stroke="#7b654c" strokeWidth="12"/>
+            <path d="M0 244H1200M0 394H1200" stroke="#eadfc9" strokeWidth="4"/>
+            <g opacity=".9">
+              <rect x="24" y="266" width="1152" height="5" fill="#b7a788"/>
+              <rect x="24" y="366" width="1152" height="5" fill="#b7a788"/>
+            </g>
+            <g shapeRendering="crispEdges">
+              <rect x="164" y="236" width="242" height="10" fill="#68442f"/>
+              <rect x="172" y="228" width="226" height="8" fill="#f5d17b"/>
+              <path d="M172 228H398V246H172z" fill="url(#awningStripe)" stroke="#68442f" strokeWidth="4"/>
+              <rect x="178" y="242" width="10" height="14" fill="#7d4b32"/><rect x="382" y="242" width="10" height="14" fill="#7d4b32"/>
+              <rect x="210" y="254" width="10" height="10" fill="#f6e5b8"/><rect x="352" y="254" width="10" height="10" fill="#f6e5b8"/>
+            </g>
+            <g filter="url(#pixelShadow)">
+              <rect x="180" y="264" width="210" height="116" fill="#a64e36" stroke="#593c2d" strokeWidth="8"/>
+              <rect x="168" y="246" width="234" height="36" fill="#f2c45f" stroke="#593c2d" strokeWidth="7"/>
+              <path d="M168 282h234l-14 22H182z" fill="#e5a84d"/>
+              <g fill="#f7e8c5" fontFamily="monospace" fontSize="19" fontWeight="bold" textAnchor="middle"><text x="285" y="271">BÁNH TRÁNG</text></g>
+              <rect x="202" y="309" width="164" height="58" fill="#e8d8b2" stroke="#684633" strokeWidth="6"/>
+              <rect x="208" y="315" width="152" height="8" fill="#f8edcf"/>
+              <rect x="208" y="358" width="152" height="6" fill="#a8784e"/>
+              <rect x="278" y="326" width="7" height="30" fill="#684633"/>
+              <rect x="218" y="319" width="52" height="36" fill="#7caaa0"/><rect x="282" y="319" width="68" height="36" fill="#f0c477"/>
+              <rect x="194" y="374" width="184" height="10" fill="#6e4937"/>
+              <circle cx="220" cy="392" r="13" fill="#343a3d" stroke="#d2b58a" strokeWidth="5"/><circle cx="350" cy="392" r="13" fill="#343a3d" stroke="#d2b58a" strokeWidth="5"/>
+              <rect x="224" y="294" width="122" height="10" fill="#f8e6bd"/>
+              <g fill="#dc754b"><rect x="234" y="286" width="18" height="8"/><rect x="258" y="286" width="18" height="8"/><rect x="282" y="286" width="18" height="8"/><rect x="306" y="286" width="18" height="8"/></g>
+              <g fill="#6d8b49"><rect x="240" y="282" width="8" height="5"/><rect x="288" y="282" width="8" height="5"/><rect x="318" y="282" width="8" height="5"/></g>
+              <g fill="#b85b38"><circle cx="246" cy="300" r="5"/><circle cx="264" cy="300" r="5"/><circle cx="282" cy="300" r="5"/><circle cx="300" cy="300" r="5"/><circle cx="318" cy="300" r="5"/></g>
+            </g>
+            <g filter="url(#pixelShadow)">
+              <rect x="700" y="276" width="150" height="92" fill="#d7a35d" stroke="#76503a" strokeWidth="7"/>
+              <path d="M690 278l84-52 86 52z" fill="#b94e3e" stroke="#684333" strokeWidth="7"/>
+              <rect x="723" y="310" width="105" height="58" fill="#a9c8bc" stroke="#76503a" strokeWidth="5"/>
+              <text x="775" y="302" fontSize="13" fontFamily="monospace" fontWeight="bold" textAnchor="middle" fill="#fff0cf">QUÁN NƯỚC</text>
+            </g>
+            <g>
+              <rect y="418" width="1200" height="260" fill="url(#roadTexture)"/>
+              <path d="M0 418H1200M0 678H1200" stroke="#d8c9a9" strokeWidth="12"/>
+              <path d="M0 550H1200" stroke="#f4e5b4" strokeWidth="5" strokeDasharray="48 38"/>
+              <rect x="560" y="418" width="80" height="260" fill="#e5d7b9" opacity=".2"/>
+              <path d="M600 418V678" stroke="#f8e9bd" strokeWidth="4" strokeDasharray="16 12" opacity=".65"/>
+            </g>
+            <g transform="translate(1050 260)" shapeRendering="crispEdges">
+              <rect x="-8" y="102" width="36" height="22" fill="#a77a4d" stroke="#694a35" strokeWidth="5"/>
+              <rect x="0" y="0" width="18" height="120" fill="#8b6c4e"/><circle cx="8" cy="-12" r="42" fill="#4d8051" stroke="#356342" strokeWidth="8"/><circle cx="-18" cy="-25" r="19" fill="#63965b"/><circle cx="28" cy="-34" r="20" fill="#63965b"/>
+            </g>
+            <g transform="translate(36 280)" shapeRendering="crispEdges">
+              <rect x="-8" y="72" width="34" height="20" fill="#a77a4d" stroke="#694a35" strokeWidth="5"/>
+              <rect x="0" y="0" width="14" height="90" fill="#8b6c4e"/><circle cx="8" cy="-8" r="34" fill="#4e8153" stroke="#356342" strokeWidth="7"/><circle cx="-12" cy="-22" r="17" fill="#67985e"/><circle cx="26" cy="-27" r="17" fill="#67985e"/>
+            </g>
+            <g fill="#f6d88d" fontFamily="monospace" fontSize="16" fontWeight="bold">
+              <text x="36" y="700">KHU PHỐ BÁN BÁNH TRÁNG · SÀI GÒN</text>
+            </g>
+          </svg>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 z-[4] mix-blend-soft-light"
+            style={{
+              background: neighborhoodEvent.dayPart === 'MORNING'
+                ? 'linear-gradient(180deg, rgba(255,220,150,.16) 0%, rgba(255,220,150,.04) 48%, transparent 78%)'
+                : neighborhoodEvent.dayPart === 'NOON'
+                  ? 'linear-gradient(180deg, rgba(255,250,215,.08) 0%, transparent 62%)'
+                  : 'linear-gradient(180deg, rgba(255,155,100,.17) 0%, rgba(255,155,100,.05) 56%, transparent 82%)',
+            }}
+          />
+          <div className="world-status-card absolute left-2 top-2 z-20 w-[min(46%,250px)] border-[3px] border-[#35291f] bg-[#263b3b] px-2 py-2 font-mono shadow-[4px_4px_0_#172126] [image-rendering:pixelated] sm:left-[2%] sm:top-[2%] sm:w-auto sm:px-4 sm:py-3">
+            <p className="text-[9px] font-black tracking-[.1em] text-amber-300 sm:text-[10px] sm:tracking-[.16em]">GÓC PHỐ BÁNH TRÁNG</p>
+            <p className="text-[11px] font-extrabold sm:text-sm">Ngày {hud.day} · {hud.money.toLocaleString('vi-VN')}đ</p>
+            <p className="world-status-detail text-[8px] leading-relaxed text-slate-200 sm:text-[10px]">Cấp {hud.playerLevel} · Đi bộ đến xe để bán hàng</p>
+          </div>
+          <div className="world-daypart-card absolute right-2 top-16 z-20 w-[min(48%,270px)] border-[3px] border-[#35291f] bg-[#263b3b]/95 p-2 font-mono shadow-[4px_4px_0_#172126] sm:right-5 sm:top-16 sm:w-[270px] sm:p-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[9px] font-black tracking-[.12em] text-amber-300">NHỊP SỐNG KHU PHỐ</p>
+              <span className="shrink-0 border border-amber-200/40 bg-amber-100/10 px-1.5 py-0.5 text-[8px] font-bold text-amber-100">{neighborhoodEvent.dayPartLabel}</span>
+            </div>
+            <p className="mt-1 text-[11px] font-extrabold text-white">{neighborhoodEvent.title}</p>
+            <p className="world-event-description mt-1 text-[9px] leading-relaxed text-slate-200">{neighborhoodEvent.description}</p>
+            <p className="world-event-traffic mt-1 text-[8px] font-bold text-emerald-200">● {neighborhoodEvent.trafficLabel}</p>
+          </div>
+          <div className="absolute left-[18%] top-[38%] z-10 flex items-end gap-2" style={{animation:"walkEast 24s linear infinite"}}>
+            <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#d99b70"/><rect x="10" y="0" width="22" height="8" fill="#292b31"/><rect x="8" y="20" width="26" height="22" fill="#3d78a0"/><rect x="10" y="42" width="9" height="18" fill="#343d4c"/><rect x="23" y="42" width="9" height="18" fill="#343d4c"/></svg>
+            <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#bd805d"/><rect x="9" y="0" width="24" height="8" fill="#4d332b"/><rect x="8" y="20" width="26" height="22" fill="#d16c4e"/><rect x="10" y="42" width="9" height="18" fill="#384b42"/><rect x="23" y="42" width="9" height="18" fill="#384b42"/></svg>
+          </div>
+          <div className="absolute left-[57%] top-[38%] z-10" style={{animation:"walkWest 29s linear infinite"}}>
+            <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#e0aa82"/><rect x="8" y="0" width="26" height="8" fill="#47382c"/><rect x="8" y="20" width="26" height="22" fill="#e2b44e"/><rect x="10" y="42" width="9" height="18" fill="#34475a"/><rect x="23" y="42" width="9" height="18" fill="#34475a"/></svg>
+          </div>
+          <div className="pointer-events-none absolute left-0 top-[66%] z-[5]" style={{animation:"trafficEast 20s linear infinite"} } aria-hidden="true">
+            <svg viewBox="0 0 150 72" className="h-12 w-28 sm:h-14 sm:w-36" shapeRendering="crispEdges"><rect x="8" y="25" width="132" height="30" fill="#2c83b9" stroke="#203f56" strokeWidth="5"/><path d="M34 25L48 8H105L124 25Z" fill="#d5e8e6" stroke="#203f56" strokeWidth="5"/><rect x="54" y="13" width="22" height="10" fill="#77aeb8"/><rect x="81" y="13" width="20" height="10" fill="#77aeb8"/><circle cx="36" cy="57" r="10" fill="#242a2e" stroke="#bcae8c" strokeWidth="3"/><circle cx="113" cy="57" r="10" fill="#242a2e" stroke="#bcae8c" strokeWidth="3"/><rect x="5" y="34" width="8" height="8" fill="#f7df91"/></svg>
+          </div>
+          <div className="pointer-events-none absolute right-0 top-[81%] z-[5]" style={{animation:"trafficWest 16s linear infinite",animationDelay:"-7s"}} aria-hidden="true">
+            <svg viewBox="0 0 112 62" className="h-10 w-20 sm:h-12 sm:w-24" shapeRendering="crispEdges"><path d="M12 38L22 18H76L96 38V48H12Z" fill="#d5a84f" stroke="#544331" strokeWidth="5"/><rect x="31" y="22" width="34" height="12" fill="#b8d7d4" stroke="#544331" strokeWidth="3"/><circle cx="30" cy="49" r="8" fill="#292e31"/><circle cx="80" cy="49" r="8" fill="#292e31"/><rect x="4" y="36" width="9" height="7" fill="#f7e5ad"/></svg>
+          </div>
+          <div className="pointer-events-none absolute left-0 top-[73%] z-[5]" style={{animation:"trafficEast 13s linear infinite",animationDelay:"-4s"}} aria-hidden="true">
+            <svg viewBox="0 0 110 64" className="h-9 w-16 sm:h-10 sm:w-20" shapeRendering="crispEdges"><circle cx="23" cy="49" r="9" fill="#242a2e"/><circle cx="83" cy="49" r="9" fill="#242a2e"/><path d="M20 42L32 26H69L85 42Z" fill="#d65a45" stroke="#593b31" strokeWidth="4"/><rect x="40" y="29" width="23" height="10" fill="#b8d7d4" stroke="#593b31" strokeWidth="3"/><path d="M12 40H95" stroke="#593b31" strokeWidth="4"/></svg>
+          </div>
+          {WORLD_INTERACTABLES.filter((location) => location.kind === 'NPC' && location.id !== 'co_nam').map((npc) => (
+            <WorldNpcSprite key={npc.id} npc={npc} />
+          ))}
+          <div className="absolute z-10 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]" style={{left:"46%",top:"52%"}} title="Cô Năm hàng xóm">
+            <svg viewBox="0 0 42 64" className="h-11 w-8 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label="Cô Năm hàng xóm">
+              <rect x="12" y="3" width="18" height="18" fill="#c98f70"/><path d="M7 13Q21 -3 35 13L31 19H11Z" fill="#8b3f35"/><rect x="8" y="22" width="26" height="22" fill="#d65f4c"/><rect x="10" y="44" width="9" height="16" fill="#344b3d"/><rect x="23" y="44" width="9" height="16" fill="#344b3d"/><rect x="9" y="59" width="12" height="5" fill="#49352b"/><rect x="22" y="59" width="12" height="5" fill="#49352b"/>
+            </svg>
+            <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap border border-[#4b3428] bg-[#ffe3a6] px-1.5 py-0.5 text-[8px] font-black text-[#35291f]">CÔ NĂM</span>
+          </div>
+          <div className="absolute z-20 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]" ref={worldPlayerElementRef} style={{left:worldPlayer.x+"%",top:worldPlayer.y+"%",willChange:"left, top"}}>
+            <svg viewBox="0 0 48 72" className="h-14 w-10 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label="Nhân vật người chơi">
+              <rect x="14" y="3" width="20" height="19" fill="#d99b76"/><rect x="11" y="0" width="26" height="9" fill="#292b31"/><rect x="8" y="22" width="32" height="25" fill="#2f83a0"/><rect x="1" y="25" width="8" height="21" fill="#d99b76"/><rect x="39" y="25" width="8" height="21" fill="#d99b76"/><rect x="11" y="47" width="10" height="21" fill="#303947"/><rect x="27" y="47" width="10" height="21" fill="#303947"/><rect x="9" y="66" width="13" height="5" fill="#392c27"/><rect x="26" y="66" width="13" height="5" fill="#392c27"/>
+            </svg>
+            <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap border border-[#243d36] bg-[#9ee4a8] px-2 py-0.5 text-[8px] font-black text-[#17251e]">BẠN</span>
+          </div>
+          {worldPanel && (
+            <div className="world-info-panel absolute top-[14%] bottom-[32%] left-1/2 z-30 w-[min(92%,520px)] -translate-x-1/2 overflow-y-auto overscroll-contain touch-pan-y border-2 border-[#e7c77e] bg-[#18262b]/95 p-4 shadow-[6px_6px_0_#111]">
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-black text-amber-200">{worldPanel === 'MAP' ? '🗺 BẢN ĐỒ KHU PHỐ' : worldPanel === 'BAG' ? '🎒 TÚI ĐỒ' : worldPanel === 'JOURNAL' ? '📖 NHẬT KÝ' : '📱 ĐIỆN THOẠI'}</p>
+                <button type="button" onClick={() => setWorldPanel(null)} aria-label="Đóng khung thông tin" title="Đóng khung thông tin" className="flex h-9 w-9 shrink-0 items-center justify-center border-[3px] border-[#5b2d25] bg-[#b95343] text-lg font-black text-white shadow-[2px_2px_0_#111] hover:bg-[#d46654]">×</button>
+              </div>
+              {worldPanel === 'JOURNAL' ? (
+                <div className="mt-2 space-y-2 text-xs text-slate-100">
+                  <div className="flex items-center justify-between gap-2"><span className="font-bold text-amber-200">{hud.storyMission.chapter}</span><span className="border border-emerald-300/40 bg-emerald-900/40 px-2 py-1 text-[10px] font-bold text-emerald-200">{hud.storyMission.allCompleted ? 'Đã hoàn thành' : hud.storyMission.completed ? 'Chờ nhận thưởng' : 'Đang thực hiện'}</span></div>
+                  <p className="text-base font-black text-white">{hud.storyMission.title}</p>
+                  <p className="leading-relaxed text-slate-200">{hud.storyMission.description}</p>
+                  <div className="rounded border border-white/15 bg-black/20 p-2"><p className="font-bold text-amber-200">💬 {hud.storyMission.npcName}</p><p className="mt-1 italic text-slate-200">{hud.storyMission.storyText}</p></div>
+                  <div className="flex justify-between gap-2 text-[11px]"><span>Tiến độ: {hud.storyMission.progress.toLocaleString('vi-VN')} / {hud.storyMission.target.toLocaleString('vi-VN')}</span><span className="font-bold text-emerald-300">{hud.storyMission.reward.toLocaleString('vi-VN')}đ</span></div>
+                  <div className="h-2 overflow-hidden rounded bg-slate-700"><div className="h-full bg-emerald-400 transition-all" style={{width: `${Math.min(100, hud.storyMission.progress / Math.max(1, hud.storyMission.target) * 100)}%`}} /></div>
+                  {hud.storyMission.completed && !hud.storyMission.allCompleted && <button type="button" onClick={() => engineRef.current?.claimCurrentStoryMission()} className="w-full border-2 border-[#31543c] bg-[#65c985] px-3 py-2 font-black text-[#14251a] shadow-[3px_3px_0_#111] hover:bg-[#83e0a0]">NHẬN THƯỞNG · {hud.storyMission.reward.toLocaleString('vi-VN')}đ</button>}
+                  {hud.storyMission.allCompleted && <p className="font-bold text-emerald-300">Bạn đã hoàn thành toàn bộ Chương 1. Những câu chuyện tiếp theo sẽ được mở trong bản cập nhật sau.</p>}
+                  <div className="mt-3 border-t-2 border-white/15 pt-3">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <p className="font-black text-amber-200">📌 CÂU CHUYỆN KHU PHỐ</p>
+                      <span className="text-[10px] text-slate-300">Nhiệm vụ phụ</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="rounded border border-white/15 bg-black/20 p-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="font-bold text-white">{NEIGHBORHOOD_HELP_QUEST.title}</p>
+                          <span className={"border px-2 py-0.5 text-[10px] font-bold " + (neighborhoodHelpQuestStatus === 'COMPLETED' ? "border-emerald-300/40 bg-emerald-900/40 text-emerald-200" : neighborhoodHelpQuestStatus === 'ACCEPTED' ? "border-amber-300/40 bg-amber-900/40 text-amber-200" : "border-slate-400/30 bg-slate-800/60 text-slate-300")}>{neighborhoodHelpQuestStatus === 'COMPLETED' ? 'Đã hoàn thành' : neighborhoodHelpQuestStatus === 'ACCEPTED' ? 'Đang thực hiện' : 'Chưa nhận'}</span>
+                        </div>
+                        <p className="mt-1 text-[11px] leading-relaxed text-slate-300">{neighborhoodHelpQuestStatus === 'COMPLETED' ? 'Bạn đã chuyển lời nhắn của Chú Bảy đến Cô Sáu.' : neighborhoodHelpQuestStatus === 'ACCEPTED' ? NEIGHBORHOOD_HELP_QUEST.objective : 'Gặp Chú Bảy ở tiệm sửa xe để nghe lời nhờ.'}</p>
+                      </div>
+                      <div className="rounded border border-white/15 bg-black/20 p-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="font-bold text-white">{NEIGHBORHOOD_PARCEL_QUEST.title}</p>
+                          <span className={"border px-2 py-0.5 text-[10px] font-bold " + (neighborhoodParcelQuestStatus === 'COMPLETED' ? "border-emerald-300/40 bg-emerald-900/40 text-emerald-200" : neighborhoodParcelQuestStatus === 'ACCEPTED' ? "border-amber-300/40 bg-amber-900/40 text-amber-200" : "border-slate-400/30 bg-slate-800/60 text-slate-300")}>{neighborhoodParcelQuestStatus === 'COMPLETED' ? 'Đã hoàn thành' : neighborhoodParcelQuestStatus === 'ACCEPTED' ? 'Đang thực hiện' : 'Chưa nhận'}</span>
+                        </div>
+                        <p className="mt-1 text-[11px] leading-relaxed text-slate-300">{neighborhoodParcelQuestStatus === 'COMPLETED' ? 'Bạn đã báo tin cho Bà Tư về gói hàng của Tí.' : neighborhoodParcelQuestStatus === 'ACCEPTED' ? NEIGHBORHOOD_PARCEL_QUEST.objective : 'Gặp Tí giao hàng trên phố để nghe lời nhờ.'}</p>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-[10px] italic text-slate-400">Các câu chuyện khu phố là nhiệm vụ tùy chọn, không ảnh hưởng tiến trình bán hàng.</p>
+                  </div>
+                </div>
+              ) : worldPanel === 'MAP' ? (
+                <div className="mt-3 space-y-3 text-xs text-slate-100">
+                  {worldNotice && <p className="border-l-4 border-amber-300 bg-amber-100/10 px-3 py-2 leading-relaxed text-amber-100">{worldNotice}</p>}
+                  <section className="border border-white/15 bg-black/20 p-3">
+                    <p className="font-black text-amber-200">🎮 CÁCH KHÁM PHÁ KHU PHỐ</p>
+                    <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <div className="flex gap-2"><span className="grid h-8 w-12 shrink-0 place-items-center border border-white/20 bg-white/10 font-black">WASD</span><span className="leading-relaxed">Di chuyển bằng W/A/S/D hoặc phím mũi tên.</span></div>
+                      <div className="flex gap-2"><span className="grid h-8 w-12 shrink-0 place-items-center border border-amber-200/40 bg-amber-200/10 font-black text-amber-100">E</span><span className="leading-relaxed">Nói chuyện hoặc tương tác với người/địa điểm gần nhất.</span></div>
+                      <div className="flex gap-2"><span className="grid h-8 w-12 shrink-0 place-items-center border border-white/20 bg-white/10 font-black">↑↓←→</span><span className="leading-relaxed">Trên điện thoại, dùng cụm nút mũi tên phía dưới.</span></div>
+                      <div className="flex gap-2"><span className="grid h-8 w-12 shrink-0 place-items-center border border-white/20 bg-white/10 font-black">E · XE</span><span className="leading-relaxed">Đến xe bánh tráng và tương tác để bắt đầu bán hàng.</span></div>
+                    </div>
+                  </section>
+                  <section className="border border-white/15 bg-black/20 p-3">
+                    <p className="font-black text-amber-200">📍 CÁC ĐIỂM CÓ THỂ GHÉ</p>
+                    <div className="mt-2 grid grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-2">
+                      <p>🛒 Tạp hóa đầu ngõ · nhập hàng</p><p>🍢 Sạp ăn vặt · gặp người bán</p>
+                      <p>🥤 Quán nước chú Ba · nghỉ chân</p><p>🏪 Cổng chợ · khám phá khu chợ</p>
+                      <p>🌺 Cô Sáu · người bán hoa</p><p>🛵 Tí · người giao hàng</p>
+                      <p>🔧 Chú Bảy · tiệm sửa xe</p><p>🏠 Bà Tư · hàng xóm</p>
+                      <p>👵 Cô Năm · hàng xóm</p><p>🛺 Xe bánh tráng · bắt đầu ca bán</p>
+                    </div>
+                    <p className="mt-2 text-[10px] leading-relaxed text-slate-400">Đi lại gần từng điểm để xem tên hiện trên nút E. Nếu đứng giữa hai điểm, game ưu tiên đối tượng gần bạn hơn.</p>
+                  </section>
+                  {nearbyWorldLocation && <section className="border border-emerald-300/30 bg-emerald-900/20 p-3"><p className="font-black text-emerald-200">ĐANG Ở GẦN: {nearbyWorldLocation.name.toUpperCase()}</p><p className="mt-1 leading-relaxed text-slate-200">{nearbyWorldLocation.description} {getWorldDialogue(nearbyWorldLocation)}</p></section>}
+                  <p className="text-[10px] italic text-slate-400">Mẹo: nhiệm vụ phụ là tùy chọn. Bạn có thể trò chuyện, khám phá trước rồi quay lại xe bánh tráng bất cứ lúc nào.</p>
+                </div>
+              ) : (
+                <p className="mt-2 text-xs leading-relaxed text-slate-200">{worldPanel === 'BAG' ? 'Tiền mặt: ' + hud.money.toLocaleString('vi-VN') + 'đ · Cấp độ: ' + hud.playerLevel + '. Kho nguyên liệu được quản lý trong hệ thống kinh doanh.' : 'Điện thoại khu phố: các liên hệ và thông báo kinh doanh sẽ được tích hợp tại đây.'}</p>
+              )}
+            </div>
+          )}
+          {worldHudOpen ? (
+          <div className="world-controls-panel absolute bottom-3 left-1/2 z-30 w-[min(94%,620px)] border-[4px] border-[#35291f] bg-[#263b3b]/[.97] p-3 pt-5 font-mono shadow-[6px_6px_0_#172126]">
+            <button type="button" onClick={() => { setWorldHudOpen(false); setWorldPanel(null); }} aria-label="Ẩn bảng điều khiển" title="Ẩn bảng điều khiển" className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center border-2 border-[#5b2d25] bg-[#b95343] text-lg font-black leading-none text-white shadow-[2px_2px_0_#111] hover:bg-[#d46654]">×</button>
+            <div className="world-tab-row mb-2 flex flex-wrap items-center justify-center gap-2">
+              {([{id:'MAP',icon:'🗺️',label:'Bản đồ'},{id:'BAG',icon:'🎒',label:'Túi đồ'},{id:'JOURNAL',icon:'📖',label:'Nhiệm vụ'},{id:'PHONE',icon:'📱',label:'Điện thoại'}] as const).map((item) => (
+                <button key={item.id} type="button" onClick={() => setWorldPanel((current) => current === item.id ? null : item.id)} className={"world-tab-button flex min-w-[58px] flex-1 flex-col items-center border-[3px] px-2 py-1.5 font-mono text-[10px] font-bold shadow-[3px_3px_0_#111] sm:min-w-[62px] sm:flex-none sm:px-3 sm:py-2 " + (worldPanel === item.id ? "border-[#f6cf70] bg-[#8d633e] text-[#fff2c7]" : "border-[#8c9a83] bg-[#405653] text-[#f8edcf] hover:bg-[#587268]")}>
+                  <span className="text-xl">{item.icon}</span>{item.label}
+                </button>
+              ))}
+            </div>
+            <p className="world-hint text-center text-xs leading-relaxed text-slate-200">{worldNotice || (nearbyWorldLocation ? 'Đang ở gần: ' + nearbyWorldLocation.name + ' · Nhấn E để tương tác' : 'Dùng WASD / phím mũi tên để đi trên vỉa hè · Đến gần các địa điểm rồi nhấn E')}</p>
+            {neighborhoodHelpQuestStatus === 'ACCEPTED' && <p className="mt-1 text-center text-[10px] font-black text-amber-200">📌 NHIỆM VỤ PHỤ: {NEIGHBORHOOD_HELP_QUEST.objective}</p>}
+            {neighborhoodHelpQuestStatus === 'COMPLETED' && <p className="mt-1 text-center text-[10px] font-black text-emerald-200">✓ ĐÃ HOÀN THÀNH: {NEIGHBORHOOD_HELP_QUEST.title}</p>}
+            {neighborhoodParcelQuestStatus === 'ACCEPTED' && <p className="mt-1 text-center text-[10px] font-black text-amber-200">📌 NHIỆM VỤ PHỤ: {NEIGHBORHOOD_PARCEL_QUEST.objective}</p>}
+            {neighborhoodParcelQuestStatus === 'COMPLETED' && <p className="mt-1 text-center text-[10px] font-black text-emerald-200">✓ ĐÃ HOÀN THÀNH: {NEIGHBORHOOD_PARCEL_QUEST.title}</p>}
+            <div className="world-dpad mt-2 flex items-center justify-center gap-2">
+              {([
+                { direction: 'up', label: 'Đi lên', symbol: '↑' },
+                { direction: 'left', label: 'Đi trái', symbol: '←' },
+                { direction: 'down', label: 'Đi xuống', symbol: '↓' },
+                { direction: 'right', label: 'Đi phải', symbol: '→' },
+              ] as const).map((item) => (
+                <button
+                  key={item.direction}
+                  type="button"
+                  onPointerDown={(event) => { event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); startWorldTouchMove(item.direction); }}
+                  onPointerUp={() => stopWorldTouchMove(item.direction)}
+                  onPointerCancel={() => stopWorldTouchMove(item.direction)}
+                  onLostPointerCapture={() => stopWorldTouchMove(item.direction)}
+                  className="world-dpad-button touch-none select-none border border-white/30 bg-white/10 px-3 py-2 text-lg active:bg-amber-300/30"
+                  aria-label={item.label}
+                >{item.symbol}</button>
+              ))}
+            </div>
+            <div className="world-action-row mt-2 flex flex-wrap items-center justify-center gap-2">
+              {nearbyWorldLocation?.id === 'cart' && !cartVisitorEventSeen && <button type="button" onClick={() => { setCartVisitorEventSeen(true); setWorldNotice(CURIOUS_CART_VISITOR_EVENT.dialogue); setWorldPanel(null); }} className="max-w-full border-[3px] border-[#6b5430] bg-[#f6dfa0] px-3 py-2 font-mono text-[10px] font-black text-[#392819] shadow-[3px_3px_0_#111] hover:bg-[#ffe9b2]">💬 KHÁCH TÒ MÒ</button>}
+              <button type="button" onClick={handleWorldInteract} className="max-w-full whitespace-normal break-words border-[3px] border-[#543a25] bg-[#f1c65e] px-4 py-2 text-center font-mono text-xs font-black text-[#392819] shadow-[4px_4px_0_#111] hover:bg-[#ffda79]">E · {nearbyWorldLocation ? nearbyWorldLocation.name.toUpperCase() : 'TƯƠNG TÁC'}</button>
+              <button type="button" onClick={() => { setWorldPanel((current) => current === 'MAP' ? null : 'MAP'); setWorldNotice('Bạn đang ở khu phố bán bánh tráng. Hãy đi dọc vỉa hè, gặp khách và đến xe bánh tráng để bắt đầu ca bán hàng.'); }} className="max-w-full border-[3px] border-[#9cae91] bg-[#405653] px-3 py-2 font-mono text-[10px] font-bold text-[#fff2d1] shadow-[3px_3px_0_#111]">Hướng dẫn</button>
+            </div>
+          </div>
+          ) : (
+            <button type="button" onClick={() => setWorldHudOpen(true)} className="absolute bottom-3 left-1/2 z-30 -translate-x-1/2 border-[3px] border-[#e7c77e] bg-[#263b3b]/95 px-4 py-2 font-mono text-xs font-black text-[#fff2d1] shadow-[4px_4px_0_#111] hover:bg-[#405653]">☰ MỞ BẢNG ĐIỀU KHIỂN</button>
+          )}
+          {neighborhoodParcelQuestOfferOpen && (
+            <div className="absolute inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="parcel-quest-title">
+              <div className="max-h-[85dvh] w-full max-w-md overflow-y-auto overscroll-contain touch-pan-y border-[4px] border-[#35291f] bg-[#f4e2b8] p-4 font-mono text-[#392819] shadow-[7px_7px_0_#111]">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <h2 id="parcel-quest-title" className="text-sm font-black">📦 CHUYẾN HÀNG CUỐI NGÕ</h2>
+                  <button type="button" onClick={() => setNeighborhoodParcelQuestOfferOpen(false)} aria-label="Đóng lời mời" className="border-2 border-[#543a25] bg-[#e7c77e] px-2 py-1 font-black">×</button>
+                </div>
+                <p className="text-xs leading-relaxed">{NEIGHBORHOOD_PARCEL_QUEST.offerDialogue}</p>
+                <p className="mt-3 border-y-2 border-[#b99a69] py-2 text-xs font-bold">Nhiệm vụ: {NEIGHBORHOOD_PARCEL_QUEST.objective}</p>
+                <div className="mt-3 flex flex-wrap justify-end gap-2">
+                  <button type="button" onClick={() => { setNeighborhoodParcelQuestOfferOpen(false); setWorldNotice('Tí: “Dạ không sao, khi nào tiện thì anh/chị ghé giúp em nha!”'); }} className="border-[3px] border-[#765c3c] bg-[#e7c77e] px-3 py-2 text-[10px] font-black hover:bg-[#f1d89d]">ĐỂ LÚC KHÁC</button>
+                  <button type="button" onClick={() => { setNeighborhoodParcelQuestStatus('ACCEPTED'); setNeighborhoodParcelQuestOfferOpen(false); setWorldNotice(NEIGHBORHOOD_PARCEL_QUEST.acceptedDialogue); }} className="border-[3px] border-[#31533e] bg-[#8fbd8c] px-3 py-2 text-[10px] font-black hover:bg-[#a7d3a2]">NHẬN LỜI</button>
+                </div>
+              </div>
+            </div>
+          )}
+          {neighborhoodHelpQuestOfferOpen && (
+            <div className="absolute inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="neighbor-quest-title">
+              <div className="max-h-[85dvh] w-full max-w-md overflow-y-auto overscroll-contain touch-pan-y border-[4px] border-[#35291f] bg-[#f4e2b8] p-4 font-mono text-[#392819] shadow-[7px_7px_0_#111]">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <h2 id="neighbor-quest-title" className="text-sm font-black">📜 LỜI NHỜ TỪ HÀNG XÓM</h2>
+                  <button type="button" onClick={() => setNeighborhoodHelpQuestOfferOpen(false)} aria-label="Đóng lời mời" className="border-2 border-[#543a25] bg-[#e7c77e] px-2 py-1 font-black">×</button>
+                </div>
+                <p className="text-xs leading-relaxed">{NEIGHBORHOOD_HELP_QUEST.offerDialogue}</p>
+                <p className="mt-3 border-y-2 border-[#b99a69] py-2 text-xs font-bold">Nhiệm vụ: {NEIGHBORHOOD_HELP_QUEST.objective}</p>
+                <div className="mt-3 flex flex-wrap justify-end gap-2">
+                  <button type="button" onClick={() => { setNeighborhoodHelpQuestOfferOpen(false); setWorldNotice('Chú Bảy: “Không sao, khi nào tiện thì con ghé giúp chú cũng được!”'); }} className="border-[3px] border-[#765c3c] bg-[#e7c77e] px-3 py-2 text-[10px] font-black hover:bg-[#f1d89d]">ĐỂ LÚC KHÁC</button>
+                  <button type="button" onClick={() => { setNeighborhoodHelpQuestStatus('ACCEPTED'); setNeighborhoodHelpQuestOfferOpen(false); setWorldNotice(NEIGHBORHOOD_HELP_QUEST.acceptedDialogue); }} className="border-[3px] border-[#31533e] bg-[#8fbd8c] px-3 py-2 text-[10px] font-black hover:bg-[#a7d3a2]">NHẬN LỜI</button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1081,38 +1734,93 @@ export default function App() {
               Cắt bánh tráng chuẩn từng khúc, chiều lòng Ninja Lead &amp; Gen Z với combo dị, và đẩy xe chạy hết tốc lực mỗi khi còi Trật Tự vang lên.
             </p>
 
+            <div className="w-full max-w-lg rounded-xl border-2 border-[#F59E0B] bg-[#181920]/95 p-3 text-slate-100">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold text-amber-300">HỒ SƠ NGƯỜI BÁN</p>
+                  <p className="font-display text-xl font-extrabold">Cấp {hud.playerLevel}</p>
+                </div>
+                <div className="text-right text-xs">
+                  <p>{hud.playerXp.toLocaleString('vi-VN')} / {hud.playerXpToNext.toLocaleString('vi-VN')} XP</p>
+                  <p className="text-amber-200">⭐ Thu hút: +{hud.decorationAttraction}</p>
+                </div>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-700">
+                <div className="h-full rounded-full bg-amber-400 transition-all" style={{ width: `${Math.min(100, hud.playerXp / Math.max(1, hud.playerXpToNext) * 100)}%` }} />
+              </div>
+              <div className="mt-2 grid grid-cols-3 gap-2 text-[10px] text-slate-300">
+                <span>Đơn hoàn thành: {hud.completedOrdersLifetime}</span>
+                <span className="text-center">Tổng thu: {hud.lifetimeEarnings.toLocaleString('vi-VN')}đ</span>
+                <span className="text-right font-bold text-emerald-300">Ví: {hud.money.toLocaleString('vi-VN')}đ</span>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold">Độ khó:</span>
+                {(['EASY', 'NORMAL', 'HARD'] as const).map((difficulty) => (
+                  <button key={difficulty} type="button" onClick={() => engineRef.current?.setGameDifficulty(difficulty)}
+                    className={`rounded-lg border border-slate-500 px-2.5 py-1 text-xs font-bold ${hud.difficulty === difficulty ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-200'}`}>
+                    {difficulty === 'EASY' ? 'Thư thả' : difficulty === 'NORMAL' ? 'Vỉa hè Sài Gòn' : 'Căng thẳng'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="w-full max-w-lg rounded-xl border-2 border-[#F59E0B] bg-[#181920]/95 p-3 text-slate-100">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-extrabold tracking-wide text-amber-300">📖 NHẬT KÝ VỈA HÈ · {hud.storyMission.chapter}</p>
+                <span className="rounded-full bg-amber-400/15 px-2 py-1 text-[10px] font-bold text-amber-200">{hud.storyMission.allCompleted ? 'Đã hoàn thành' : hud.storyMission.completed ? 'Hoàn thành' : 'Đang thực hiện'}</span>
+              </div>
+              <p className="mt-2 font-display text-lg font-extrabold">{hud.storyMission.title}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-300">{hud.storyMission.description}</p>
+              <div className="mt-2 rounded-lg border border-slate-700 bg-slate-800/80 p-2">
+                <p className="text-[10px] font-bold text-amber-200">💬 {hud.storyMission.npcName}</p>
+                <p className="mt-1 text-xs italic text-slate-200">“{hud.storyMission.storyText}”</p>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-[11px]">
+                <span className="font-bold text-slate-300">Tiến độ: {hud.storyMission.progress.toLocaleString('vi-VN')} / {hud.storyMission.target.toLocaleString('vi-VN')}</span>
+                <span className="font-bold text-emerald-300">Thưởng: {hud.storyMission.reward.toLocaleString('vi-VN')}đ</span>
+              </div>
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-700">
+                <div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${Math.min(100, hud.storyMission.progress / Math.max(1, hud.storyMission.target) * 100)}%` }} />
+              </div>
+              {hud.storyMission.completed && !hud.storyMission.allCompleted && (
+                <button type="button" onClick={() => engineRef.current?.claimCurrentStoryMission()} className="mt-3 w-full rounded-lg bg-emerald-500 px-3 py-2 text-xs font-extrabold text-slate-950 hover:bg-emerald-400">Nhận thưởng nhiệm vụ</button>
+              )}
+            </div>
+
             {/* Customizable Play Duration Selector */}
             <div className="w-full max-w-lg">
-              <ShiftDurationSelector
-                dayDuration={hud.dayDuration}
-                onSelect={(secs) => engineRef.current?.setDayDuration(secs)}
-                dark
-              />
+              <BusinessDayInfo dark />
             </div>
 
             {/* Primary CTA */}
             <div className="flex flex-wrap items-center gap-3">
+              {hasSavedGame && (
+                <button
+                  type="button"
+                  onClick={handleContinue}
+                  className="px-6 py-3.5 rounded-xl bg-[#10B981] hover:bg-[#34D399] text-white font-display font-extrabold text-lg border-[3px] border-[#111318] comic-shadow transition-transform hover:-translate-y-0.5 active:translate-y-0.5 whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  Tiếp Tục Hành Trình
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handleStart}
                 className="px-7 py-3.5 rounded-xl bg-[#F59E0B] hover:bg-[#FBBF24] text-[#111318] font-display font-extrabold text-lg border-[3px] border-[#111318] comic-shadow transition-transform hover:-translate-y-0.5 active:translate-y-0.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
-                Bắt Đầu Bán (Enter)
+                Chơi Mới (Enter)
               </button>
               <button
                 type="button"
-                onClick={() => engineRef.current?.openCityTycoon()}
+                onClick={() => {
+                  if (hasSavedGame && !window.confirm('Bắt đầu trò chơi mới sẽ thay thế bản lưu hiện tại. Bạn có chắc chắn muốn tiếp tục?')) return;
+                  setOnboardingStep('MAP');
+                }}
                 className="flex items-center gap-2 px-5 py-3.5 rounded-xl bg-[#10B981] hover:bg-[#34D399] text-white font-display font-extrabold text-base border-[3px] border-[#111318] comic-shadow transition-transform hover:-translate-y-0.5 active:translate-y-0.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <MapIcon className="w-5 h-5" />
-                <span>Bản Đồ Đội Nhóm (16 NV)</span>
+                <span>Bản Đồ Điểm Bán</span>
               </button>
-              <a
-                href="/banh-trang-master.html"
-                className="flex items-center gap-2 px-5 py-3.5 rounded-xl bg-[#38BDF8] hover:bg-[#7DD3FC] text-[#111318] font-display font-extrabold text-base border-[3px] border-[#111318] comic-shadow transition-transform hover:-translate-y-0.5 active:translate-y-0.5 whitespace-nowrap shrink-0 cursor-pointer"
-              >
-                <span>Bánh Tráng Master (2D Lab)</span>
-              </a>
             </div>
 
             {/* Single flat control-hint line + personal best */}
@@ -1130,6 +1838,19 @@ export default function App() {
         </div>
       )}
 
+      {!tutorialDismissed && hud.screen === 'PLAYING' && hud.day === 1 && hud.ordersServed < 3 && (
+        <div className="pointer-events-auto absolute left-1/2 top-20 z-20 w-[min(92%,680px)] -translate-x-1/2 rounded-xl border-2 border-sky-300 bg-[#102b3c]/95 px-4 py-3 text-white shadow-[3px_3px_0_#111318]">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black tracking-widest text-sky-200">HƯỚNG DẪN NGƯỜI MỚI · BƯỚC 3/3</p>
+              <p className="mt-1 text-sm font-extrabold">{hud.ordersServed === 0 ? 'Phục vụ vị khách đầu tiên' : 'Bạn đang làm rất tốt!'}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-200">{hud.ordersServed === 0 ? 'Quan sát bong bóng yêu cầu của khách, chuẩn bị đúng bánh tráng và topping, sau đó hoàn tất thanh toán. Không cần vội — sự kiện ngẫu nhiên đang được tạm hoãn trong 3 đơn đầu.' : 'Đã hoàn thành ' + hud.ordersServed + '/3 đơn đầu tiên. Cứ tập trung làm đúng yêu cầu và thanh toán; các sự kiện sẽ mở lại sau đơn thứ ba.'}</p>
+            </div>
+            <button type="button" onClick={() => { setTutorialDismissed(true); engineRef.current?.dismissTutorial(); try { localStorage.setItem('banhtrang_tutorial_v1','done'); } catch {} }} className="shrink-0 rounded-lg border border-slate-400 px-2 py-1 text-[10px] font-bold">Ẩn</button>
+          </div>
+        </div>
+      )}
+
       {/* MORNING PREP: DAILY NEWSPAPER & WHOLESALE INVENTORY MARKET */}
       {hud.screen === 'MORNING_PREP' && (() => {
         const totalToppings =
@@ -1142,11 +1863,24 @@ export default function App() {
           <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#111318]/85 p-4 pt-16 overflow-y-auto allow-touch-scroll safe-inset-container">
             <div className="w-full max-w-3xl rounded-2xl bg-[#FFFDF5] text-[#111318] border-[3px] border-[#111318] comic-shadow p-6 flex flex-col gap-4 my-auto">
               {/* Header */}
+              {!tutorialDismissed && hud.day === 1 && (
+                <div className="rounded-xl border-2 border-sky-400 bg-sky-50 p-4 text-slate-900">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-black tracking-widest text-sky-700">HƯỚNG DẪN NGƯỜI MỚI · {canOpenShop ? 'BƯỚC 2/3' : 'BƯỚC 1/3'}</p>
+                      <p className="mt-1 font-extrabold">{canOpenShop ? 'Nguyên liệu đã sẵn sàng — chuẩn bị mở quán' : 'Nhập nguyên liệu cho mẻ bánh đầu tiên'}</p>
+                      <p className="mt-1 text-xs leading-relaxed">{canOpenShop ? 'Bạn đã có đủ bánh tráng, tắc và topping. Nhấn “Mở Quán” để gặp vị khách đầu tiên. Ba đơn hàng đầu sẽ không bị các sự kiện ngẫu nhiên làm gián đoạn.' : 'Mua bánh tráng, tắc và ít nhất 2 phần topping. Có thể mua từng phần hoặc dùng nút mua nhanh; tiền còn lại luôn hiển thị phía trên.'}</p>
+                    </div>
+                    <button type="button" onClick={() => { setTutorialDismissed(true); engineRef.current?.dismissTutorial(); try { localStorage.setItem('banhtrang_tutorial_v1','done'); } catch {} }} className="rounded-lg border border-slate-400 px-2 py-1 text-xs font-bold">Ẩn hướng dẫn</button>
+                  </div>
+                </div>
+              )}
               <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-slate-200 pb-3">
                 <div>
                   <h2 className="font-display font-extrabold text-2xl text-[#111318]">
                     Chợ Sớm Ngày {hud.day} · Nhập Nguyên Liệu
                   </h2>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-600"><span>📍 Điểm bán: <strong className="text-emerald-800">{getVendorLocation(selectedVendorSpot).name}</strong></span><button type="button" onClick={() => { updateWorldPlayerPosition({ x: 48, y: 45 }); setWorldHubOpen(true); }} className="rounded-md border border-emerald-700 bg-emerald-50 px-2 py-1 font-bold text-emerald-800">🚶 Đi dạo khu phố</button><button type="button" onClick={() => engineRef.current?.returnToTitle()} className="rounded-md border border-slate-500 px-2 py-1 font-bold text-slate-700">← Quay lại menu</button></div>
                   <p className="text-xs text-slate-600 mt-0.5">
                     Phương tiện: <strong className="text-[#111318]">{vehicleMeta.name}</strong> (Tối đa{' '}
                     <span className="font-mono-tabular font-bold">{hud.maxStockPerItem}</span> phần/món) ·{' '}
@@ -1164,10 +1898,7 @@ export default function App() {
               </div>
 
               {/* Customizable Shift Duration before opening */}
-              <ShiftDurationSelector
-                dayDuration={hud.dayDuration}
-                onSelect={(secs) => engineRef.current?.setDayDuration(secs)}
-              />
+              <BusinessDayInfo />
 
               {/* Daily Newspaper Event & Daily Hexagram */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1251,9 +1982,11 @@ export default function App() {
                   const price = hud.marketPrices[id];
                   const mult = hud.newspaper.multipliers[id] ?? 1;
                   const stock = hud.inventory[id];
+                  const unlockLevel = item.unlockLevel ?? 1;
+                  const levelLocked = hud.playerLevel < unlockLevel;
                   const isFull = stock >= hud.maxStockPerItem;
-                  const canBuy1 = !isFull && hud.money >= price;
-                  const canBuy5 = !isFull && hud.money >= price;
+                  const canBuy1 = !levelLocked && !isFull && hud.money >= price;
+                  const canBuy5 = !levelLocked && !isFull && hud.money >= price;
 
                   return (
                     <div
@@ -1266,6 +1999,7 @@ export default function App() {
                           <span className="font-display font-extrabold text-sm text-[#111318] leading-tight">
                             {item.name}
                           </span>
+                          {levelLocked && <span className="shrink-0 rounded border border-[#111318] bg-slate-800 px-1.5 py-0.5 text-[9px] font-black text-white">🔒 CẤP {unlockLevel}</span>}
                           {mult !== 1 && (
                             <span
                               className={`inline-flex items-center gap-0.5 font-mono-tabular font-extrabold text-[11px] px-1.5 py-0.5 rounded border border-[#111318] shrink-0 ${
@@ -1295,12 +2029,28 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="grid grid-cols-4 gap-1.5">
+                        <button
+                          type="button"
+                          disabled={stock < 1}
+                          onClick={() => engineRef.current?.removeIngredient(id, 1)}
+                          className="py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
+                        >
+                          −1
+                        </button>
+                        <button
+                          type="button"
+                          disabled={stock < 5}
+                          onClick={() => engineRef.current?.removeIngredient(id, 5)}
+                          className="py-1.5 rounded-lg bg-rose-200 hover:bg-rose-300 disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
+                        >
+                          −5
+                        </button>
                         <button
                           type="button"
                           disabled={!canBuy1}
                           onClick={() => engineRef.current?.buyIngredient(id, 1)}
-                          className="flex-1 py-1.5 rounded-lg bg-white hover:bg-amber-100 disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
+                          className="py-1.5 rounded-lg bg-white hover:bg-amber-100 disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
                         >
                           +1
                         </button>
@@ -1308,7 +2058,7 @@ export default function App() {
                           type="button"
                           disabled={!canBuy5}
                           onClick={() => engineRef.current?.buyIngredient(id, 5)}
-                          className="flex-1 py-1.5 rounded-lg bg-[#F59E0B] hover:bg-[#FBBF24] disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
+                          className="py-1.5 rounded-lg bg-[#F59E0B] hover:bg-[#FBBF24] disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
                         >
                           +5
                         </button>
@@ -1476,6 +2226,86 @@ export default function App() {
                 )}
               </div>
 
+              <div className="rounded-xl border-2 border-[#111318] bg-slate-100 p-4 flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-display font-extrabold text-base text-[#111318]">🎨 Trang trí xe bánh tráng</h3>
+                  <span className="text-xs font-bold text-emerald-700">+{hud.decorationAttraction} điểm thu hút</span>
+                </div>
+                <p className="text-xs text-slate-600">Mua vật phẩm bằng tiền hiện có. Mỗi vị trí chỉ trang bị một món; đồ đã mua được giữ lại lâu dài.</p>
+                <div className="overflow-hidden rounded-xl border-2 border-[#111318] bg-gradient-to-br from-amber-100 via-orange-50 to-sky-100 p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-extrabold text-slate-800">XE BÁNH TRÁNG CỦA BẠN</span>
+                    <span className="rounded-full bg-white/80 px-2 py-1 text-[10px] font-bold text-emerald-800">Độ thu hút +{hud.decorationAttraction}</span>
+                  </div>
+                  <div className="relative mx-auto mt-3 flex max-w-sm items-center justify-center">
+                    <div className="absolute bottom-1 h-3 w-64 rounded-full bg-slate-900/15 blur-sm" />
+                    <div className="relative flex h-24 w-64 items-end justify-center">
+                      <div className="absolute top-1 h-3 w-48 rounded-t-lg border-2 border-slate-900 bg-rose-500" />
+                      <div className="absolute top-4 h-12 w-52 rounded-lg border-[3px] border-slate-900 bg-amber-300 shadow-[inset_0_-8px_0_rgba(120,53,15,0.12)]">
+                        <div className="mt-2 text-center text-[11px] font-black tracking-widest text-slate-900">BÁNH TRÁNG TRỘN</div>
+                        <div className="mt-1 text-center text-lg">🥬 🥚 🌶️</div>
+                      </div>
+                      <div className="absolute bottom-0 left-10 h-5 w-5 rounded-full border-[3px] border-slate-900 bg-slate-500" />
+                      <div className="absolute bottom-0 right-10 h-5 w-5 rounded-full border-[3px] border-slate-900 bg-slate-500" />
+                      {hud.equippedDecorations.includes('neon_sign') && <span className="absolute -top-5 rounded border border-fuchsia-500 bg-fuchsia-100 px-2 py-0.5 text-[9px] font-black text-fuchsia-800 shadow-[0_0_12px_rgba(217,70,239,0.5)]">✦ NEON ✦</span>}
+                      {hud.equippedDecorations.includes('string_lights') && <span className="absolute top-0 text-xs tracking-[0.3em] text-amber-500">● ● ● ● ●</span>}
+                      {hud.equippedDecorations.includes('colorful_awning') && <span className="absolute -top-1 text-xs font-black text-emerald-700">☂ MÁI CHE</span>}
+                    </div>
+                  </div>
+                  <p className="mt-2 text-center text-[10px] font-semibold text-slate-600">
+                    {hud.equippedDecorations.length ? 'Đang trang bị: ' + hud.equippedDecorations.map((id) => DECORATIONS.find((item) => item.id === id)?.name).filter(Boolean).join(' · ') : 'Chưa có đồ trang trí — hãy mua vật phẩm đầu tiên ở bên dưới.'}
+                  </p>
+                </div>
+                <div className="rounded-lg border-2 border-[#111318] bg-white p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <p className="text-xs font-extrabold text-slate-900">🌟 KỸ NĂNG THEO CẤP ĐỘ</p>
+                    <span className="text-[10px] font-bold text-emerald-700">{getUnlockedSkills(hud.playerLevel).length}/3 đã mở</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {[
+                      { id: 'FAST_LEARNER', level: 3, name: 'Học việc nhanh', desc: '+10% XP mỗi đơn' },
+                      { id: 'CUSTOMER_CARE', level: 5, name: 'Giữ chân khách', desc: '+5% thời gian chờ' },
+                      { id: 'STREET_REPUTATION', level: 8, name: 'Danh tiếng vỉa hè', desc: '+5% tiền thưởng' },
+                    ].map((skill) => {
+                      const unlocked = hud.playerLevel >= skill.level;
+                      return <div key={skill.id} className={unlocked ? 'rounded-lg border border-emerald-500 bg-emerald-50 p-2' : 'rounded-lg border border-slate-300 bg-slate-50 p-2'}>
+                        <p className="text-[10px] font-extrabold text-slate-900">{unlocked ? '✓' : '🔒'} {skill.name}</p>
+                        <p className="mt-1 text-[10px] text-slate-600">{skill.desc}</p>
+                        <p className="mt-1 text-[9px] font-bold text-slate-500">Mở ở cấp {skill.level}</p>
+                      </div>;
+                    })}
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {DECORATIONS.map((item) => {
+                    const owned = hud.ownedDecorations.includes(item.id);
+                    const equipped = hud.equippedDecorations.includes(item.id);
+                    const locked = hud.playerLevel < item.unlockLevel;
+                    return (
+                      <div key={item.id} className="rounded-lg border-2 border-[#111318] bg-white p-3 flex flex-col gap-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-xs font-extrabold text-slate-900">{item.name}</p>
+                            <p className="mt-1 text-[11px] text-slate-600">{item.description}</p>
+                          </div>
+                          <span className="shrink-0 rounded bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-900">+{item.attraction}</span>
+                        </div>
+                        <p className="text-[10px] font-semibold text-slate-500">Mở ở cấp {item.unlockLevel} · {item.price.toLocaleString('vi-VN')}đ</p>
+                        {equipped ? (
+                          <span className="text-xs font-bold text-emerald-700">✓ Đang trang bị</span>
+                        ) : owned ? (
+                          <button type="button" onClick={() => engineRef.current?.equipGarageDecoration(item.id)} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white">Trang bị</button>
+                        ) : (
+                          <button type="button" disabled={locked || hud.money < item.price} onClick={() => engineRef.current?.buyGarageDecoration(item.id)} className="rounded-lg bg-amber-400 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-300">
+                            {locked ? `Cần cấp ${item.unlockLevel}` : hud.money < item.price ? 'Không đủ tiền' : 'Mua vật phẩm'}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Mechanic 9: Garage Vehicle Upgrades */}
               <div className="rounded-xl bg-slate-100 border-2 border-[#111318] p-4 flex flex-col gap-3">
                 <div className="flex items-center gap-2">
@@ -1534,13 +2364,22 @@ export default function App() {
                 )}
               </div>
 
-              <button
-                type="button"
-                onClick={() => engineRef.current?.startNextDay()}
-                className="w-full py-3.5 rounded-xl bg-[#10B981] hover:bg-[#34D399] text-white font-display font-extrabold text-base border-[3px] border-[#111318] comic-shadow-sm active:translate-y-0.5 cursor-pointer"
-              >
-                Sang Ngày {hud.day + 1} · Đi Chợ Sớm →
-              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setOnboardingStep('MAP')}
+                  className="w-full py-3 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-display font-extrabold text-sm border-[3px] border-[#111318] comic-shadow-sm"
+                >
+                  📍 Đổi địa điểm bán
+                </button>
+                <button
+                  type="button"
+                  onClick={() => engineRef.current?.startNextDay()}
+                  className="w-full py-3.5 rounded-xl bg-[#10B981] hover:bg-[#34D399] text-white font-display font-extrabold text-base border-[3px] border-[#111318] comic-shadow-sm active:translate-y-0.5 cursor-pointer"
+                >
+                  Giữ địa điểm · Sang Ngày {hud.day + 1} →
+                </button>
+              </div>
             </div>
           </div>
         );
@@ -2027,6 +2866,25 @@ export default function App() {
           </div>
         );
       })()}
+
+      {hud.screen === 'PLAYING' && hud.phase === 'COOKING' && hud.npcEncounter && !hud.checkout.active && !hud.shopOpen && (
+        <div className="pointer-events-auto absolute left-3 top-20 z-20 w-[min(92vw,340px)] rounded-2xl border-[3px] border-[#111318] bg-[#FFFDF5]/95 p-3 text-[#111318] comic-shadow">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] font-extrabold tracking-wide text-amber-700">🤝 GẶP GỠ NHÂN VẬT</span>
+            <span className="rounded-full bg-amber-100 px-2 py-1 text-[9px] font-extrabold">{hud.npcEncounter.role}</span>
+          </div>
+          <p className="mt-1 font-display text-base font-extrabold">{hud.npcEncounter.name}</p>
+          <p className="mt-1 text-xs font-semibold text-slate-700">“{hud.npcEncounter.dialogue}”</p>
+          {!hud.npcEncounter.interacted ? (
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => engineRef.current?.interactWithCurrentNpc('FRIENDLY')} className="rounded-lg border-2 border-[#111318] bg-amber-300 px-2 py-2 text-[10px] font-extrabold hover:bg-amber-200">💛 Trò chuyện (+10% tiền)</button>
+              <button type="button" onClick={() => engineRef.current?.interactWithCurrentNpc('QUICK')} className="rounded-lg border-2 border-[#111318] bg-sky-200 px-2 py-2 text-[10px] font-extrabold hover:bg-sky-100">⏳ Xin thêm thời gian</button>
+            </div>
+          ) : (
+            <p className="mt-2 rounded-lg bg-emerald-100 px-2 py-1.5 text-center text-[10px] font-extrabold text-emerald-800">Đã tương tác · Lựa chọn đã có hiệu lực cho đơn này</p>
+          )}
+        </div>
+      )}
 
       {/* DAY START ACCELERATION FLASH BANNER ("Day [X] - Tốc độ tăng cường!") */}
       {hud.screen === 'PLAYING' && hud.dayBannerTimer > 0 && hud.dayBannerText && (
@@ -3166,10 +4024,7 @@ export default function App() {
               </div>
             </div>
 
-            <ShiftDurationSelector
-              dayDuration={hud.dayDuration}
-              onSelect={(secs) => engineRef.current?.setDayDuration(secs)}
-            />
+            <BusinessDayInfo />
 
             <div className="flex flex-wrap items-center gap-2.5">
               <button
@@ -3273,6 +4128,19 @@ export default function App() {
           </div>
         </div>
       )}
+      {testerPanelOpen && <TesterPanel
+        hud={hud}
+        onClose={() => setTesterPanelOpen(false)}
+        onSetMoney={(value) => engineRef.current?.debugSetMoney(value)}
+        onSetProgress={(level, xp) => engineRef.current?.debugSetProgress(level, xp)}
+        onSetStoryStats={(orders, earnings) => engineRef.current?.debugSetStoryStats(orders, earnings)}
+        onSetDayTime={(seconds) => engineRef.current?.debugSetDayTime(seconds)}
+        onQueueCustomer={(type: CustomerType) => engineRef.current?.debugQueueCustomer(type) ?? false}
+        onTriggerRain={() => engineRef.current?.debugTriggerRain() ?? false}
+        worldPosition={worldPlayer}
+        onOpenWorld={() => { setTesterPanelOpen(false); setWorldHubOpen(true); setWorldPanel(null); }}
+        onTeleportWorld={(x, y) => updateWorldPlayerPosition({ x, y })}
+      />}
     </div>
   );
 }

@@ -8,6 +8,8 @@ import {
   getFlowLaneRects,
   getLandladyRect,
   getLotterySellerRect,
+  getToppingRemoveRect,
+  getToppingUndoRect,
   getQteArrowRects,
   getWaitingCustomerRects,
   type PrepLayout,
@@ -66,6 +68,7 @@ export interface RenderState {
   swipeTrail: Point2D[];
   addedToppings: Record<ToppingId, number>;
   inventory: InventoryState;
+  playerLevel: number;
   bowlIngredients: BowlIngredient[];
   flyingToppings: FlyingTopping[];
   flyingCash: FlyingCashItem[];
@@ -983,6 +986,65 @@ function drawOrderBubble(
 
   const padX = 16;
   const innerW = b.w - padX * 2;
+  if (layout.isCompact) {
+    // Phone card uses two compact header rows so special labels never collide with the timer.
+    const barY = b.y + 12;
+    ctx.font = '800 8px "Bricolage Grotesque", sans-serif';
+    const dishTag = order.dishType === 'CUON' ? 'BÁNH CUỐN' : 'BÁNH TRÁNG TRỘN';
+    const dishW = Math.min(innerW * 0.58, ctx.measureText(dishTag).width + 14);
+    drawComicBox(ctx, { x: b.x + padX, y: barY - 2, w: dishW, h: 18 }, order.dishType === 'CUON' ? '#DBEAFE' : '#FEF3C7', 5, 0, 1.5);
+    ctx.fillStyle = order.dishType === 'CUON' ? '#1E40AF' : '#92400E';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(dishTag, b.x + padX + dishW * 0.5, barY + 7, dishW - 6);
+    ctx.font = '700 8px "JetBrains Mono", monospace';
+    ctx.fillStyle = order.patience / order.maxPatience < 0.28 ? '#BE123C' : '#334155';
+    ctx.textAlign = 'right';
+    ctx.fillText(`Chờ ${Math.ceil(order.patience)}s`, b.x + b.w - padX, barY + 7);
+
+    let specialTag = '';
+    if (order.baziProfile) specialTag = `☯ ${order.baziProfile.dayMaster}`;
+    else if (order.hasTraTacCombo) specialTag = 'COMBO TRÀ TẮC L';
+    else if (order.elementTag) specialTag = `☯ Mệnh ${ELEMENT_META[order.elementTag].shortLabel}`;
+    else if (order.hexagramBoosted) specialTag = '☯ HỢP QUẺ +35%';
+    const specialY = barY + 20;
+    ctx.font = '800 7px "Bricolage Grotesque", sans-serif';
+    const specialW = specialTag ? Math.min(innerW * 0.55, ctx.measureText(specialTag).width + 12) : 0;
+    if (specialTag) {
+      drawComicBox(ctx, { x: b.x + padX, y: specialY - 1, w: specialW, h: 15 }, '#F3E8FF', 5, 0, 1);
+      ctx.fillStyle = '#7E22CE'; ctx.textAlign = 'center';
+      ctx.fillText(specialTag, b.x + padX + specialW * 0.5, specialY + 6, specialW - 5);
+    }
+    const progressX = specialTag ? b.x + padX + specialW + 6 : b.x + padX;
+    const progressW = Math.max(24, b.x + b.w - padX - progressX);
+    const pRatio = Math.max(0, Math.min(1, order.patience / order.maxPatience));
+    ctx.fillStyle = '#E2E8F0'; roundRectPath(ctx, progressX, specialY + 3, progressW, 6, 3); ctx.fill();
+    ctx.fillStyle = pRatio > 0.5 ? '#10B981' : pRatio > 0.25 ? '#F59E0B' : '#E11D48';
+    if (pRatio > 0.02) { roundRectPath(ctx, progressX + 1, specialY + 4, Math.max(3, (progressW - 2) * pRatio), 4, 2); ctx.fill(); }
+
+    ctx.font = '700 9px "Plus Jakarta Sans", sans-serif';
+    ctx.fillStyle = INK; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    const lines = wrapText(ctx, `"${order.dialogue}"`, innerW);
+    let textY = barY + 39;
+    for (let i = 0; i < Math.min(3, lines.length); i++) { ctx.fillText(lines[i], b.x + padX, textY, innerW); textY += 11; }
+
+    const checkY = b.y + b.h - 34;
+    ctx.strokeStyle = '#E2E8F0'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(b.x + padX, checkY - 8); ctx.lineTo(b.x + b.w - padX, checkY - 8); ctx.stroke();
+    const sliceText = order.targetSlices === 0 ? 'Low-Carb' : `Cắt ${cutCount}/${order.targetSlices}`;
+    const reqEntries = (Object.keys(order.requiredToppings) as ToppingId[]).filter((k) => order.requiredToppings[k] > 0);
+    const toppingText = reqEntries.slice(0, 2).map((tid) => {
+      const need = order.requiredToppings[tid]; const got = addedToppings[tid] || 0;
+      return `${TOPPING_MAP[tid].shortName} ${got}/${need}`;
+    }).join(' · ');
+    ctx.font = '700 7px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = prepStep === 'CUTTING' ? '#D97706' : (order.targetSlices === 0 || cutCount === order.targetSlices) ? '#059669' : '#334155';
+    ctx.fillText(toppingText ? `${sliceText} · ${toppingText}` : sliceText, b.x + padX, checkY + 1, innerW);
+    ctx.fillStyle = '#0F172A';
+    ctx.fillText(`Chanh ${SEASONING_LABEL[order.limeTarget]} · Sa tế ${SEASONING_LABEL[order.chiliTarget]}`, b.x + padX, checkY + 14, innerW);
+    return;
+  }
+
 
   const barY = b.y + 12;
   const dishTag = order.dishType === 'CUON' ? 'BÁNH TRÁNG CUỐN' : 'BÁNH TRÁNG TRỘN';
@@ -1056,15 +1118,19 @@ function drawOrderBubble(
   ctx.textBaseline = 'middle';
   ctx.fillText(`Chờ: ${Math.ceil(order.patience)}s`, b.x + b.w - padX, barY + 8);
 
-  ctx.font = '700 15px "Plus Jakarta Sans", sans-serif';
+  const compactOrderCard = layout.isCompact;
+  ctx.font = compactOrderCard
+    ? '700 10px "Plus Jakarta Sans", sans-serif'
+    : '700 15px "Plus Jakarta Sans", sans-serif';
   ctx.fillStyle = INK;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   const lines = wrapText(ctx, `"${order.dialogue}"`, innerW);
-  let textY = barY + 26;
-  for (let i = 0; i < Math.min(2, lines.length); i++) {
-    ctx.fillText(lines[i], b.x + padX, textY);
-    textY += 20;
+  let textY = barY + (compactOrderCard ? 22 : 26);
+  const orderLineHeight = compactOrderCard ? 13 : 20;
+  for (let i = 0; i < Math.min(compactOrderCard ? 3 : 2, lines.length); i++) {
+    ctx.fillText(lines[i], b.x + padX, textY, innerW);
+    textY += orderLineHeight;
   }
 
   const checkY = b.y + b.h - 34;
@@ -1076,7 +1142,9 @@ function drawOrderBubble(
   ctx.stroke();
 
   let cx = b.x + padX;
-  ctx.font = '700 13px "Plus Jakarta Sans", sans-serif';
+  ctx.font = compactOrderCard
+    ? '700 8px "Plus Jakarta Sans", sans-serif'
+    : '700 13px "Plus Jakarta Sans", sans-serif';
   ctx.textBaseline = 'middle';
 
   const sliceDone = order.targetSlices === 0 || cutCount === order.targetSlices;
@@ -1236,11 +1304,12 @@ function drawButton(
   const offset = hovered && !disabled ? -2 : 0;
   const rect = { x: r.x, y: r.y + offset, w: r.w, h: r.h };
   drawComicBox(ctx, rect, disabled ? '#CBD5E1' : bg, 12, disabled ? 2 : 4, 3);
-  ctx.font = '800 15px "Bricolage Grotesque", sans-serif';
+  const buttonFontSize = rect.w < 100 ? 11 : rect.w < 140 ? 13 : 15;
+  ctx.font = `800 ${buttonFontSize}px "Bricolage Grotesque", sans-serif`;
   ctx.fillStyle = disabled ? '#64748B' : textColor;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(label, rect.x + rect.w * 0.5, rect.y + rect.h * 0.5 + 1);
+  ctx.fillText(label, rect.x + rect.w * 0.5, rect.y + rect.h * 0.5 + 1, Math.max(8, rect.w - 12));
 }
 
 function drawPowerBar(
@@ -1681,19 +1750,23 @@ function renderCookingPhase(
             { key: 'SHAKING', label: '4. Lắc & Giao' },
           ];
 
-    ctx.font = '700 14px "Plus Jakarta Sans", sans-serif';
+    const isPortrait = w < 680;
+    ctx.font = isPortrait
+      ? '800 9px "Plus Jakarta Sans", sans-serif'
+      : '700 14px "Plus Jakarta Sans", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const stepY = layout.counterY + 42;
-    const totalStepSpan = Math.min(580, w - 80);
+    const stepY = layout.counterY + (isPortrait ? 34 : 42);
+    const totalStepSpan = Math.max(0, Math.min(isPortrait ? w - 48 : 580, w - (isPortrait ? 48 : 80)));
+    const compactLabels = ['1. Cắt', '2. Topping', '3. Nêm', '4. Lắc'];
     stepNames.forEach((s, idx) => {
       const sx = w * 0.5 - totalStepSpan * 0.5 + (idx / 3) * totalStepSpan;
       const isActive = state.prepStep === s.key || (state.prepStep === 'READY' && idx === 3);
       ctx.fillStyle = isActive ? '#D97706' : '#64748B';
-      ctx.fillText(s.label, sx, stepY);
+      ctx.fillText(isPortrait ? compactLabels[idx] : s.label, sx, stepY, isPortrait ? Math.max(48, totalStepSpan / 3) : undefined);
       if (isActive) {
-        const tw = ctx.measureText(s.label).width;
-        ctx.fillRect(sx - tw * 0.5, stepY + 11, tw, 3);
+        const tw = Math.min(ctx.measureText(isPortrait ? compactLabels[idx] : s.label).width, isPortrait ? 42 : 580);
+        ctx.fillRect(sx - tw * 0.5, stepY + (isPortrait ? 8 : 11), tw, 3);
       }
     });
 
@@ -2771,6 +2844,10 @@ function renderToppingTrays(ctx: CanvasRenderingContext2D, state: RenderState, l
     trung_cut: 'trung_cut',
     xoai: 'xoai',
     rau_ram: 'rau_ram',
+    pho_mai: 'pho_mai',
+    tran_chau: 'tran_chau',
+    sau_rieng: 'sau_rieng',
+    nuoc_cot_dua: 'nuoc_cot_dua',
   };
 
   for (const t of TOPPINGS) {
@@ -2780,9 +2857,10 @@ function renderToppingTrays(ctx: CanvasRenderingContext2D, state: RenderState, l
     const stockKey = stockKeys[t.id];
     const stock = stockKey ? state.inventory[stockKey] : null;
     const outOfStock = stock !== null && stock <= 0;
-    const cursedLocked = !state.upgrades.cursedMenu && (t.id === 'sau_rieng' || t.id === 'nuoc_cot_dua');
-    const hovered = state.hoverTrayId === t.id && !outOfStock && !cursedLocked;
-    const trayBg = cursedLocked
+    const unlockLevel = t.id === 'pho_mai' ? 2 : t.id === 'tran_chau' ? 3 : t.id === 'sau_rieng' ? 5 : t.id === 'nuoc_cot_dua' ? 6 : 1;
+    const levelLocked = state.playerLevel < unlockLevel;
+    const hovered = state.hoverTrayId === t.id && !outOfStock && !levelLocked;
+    const trayBg = levelLocked
       ? '#CBD5E1'
       : outOfStock
       ? '#E2E8F0'
@@ -2797,20 +2875,28 @@ function renderToppingTrays(ctx: CanvasRenderingContext2D, state: RenderState, l
 
     drawComicBox(ctx, drawRect, trayBg, 12, 3, 2.5);
 
-    if (drawRect.w < 112) {
+    if (drawRect.h < 32) {
+      const progressStr = need > 0 ? `${count}/${need}` : `${count}`;
+      const compactLabel = levelLocked ? `🔒 Cấp ${unlockLevel}` : `${t.shortName} ${progressStr}`;
+      ctx.font = '700 8px "Bricolage Grotesque", sans-serif';
+      ctx.fillStyle = levelLocked || outOfStock ? '#64748B' : outOfStock ? '#E11D48' : INK;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(compactLabel, drawRect.x + drawRect.w * 0.5, drawRect.y + drawRect.h * 0.5, drawRect.w - 6);
+    } else if (drawRect.w < 112) {
       // Compact Portrait Tray (fits 4-column iPhone/Android thumb grid cleanly)
       drawToppingIcon(ctx, t.id, drawRect.x + drawRect.w * 0.5, drawRect.y + 15, 0.65);
 
       ctx.font = '800 10px "Bricolage Grotesque", sans-serif';
-      ctx.fillStyle = cursedLocked || outOfStock ? '#64748B' : INK;
+      ctx.fillStyle = levelLocked || outOfStock ? '#64748B' : INK;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(t.shortName, drawRect.x + drawRect.w * 0.5, drawRect.y + drawRect.h - 20, drawRect.w - 8);
 
       ctx.font = '700 10px "JetBrains Mono", monospace';
-      if (cursedLocked) {
+      if (levelLocked) {
         ctx.fillStyle = '#7C3AED';
-        ctx.fillText('🔒 Hắc Ám', drawRect.x + drawRect.w * 0.5, drawRect.y + drawRect.h - 8, drawRect.w - 8);
+        ctx.fillText(`🔒 Cấp ${unlockLevel}`, drawRect.x + drawRect.w * 0.5, drawRect.y + drawRect.h - 8, drawRect.w - 8);
       } else {
         ctx.fillStyle = outOfStock
           ? '#E11D48'
@@ -2834,15 +2920,15 @@ function renderToppingTrays(ctx: CanvasRenderingContext2D, state: RenderState, l
       drawToppingIcon(ctx, t.id, panRect.x + panRect.w * 0.5, panRect.y + panRect.h * 0.5, 0.88);
 
       ctx.font = '800 13px "Bricolage Grotesque", sans-serif';
-      ctx.fillStyle = cursedLocked || outOfStock ? '#64748B' : INK;
+      ctx.fillStyle = levelLocked || outOfStock ? '#64748B' : INK;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
       ctx.fillText(t.name, drawRect.x + 58, drawRect.y + drawRect.h * 0.5 - 9, drawRect.w - 64);
 
       ctx.font = '700 11px "JetBrains Mono", monospace';
-      if (cursedLocked) {
+      if (levelLocked) {
         ctx.fillStyle = '#7C3AED';
-        ctx.fillText('🔒 Mua Hắc Ám', drawRect.x + 58, drawRect.y + drawRect.h * 0.5 + 10, drawRect.w - 64);
+        ctx.fillText(`🔒 Mở ở cấp ${unlockLevel}`, drawRect.x + 58, drawRect.y + drawRect.h * 0.5 + 10, drawRect.w - 64);
       } else {
         ctx.fillStyle = outOfStock
           ? '#E11D48'
@@ -2969,10 +3055,25 @@ function renderCuonStation(ctx: CanvasRenderingContext2D, state: RenderState, la
 
     if (state.prepStep === 'TOPPINGS') {
       renderToppingTrays(ctx, state, layout);
+      const hasToppings = TOPPINGS.some((t) => (state.addedToppings[t.id] || 0) > 0);
+      for (const topping of TOPPINGS) {
+        if ((state.addedToppings[topping.id] || 0) > 0) {
+          const removeRect = getToppingRemoveRect(layout, topping.id);
+          drawButton(ctx, removeRect, '−', '#FEE2E2', '#991B1B', state.hoverTrayId === topping.id);
+        }
+      }
       drawButton(
         ctx,
-        { ...layout.primaryBtn, x: w * 0.5 - layout.primaryBtn.w * 0.5 },
-        'Xong Topping · Nêm Gia Vị →',
+        getToppingUndoRect(layout),
+        hasToppings ? (layout.width < 360 ? '↶ Rút' : '↶ Hoàn tác') : (layout.width < 360 ? 'Chưa có' : 'Chưa có món'),
+        hasToppings ? '#DBEAFE' : '#E2E8F0',
+        INK,
+        hasToppings && state.hoverSecondary
+      );
+      drawButton(
+        ctx,
+        { ...layout.primaryBtn, x: layout.isCompact ? layout.primaryBtn.x : w * 0.5 - layout.primaryBtn.w * 0.5 },
+        (layout.isCompact ? 'Xong Topping →' : 'Xong Topping · Nêm Gia Vị →'),
         '#F59E0B',
         INK,
         state.hoverPrimary
@@ -3026,14 +3127,7 @@ function renderCuonStation(ctx: CanvasRenderingContext2D, state: RenderState, la
     }
   } else {
     // CUTTING step for Bánh Tráng Cuốn: FREE 2D polygon slicing (horizontal, vertical, diagonal!)
-    const bw = Math.max(layout.rollRect.w + 84, layout.boardRadius * 2.85);
-    const bh = layout.boardRadius * 2.05;
-    const boardRect: Rect = {
-      x: layout.boardCenterX - bw * 0.5,
-      y: layout.boardCenterY - bh * 0.5,
-      w: bw,
-      h: bh,
-    };
+    const boardRect = layout.cuonCutBoardRect;
     drawComicBox(ctx, boardRect, '#E6C79C', 24, 6, 3);
     ctx.strokeStyle = 'rgba(146, 64, 14, 0.16)';
     ctx.lineWidth = 2;
@@ -3100,14 +3194,23 @@ function renderTronStation(ctx: CanvasRenderingContext2D, state: RenderState, la
 
     const target = state.order?.targetSlices ?? 4;
     const count = state.slices.length;
-    ctx.font = '800 17px "Bricolage Grotesque", sans-serif';
+    const isPortrait = w < 680;
+    const instruction = isPortrait
+      ? `Vuốt trên bánh để cắt · ${count}/${target}`
+      : `Kéo chuột cắt tự do tấm bánh thành ${target} khúc (Hiện tại: ${count} khúc)`;
+    ctx.font = isPortrait
+      ? '800 10px "Bricolage Grotesque", sans-serif'
+      : '800 17px "Bricolage Grotesque", sans-serif';
     ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     ctx.fillStyle = count === target ? '#059669' : count > target ? '#E11D48' : INK;
-    ctx.fillText(
-      `Kéo chuột cắt tự do tấm bánh thành ${target} khúc (Hiện tại: ${count} khúc)`,
-      layout.boardCenterX,
-      boardRect.y - 16
-    );
+    if (isPortrait) {
+      const banner = { x: boardRect.x + 10, y: boardRect.y + 8, w: Math.max(1, boardRect.w - 20), h: 22 };
+      drawComicBox(ctx, banner, '#FFFDF5', 6, 1, 1.5);
+      ctx.fillText(instruction, layout.boardCenterX, banner.y + banner.h * 0.5, banner.w - 8);
+    } else {
+      ctx.fillText(instruction, layout.boardCenterX, boardRect.y - 16);
+    }
 
     drawButton(ctx, layout.secondaryBtn, 'Cắt Lại', '#FFFFFF', INK, state.hoverSecondary);
     drawButton(
@@ -3247,8 +3350,8 @@ function renderTronStation(ctx: CanvasRenderingContext2D, state: RenderState, la
       renderToppingTrays(ctx, state, layout);
       drawButton(
         ctx,
-        { ...layout.primaryBtn, x: w * 0.5 - layout.primaryBtn.w * 0.5 },
-        'Xong Topping · Nêm Gia Vị →',
+        { ...layout.primaryBtn, x: layout.isCompact ? layout.primaryBtn.x : w * 0.5 - layout.primaryBtn.w * 0.5 },
+        (layout.isCompact ? 'Xong Topping →' : 'Xong Topping · Nêm Gia Vị →'),
         '#F59E0B',
         INK,
         state.hoverPrimary
@@ -3289,7 +3392,7 @@ function renderTronStation(ctx: CanvasRenderingContext2D, state: RenderState, la
       } else {
         drawButton(
           ctx,
-          { ...layout.primaryBtn, x: w * 0.5 - layout.primaryBtn.w * 0.5 },
+          { ...layout.primaryBtn, x: layout.isCompact ? layout.primaryBtn.x : w * 0.5 - layout.primaryBtn.w * 0.5 },
           'Giao Hàng Ngay! (Enter)',
           '#10B981',
           '#FFFFFF',
@@ -3340,7 +3443,7 @@ function renderSeasoningPanel(
   const bothDone = state.limeMeter.locked && state.chiliMeter.locked;
   drawButton(
     ctx,
-    { ...layout.primaryBtn, x: w * 0.5 - layout.primaryBtn.w * 0.5 },
+    { ...layout.primaryBtn, x: layout.isCompact ? layout.primaryBtn.x : w * 0.5 - layout.primaryBtn.w * 0.5 },
     bothDone ? nextLabel : 'Hãy Vắt Chanh & Rưới Sa Tế',
     bothDone ? '#10B981' : '#CBD5E1',
     bothDone ? '#FFFFFF' : '#475569',
