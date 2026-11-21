@@ -209,7 +209,7 @@ export function computePrepLayout(w: number, h: number): PrepLayout {
       : Math.max(48, insets.top + 44);
   const safeBottom = Math.max(10, insets.bottom + 8);
   const counterY = isShortLandscape
-    ? safeTop + 100
+    ? safeTop + 70
     : isCompact
       ? safeTop + 148
       : Math.max(safeTop + 150, Math.min(height * 0.38, 280));
@@ -249,14 +249,14 @@ export function computePrepLayout(w: number, h: number): PrepLayout {
   const bowlRadius = isTinyPortrait
     ? Math.max(18, Math.min(36, Math.min(workH * 0.22, (width - 32) * 0.18)))
     : isShortLandscape
-      ? Math.max(24, Math.min(40, Math.min(workH * 0.22, (width - 32) * 0.18)))
+      ? Math.max(18, Math.min(32, Math.min(workH * 0.16, (width - 32) * 0.16)))
       : isCompact
         ? Math.max(42, Math.min(86, Math.min(workH * 0.2, (width - 32) * 0.22)))
         : Math.max(64, Math.min(124, Math.min(workH * 0.3, maxSceneW * 0.16)));
   const bowlCenterY = isTinyPortrait
     ? workTop + Math.min(20, workH * 0.24)
     : isShortLandscape
-      ? workTop + Math.min(40, workH * 0.18)
+      ? workTop + Math.min(24, workH * 0.15)
       : isCompact
         ? Math.min(boardTop + bowlRadius + 12, workTop + Math.min(workH * 0.25, 118))
         : workTop + workH * 0.42;
@@ -294,18 +294,18 @@ export function computePrepLayout(w: number, h: number): PrepLayout {
   if (isCompact) {
     const cols = 4;
     const gapX = 5;
-    const gapY = 6;
+    const gapY = isShortLandscape ? 4 : 6;
     const sidePad = Math.max(8, insets.left + 6);
     const trayW = Math.max(1, Math.floor((width - sidePad * 2 - gapX * (cols - 1)) / cols));
     const trayH = isTinyPortrait
       ? Math.max(16, Math.min(24, (btnY - (bowlCenterY + bowlRadius + 10) - 4) / 2))
       : isShortLandscape
-        ? Math.max(22, Math.min(30, (btnY - (bowlCenterY + bowlRadius + 14) - gapY) / 2))
+        ? Math.max(18, Math.min(30, (btnY - (bowlCenterY + bowlRadius + 14) - gapY) / 2))
         : Math.max(34, Math.min(54, (btnY - (bowlCenterY + bowlRadius + 12)) / 2.25));
     const gridStartY = isTinyPortrait
       ? Math.max(bowlCenterY + bowlRadius + 5, btnY - trayH * 2 - 4 - 4)
       : isShortLandscape
-        ? Math.max(bowlCenterY + bowlRadius + 6, btnY - trayH * 2 - gapY - 5)
+        ? Math.max(bowlCenterY + bowlRadius + 4, btnY - trayH * 2 - gapY - 3)
         : Math.max(bowlCenterY + bowlRadius + 8, btnY - trayH * 2 - gapY - 10);
     TOPPINGS.forEach((t, idx) => {
       const col = idx % cols;
