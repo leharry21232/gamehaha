@@ -228,10 +228,10 @@ export function computePrepLayout(w: number, h: number): PrepLayout {
   // buttons. The board scales down when a phone is short instead of overflowing.
   const boardTop = workTop + (isPortrait ? 10 : 24);
   const boardBottom = btnY - (isPortrait ? 14 : 24);
-  const boardSlotH = Math.max(52, boardBottom - boardTop);
+  const boardSlotH = Math.max(1, boardBottom - boardTop);
   const boardRadius = isPortrait
-    ? Math.max(30, Math.min(126, (width - 28) / 2.6, boardSlotH / 2.08))
-    : Math.max(54, Math.min(144, (boardSlotH / 2.08), maxSceneW * 0.18));
+    ? Math.max(1, Math.min(126, (width - 28) / 2.6, boardSlotH / 2.08))
+    : Math.max(1, Math.min(144, (boardSlotH / 2.08), maxSceneW * 0.18));
   const boardCenterX = width * 0.5;
   const boardCenterY = boardTop + boardSlotH * 0.5;
 
