@@ -3351,7 +3351,7 @@ function renderTronStation(ctx: CanvasRenderingContext2D, state: RenderState, la
       drawButton(
         ctx,
         { ...layout.primaryBtn, x: layout.isCompact ? layout.primaryBtn.x : w * 0.5 - layout.primaryBtn.w * 0.5 },
-        'Xong Topping · Nêm Gia Vị →',
+        (layout.isCompact ? 'Xong Topping →' : 'Xong Topping · Nêm Gia Vị →'),
         '#F59E0B',
         INK,
         state.hoverPrimary
