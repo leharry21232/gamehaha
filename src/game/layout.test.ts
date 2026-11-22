@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { computePrepLayout, getToppingUndoRect } from './layout';
+import { computePrepLayout, getMobileHubBaseHeight, getToppingUndoRect } from './layout';
 
 const phoneViewports = [
   [280, 480], [320, 568], [320, 640], [360, 740], [375, 667],
@@ -107,5 +107,57 @@ test('very short portrait phones keep two topping rows above the action buttons'
   for (const tray of Object.values(layout.trayRects)) {
     assert.ok(tray.y + tray.h <= layout.primaryBtn.y, 'tiny-phone tray does not overlap action row');
     assert.ok(tray.h >= 16, 'tiny-phone tray remains tappable');
+  }
+});
+
+
+test('mobile canvas starts below the Mobile Hub reservation on portrait and landscape', () => {
+  const cases = [
+    [280, 480, 136], [320, 480, 136], [320, 568, 170], [360, 740, 170],
+    [375, 667, 202], [390, 844, 202], [568, 320, 78], [667, 375, 78],
+    [844, 390, 78], [932, 430, 78],
+  ];
+  for (const [width, height, expectedHubBase] of cases) {
+    assert.equal(getMobileHubBaseHeight(width, height), expectedHubBase);
+    const layout = computePrepLayout(width, height);
+    assert.equal(layout.mobileHubBottom, expectedHubBase + 12);
+    assert.ok(layout.bubbleRect.y >= layout.mobileHubBottom + 4, `order card clears Mobile Hub at ${width}x${height}`);
+  }
+});
+
+test('landscape phones place the bowl and all ingredient targets side by side', () => {
+  for (const [width, height] of [[568, 320], [667, 375], [740, 360], [844, 390], [932, 430]]) {
+    const layout = computePrepLayout(width, height);
+    assert.ok(layout.bowlCenterX + layout.bowlRadius < Math.min(...Object.values(layout.trayRects).map((r) => r.x)));
+    for (const tray of Object.values(layout.trayRects)) {
+      assert.ok(tray.x >= 0 && tray.x + tray.w <= width);
+      assert.ok(tray.y >= layout.counterY);
+      assert.ok(tray.y + tray.h <= layout.primaryBtn.y - 8);
+      assert.ok(tray.h >= 24, `landscape ingredient target remains touchable at ${width}x${height}`);
+      assert.ok(tray.w >= 40, `landscape ingredient target remains wide enough at ${width}x${height}`);
+    }
+  }
+});
+
+test('compact portrait seasoning controls and topping trays clear the action row', () => {
+  for (const [width, height] of [[280, 480], [320, 568], [360, 740], [375, 667], [390, 844], [414, 896]]) {
+    const layout = computePrepLayout(width, height);
+    for (const rect of [layout.limeHoldRect, layout.chiliHoldRect, layout.limeBarRect, layout.chiliBarRect]) {
+      assert.ok(rect.x >= 0 && rect.x + rect.w <= width, `seasoning control stays within ${width}px`);
+    }
+    assert.ok(layout.chiliHoldRect.y + layout.chiliHoldRect.h <= layout.primaryBtn.y, `second seasoning hold target clears continue button at ${width}x${height}`);
+    for (const tray of Object.values(layout.trayRects)) {
+      assert.ok(tray.y + tray.h <= layout.primaryBtn.y, `portrait topping tray clears continue button at ${width}x${height}`);
+      assert.ok(tray.h >= 28, `portrait topping target remains touchable at ${width}x${height}`);
+    }
+  }
+});
+
+test('short landscape seasoning controls do not cover the action row', () => {
+  for (const [width, height] of [[568, 320], [667, 375], [740, 360], [844, 390]]) {
+    const layout = computePrepLayout(width, height);
+    assert.ok(layout.chiliHoldRect.y + layout.chiliHoldRect.h <= layout.primaryBtn.y);
+    assert.ok(layout.limeBarRect.x + layout.limeBarRect.w <= width);
+    assert.ok(layout.chiliBarRect.x + layout.chiliBarRect.w <= width);
   }
 });

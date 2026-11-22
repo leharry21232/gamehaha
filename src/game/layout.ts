@@ -10,6 +10,7 @@ export interface Rect {
 
 export interface PrepLayout {
   width: number;
+  mobileHubBottom: number;
   isCompact: boolean;
   height: number;
   counterY: number;
@@ -195,21 +196,29 @@ export function getQteArrowRects(w: number, h: number): Rect[] {
   }));
 }
 
+export function getMobileHubBaseHeight(w: number, h: number): number {
+  const width = Math.max(1, w);
+  const height = Math.max(1, h);
+  if (height < width && height <= 520) return 78;
+  if (width <= 320 && height <= 500) return 136;
+  if (width <= 360 || height <= 600) return 170;
+  return 202;
+}
+
 export function computePrepLayout(w: number, h: number): PrepLayout {
   const insets = readSafeAreaInsets();
   const width = Math.max(1, w);
   const height = Math.max(1, h);
   const isShortLandscape = height < width && height <= 520;
-  const isTinyPortrait = width < 360 && height < 560 && !isShortLandscape;
+  const isTinyPortrait = width <= 320 && height <= 500 && !isShortLandscape;
   const isCompact = width < 680 || isShortLandscape;
-  const safeTop = isShortLandscape
-    ? Math.max(92, insets.top + 80)
-    : isCompact
-      ? Math.max(width <= 360 ? 168 : 152, insets.top + 144)
-      : Math.max(48, insets.top + 44);
+  const mobileHubBottom = isCompact
+    ? getMobileHubBaseHeight(width, height) + Math.max(8, insets.top) + 4
+    : 0;
+  const safeTop = isCompact ? mobileHubBottom : Math.max(48, insets.top + 44);
   const safeBottom = Math.max(10, insets.bottom + 8);
   const counterY = isShortLandscape
-    ? safeTop + 70
+    ? safeTop + 90
     : isCompact
       ? safeTop + 148
       : Math.max(safeTop + 150, Math.min(height * 0.38, 280));
@@ -245,24 +254,28 @@ export function computePrepLayout(w: number, h: number): PrepLayout {
   const boardCenterX = width * 0.5;
   const boardCenterY = boardTop + boardSlotH * 0.5;
 
-  const bowlCenterX = width * 0.5;
+  const bowlCenterX = isShortLandscape ? Math.min(150, width * 0.22) : width * 0.5;
   const bowlRadius = isTinyPortrait
-    ? Math.max(18, Math.min(36, Math.min(workH * 0.22, (width - 32) * 0.18)))
+    ? Math.max(18, Math.min(32, Math.min(workH * 0.2, (width - 32) * 0.16)))
     : isShortLandscape
-      ? Math.max(18, Math.min(32, Math.min(workH * 0.16, (width - 32) * 0.16)))
+      ? Math.max(18, Math.min(32, Math.min(workH * 0.22, (width - 32) * 0.16)))
       : isCompact
         ? Math.max(42, Math.min(86, Math.min(workH * 0.2, (width - 32) * 0.22)))
         : Math.max(64, Math.min(124, Math.min(workH * 0.3, maxSceneW * 0.16)));
   const bowlCenterY = isTinyPortrait
-    ? workTop + Math.min(20, workH * 0.24)
+    ? workTop + Math.min(14, workH * 0.12)
     : isShortLandscape
-      ? workTop + Math.min(24, workH * 0.15)
+      ? workTop + workH * 0.5
       : isCompact
         ? Math.min(boardTop + bowlRadius + 12, workTop + Math.min(workH * 0.25, 118))
         : workTop + workH * 0.42;
 
-  const matW = isCompact ? Math.max(1, Math.min(width - 24, 260)) : Math.min(320, bowlRadius * 2.55);
-  const matH = isCompact ? Math.min(132, workH * 0.28) : Math.min(230, workH * 0.56);
+  const matW = isShortLandscape
+    ? Math.min(170, Math.max(120, bowlRadius * 3.4))
+    : isCompact ? Math.max(1, Math.min(width - 24, 260)) : Math.min(320, bowlRadius * 2.55);
+  const matH = isShortLandscape
+    ? Math.min(120, Math.max(56, workH * 0.82))
+    : isCompact ? Math.min(132, workH * 0.28) : Math.min(230, workH * 0.56);
   const matRect: Rect = {
     x: bowlCenterX - matW * 0.5,
     y: bowlCenterY - matH * 0.5,
@@ -291,22 +304,38 @@ export function computePrepLayout(w: number, h: number): PrepLayout {
   };
 
   const trayRects = {} as Record<ToppingId, Rect>;
-  if (isCompact) {
+  if (isShortLandscape) {
+    // Landscape phones use a side-by-side prep area: bowl on the left, ingredients on the right.
     const cols = 4;
     const gapX = 5;
-    const gapY = isShortLandscape ? 4 : 6;
+    const gapY = 4;
+    const sidePad = Math.max(bowlCenterX + bowlRadius + 14, matRect.x + matRect.w + 10, insets.left + 8);
+    const rightPad = Math.max(8, insets.right + 6);
+    const trayW = Math.max(1, Math.floor((width - sidePad - rightPad - gapX * (cols - 1)) / cols));
+    const trayStartY = workTop + 2;
+    const trayH = Math.max(24, Math.min(36, (btnY - trayStartY - gapY - 8) / 2));
+    TOPPINGS.forEach((t, idx) => {
+      const col = idx % cols;
+      const row = Math.floor(idx / cols);
+      trayRects[t.id] = {
+        x: sidePad + col * (trayW + gapX),
+        y: trayStartY + row * (trayH + gapY),
+        w: trayW,
+        h: trayH,
+      };
+    });
+  } else if (isCompact) {
+    const cols = 4;
+    const gapX = 5;
+    const gapY = isTinyPortrait ? 4 : 6;
     const sidePad = Math.max(8, insets.left + 6);
     const trayW = Math.max(1, Math.floor((width - sidePad * 2 - gapX * (cols - 1)) / cols));
     const trayH = isTinyPortrait
-      ? Math.max(16, Math.min(24, (btnY - (bowlCenterY + bowlRadius + 10) - 4) / 2))
-      : isShortLandscape
-        ? Math.max(18, Math.min(30, (btnY - (bowlCenterY + bowlRadius + 14) - gapY) / 2))
-        : Math.max(34, Math.min(54, (btnY - (bowlCenterY + bowlRadius + 12)) / 2.25));
+      ? Math.max(28, Math.min(34, (btnY - (bowlCenterY + bowlRadius + 2) - 6) / 2))
+      : Math.max(34, Math.min(54, (btnY - (bowlCenterY + bowlRadius + 12)) / 2.25));
     const gridStartY = isTinyPortrait
-      ? Math.max(bowlCenterY + bowlRadius + 5, btnY - trayH * 2 - 4 - 4)
-      : isShortLandscape
-        ? Math.max(bowlCenterY + bowlRadius + 4, btnY - trayH * 2 - gapY - 3)
-        : Math.max(bowlCenterY + bowlRadius + 8, btnY - trayH * 2 - gapY - 10);
+      ? Math.max(bowlCenterY + bowlRadius + 2, btnY - trayH * 2 - gapY - 4)
+      : Math.max(bowlCenterY + bowlRadius + 8, btnY - trayH * 2 - gapY - 10);
     TOPPINGS.forEach((t, idx) => {
       const col = idx % cols;
       const row = Math.floor(idx / cols);
@@ -360,14 +389,15 @@ export function computePrepLayout(w: number, h: number): PrepLayout {
   const limeHoldW = isCompact ? Math.min(122, Math.floor(width * 0.33)) : 144;
   const gapHold = isCompact ? 8 : 18;
   const barW = isCompact ? Math.max(1, width - limeHoldW - gapHold - 24) : Math.min(340, maxSceneW * 0.48);
-  const barH = 26;
-  const holdH = isCompact ? 48 : 58;
-  const seasonStartY = isCompact ? workTop + 24 : bowlCenterY - 56;
+  const barH = isTinyPortrait || isShortLandscape ? 18 : 26;
+  const holdH = isTinyPortrait || isShortLandscape ? 34 : isCompact ? 48 : 58;
+  const seasonGap = isTinyPortrait || isShortLandscape ? 6 : 16;
+  const seasonStartY = isTinyPortrait || isShortLandscape ? workTop + 6 : isCompact ? workTop + 24 : bowlCenterY - 56;
   const seasonLeftX = width * 0.5 - (limeHoldW + gapHold + barW) * 0.5;
   const limeHoldRect: Rect = { x: seasonLeftX, y: seasonStartY, w: limeHoldW, h: holdH };
   const limeBarRect: Rect = { x: seasonLeftX + limeHoldW + gapHold, y: seasonStartY + (holdH - barH) * 0.5, w: barW, h: barH };
-  const chiliHoldRect: Rect = { x: seasonLeftX, y: seasonStartY + holdH + 16, w: limeHoldW, h: holdH };
-  const chiliBarRect: Rect = { x: seasonLeftX + limeHoldW + gapHold, y: seasonStartY + holdH + 16 + (holdH - barH) * 0.5, w: barW, h: barH };
+  const chiliHoldRect: Rect = { x: seasonLeftX, y: seasonStartY + holdH + seasonGap, w: limeHoldW, h: holdH };
+  const chiliBarRect: Rect = { x: seasonLeftX + limeHoldW + gapHold, y: seasonStartY + holdH + seasonGap + (holdH - barH) * 0.5, w: barW, h: barH };
 
   const shakeBtnW = isCompact ? Math.max(1, Math.min(264, width - 24)) : 276;
   const shakeBtn: Rect = { x: (width - shakeBtnW) * 0.5, y: btnY - 58, w: shakeBtnW, h: 48 };
@@ -377,6 +407,7 @@ export function computePrepLayout(w: number, h: number): PrepLayout {
   return {
     width,
     height,
+    mobileHubBottom,
     isCompact,
     counterY,
     customerX,

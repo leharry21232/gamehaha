@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 @layer base {
-  :root {
+   :root {
+    --mobile-game-hub-base-height: 202px;
     --font-display: "Bricolage Grotesque", system-ui, sans-serif;
     --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
     --font-mono: "JetBrains Mono", monospace;
@@ -167,7 +168,9 @@
 .mobile-game-hub {
   display: none;
 }
-.mobile-game-hub__card {
+ .mobile-game-hub__card {
+  box-sizing: border-box;
+  min-height: calc(var(--mobile-game-hub-base-height) + max(8px, var(--sat)));
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -352,4 +355,34 @@
   .mobile-game-hub__actions { gap: 3px; }
   .mobile-hub-action { min-height: 30px; padding: 2px; font-size: 8px; }
   .mobile-hub-icon-button { width: 28px; height: 28px; }
+}
+
+
+/* Canvas and HTML Mobile Hub share the same vertical reservation at each breakpoint. */
+@media (max-width: 360px), (orientation: portrait) and (max-height: 600px) {
+  :root { --mobile-game-hub-base-height: 170px; }
+  .mobile-game-hub__mission,
+  .mobile-game-hub__condition { display: none; }
+}
+@media (max-width: 360px) {
+  .mobile-game-hub__actions { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; }
+  .mobile-hub-action { min-height: 32px; gap: 2px; padding: 3px 2px; font-size: 7px; }
+  .mobile-hub-action svg { width: 11px; height: 11px; }
+}
+@media (max-width: 320px) and (orientation: portrait) and (max-height: 500px) {
+  :root { --mobile-game-hub-base-height: 136px; }
+  .mobile-game-hub__actions { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 2px; }
+  .mobile-hub-action { min-height: 28px; gap: 1px; padding: 2px 1px; font-size: 6.5px; }
+  .mobile-hub-action svg { width: 9px; height: 9px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  :root { --mobile-game-hub-base-height: 78px; }
+  .mobile-game-hub__level,
+  .mobile-game-hub__stats,
+  .mobile-game-hub__mission,
+  .mobile-game-hub__condition { display: none; }
+  .mobile-game-hub__topline { min-height: 31px; justify-content: flex-end; }
+  .mobile-game-hub__utility { width: 100%; justify-content: flex-end; }
+  .mobile-game-hub__actions { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 3px; }
+  .mobile-hub-action { min-height: 30px; padding: 2px; font-size: 8px; }
 }

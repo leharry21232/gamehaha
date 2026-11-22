@@ -1750,7 +1750,7 @@ function renderCookingPhase(
             { key: 'SHAKING', label: '4. Lắc & Giao' },
           ];
 
-    const isPortrait = w < 680;
+    const isPortrait = layout.isCompact;
     ctx.font = isPortrait
       ? '800 9px "Plus Jakarta Sans", sans-serif'
       : '700 14px "Plus Jakarta Sans", sans-serif';
@@ -2875,14 +2875,21 @@ function renderToppingTrays(ctx: CanvasRenderingContext2D, state: RenderState, l
 
     drawComicBox(ctx, drawRect, trayBg, 12, 3, 2.5);
 
-    if (drawRect.h < 32) {
+    if (drawRect.h < 44) {
+      // Short landscape and tiny portrait: icon on the left, two concise text rows on the right.
+      const iconX = drawRect.x + Math.min(14, drawRect.w * 0.23);
+      const textX = drawRect.x + Math.min(27, drawRect.w * 0.42);
+      drawToppingIcon(ctx, t.id, iconX, drawRect.y + drawRect.h * 0.5, 0.42);
       const progressStr = need > 0 ? `${count}/${need}` : `${count}`;
-      const compactLabel = levelLocked ? `🔒 Cấp ${unlockLevel}` : `${t.shortName} ${progressStr}`;
-      ctx.font = '700 8px "Bricolage Grotesque", sans-serif';
-      ctx.fillStyle = levelLocked || outOfStock ? '#64748B' : outOfStock ? '#E11D48' : INK;
-      ctx.textAlign = 'center';
+      ctx.font = '800 8px "Bricolage Grotesque", sans-serif';
+      ctx.fillStyle = levelLocked || outOfStock ? '#64748B' : INK;
+      ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(compactLabel, drawRect.x + drawRect.w * 0.5, drawRect.y + drawRect.h * 0.5, drawRect.w - 6);
+      ctx.fillText(levelLocked ? `Lv ${unlockLevel}` : t.shortName, textX, drawRect.y + drawRect.h * 0.5 - 5, Math.max(8, drawRect.x + drawRect.w - textX - 3));
+      ctx.font = '700 7px "JetBrains Mono", monospace';
+      ctx.fillStyle = outOfStock ? '#E11D48' : count > need ? '#E11D48' : need > 0 && count === need ? '#059669' : '#64748B';
+      const stockText = levelLocked ? 'KHOÁ' : `${progressStr}${stock !== null ? ` · ${stock}` : ''}`;
+      ctx.fillText(stockText, textX, drawRect.y + drawRect.h * 0.5 + 6, Math.max(8, drawRect.x + drawRect.w - textX - 3));
     } else if (drawRect.w < 112) {
       // Compact Portrait Tray (fits 4-column iPhone/Android thumb grid cleanly)
       drawToppingIcon(ctx, t.id, drawRect.x + drawRect.w * 0.5, drawRect.y + 15, 0.65);
@@ -3194,7 +3201,7 @@ function renderTronStation(ctx: CanvasRenderingContext2D, state: RenderState, la
 
     const target = state.order?.targetSlices ?? 4;
     const count = state.slices.length;
-    const isPortrait = w < 680;
+    const isPortrait = layout.isCompact;
     const instruction = isPortrait
       ? `Vuốt trên bánh để cắt · ${count}/${target}`
       : `Kéo chuột cắt tự do tấm bánh thành ${target} khúc (Hiện tại: ${count} khúc)`;
@@ -3410,12 +3417,16 @@ function renderSeasoningPanel(
   nextLabel: string
 ): void {
   const { width: w } = state;
-  const panelW = layout.limeBarRect.x + layout.limeBarRect.w - layout.limeHoldRect.x + 36;
-  const panelH = 192;
+  const panelX = layout.isCompact ? Math.max(8, layout.limeHoldRect.x - 8) : layout.limeHoldRect.x - 18;
+  const panelRight = layout.isCompact ? Math.min(w - 8, layout.limeBarRect.x + layout.limeBarRect.w + 8) : layout.limeBarRect.x + layout.limeBarRect.w + 18;
+  const panelY = layout.isCompact ? layout.limeHoldRect.y - 8 : layout.limeHoldRect.y - 26;
+  const panelH = layout.isCompact
+    ? layout.chiliHoldRect.y + layout.chiliHoldRect.h - panelY + 2
+    : 192;
   const panelRect: Rect = {
-    x: layout.limeHoldRect.x - 18,
-    y: layout.limeHoldRect.y - 26,
-    w: panelW,
+    x: panelX,
+    y: panelY,
+    w: Math.max(1, panelRight - panelX),
     h: panelH,
   };
   drawComicBox(ctx, panelRect, 'rgba(255, 255, 255, 0.96)', 16, 4, 3);
