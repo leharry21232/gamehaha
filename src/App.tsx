@@ -1282,6 +1282,54 @@ export default function App() {
             @keyframes walkWest { from { transform: translateX(34vw); } to { transform: translateX(-26vw); } }
             @keyframes trafficEast { from { transform: translateX(-180px); } to { transform: translateX(calc(100vw + 180px)); } }
             @keyframes trafficWest { from { transform: translateX(calc(100vw + 180px)); } to { transform: translateX(-180px); } }
+            .world-mobile-dock { display:none; }
+            @media (max-width: 640px) {
+              .world-mobile-dock { position:absolute; z-index:35; display:flex; flex-direction:column; gap:9px; left:max(9px,env(safe-area-inset-left)); right:max(9px,env(safe-area-inset-right)); bottom:max(9px,env(safe-area-inset-bottom)); padding:9px; border:2px solid #171f20; border-radius:17px; background:linear-gradient(180deg,rgba(38,59,59,.97),rgba(22,39,40,.98)); box-shadow:0 5px 0 #172126; font-family:var(--font-mono); }
+              .world-mobile-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
+              .world-mobile-tab { min-width:0; min-height:48px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; border:1.5px solid #91a28e; border-radius:10px; background:#405653; color:#fff2d1; box-shadow:0 2px 0 #111; }
+              .world-mobile-tab span { font-size:19px; line-height:1; }
+              .world-mobile-tab b { font:900 9px/1 var(--font-display); white-space:nowrap; }
+              .world-mobile-tab.is-active { border-color:#f6cf70; background:#a56e35; color:#fff4ce; box-shadow:inset 0 0 0 1px #f6cf70,0 2px 0 #111; }
+              .world-mobile-controls { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.12fr); align-items:center; gap:12px; }
+              .world-mobile-dpad { width:min(100%,174px); display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(2,38px); gap:4px; justify-self:center; }
+              .world-mobile-dpad button { display:grid; place-items:center; border:2px solid #9cae91; border-radius:9px; background:#526c61; color:#fff4d6; font:900 22px/1 var(--font-display); box-shadow:0 3px 0 #111; touch-action:none; user-select:none; }
+              .world-mobile-dpad button:nth-child(1) { grid-column:2; grid-row:1; }
+              .world-mobile-dpad button:nth-child(2) { grid-column:1; grid-row:2; }
+              .world-mobile-dpad button:nth-child(3) { grid-column:2; grid-row:2; }
+              .world-mobile-dpad button:nth-child(4) { grid-column:3; grid-row:2; }
+              .world-mobile-dpad button:active { background:#9b7548; transform:translateY(2px); box-shadow:0 1px 0 #111; }
+              .world-mobile-actions { display:flex; min-width:0; flex-direction:column; gap:5px; }
+              .world-mobile-interact { min-height:66px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:5px; border:3px solid #543a25; border-radius:11px; background:linear-gradient(180deg,#ffdc80,#e9ad42); color:#392819; box-shadow:0 4px 0 #111; text-align:center; }
+              .world-mobile-interact span { font:900 17px/1 var(--font-display); }
+              .world-mobile-interact b { max-width:100%; overflow:hidden; font:900 9px/1.15 var(--font-display); text-overflow:ellipsis; }
+              .world-mobile-visitor { border:2px solid #6b5430; border-radius:8px; background:#f6dfa0; color:#392819; padding:5px; font:900 9px var(--font-display); }
+              .world-mobile-actions p { min-height:20px; margin:0; overflow:hidden; color:#dbe5df; font:700 8px/1.2 var(--font-display); text-align:center; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+              .world-desktop-controls { display:none !important; }
+              .world-status-card { top:max(8px,env(safe-area-inset-top)); width:calc(50% - 14px); }
+              .world-daypart-card { top:max(8px,env(safe-area-inset-top)); }
+              .world-info-panel { top:max(76px,calc(env(safe-area-inset-top) + 68px)); bottom:calc(188px + env(safe-area-inset-bottom)); max-height:calc(100dvh - 270px); }
+            }
+            @media (max-width: 360px) and (orientation: portrait) {
+              .world-mobile-dock { gap:7px; padding:7px; }
+              .world-mobile-tab { min-height:43px; }
+              .world-mobile-tab span { font-size:17px; }
+              .world-mobile-tab b { font-size:8px; }
+              .world-mobile-controls { gap:7px; }
+              .world-mobile-dpad { grid-template-rows:repeat(2,34px); }
+              .world-mobile-interact { min-height:60px; }
+            }
+            @media (max-height: 620px) and (orientation: landscape) {
+              .world-mobile-dock { left:auto; right:max(8px,env(safe-area-inset-right)); bottom:max(8px,env(safe-area-inset-bottom)); width:min(47vw,390px); gap:5px; padding:6px; }
+              .world-mobile-tabs { gap:4px; }
+              .world-mobile-tab { min-height:37px; }
+              .world-mobile-tab span { font-size:15px; }
+              .world-mobile-tab b { font-size:7px; }
+              .world-mobile-controls { grid-template-columns:1fr 1fr; gap:6px; }
+              .world-mobile-dpad { grid-template-rows:repeat(2,29px); }
+              .world-mobile-interact { min-height:54px; }
+              .world-mobile-actions p { font-size:7px; }
+              .world-info-panel { left:8px; top:max(64px,calc(env(safe-area-inset-top) + 56px)); bottom:8px; width:min(50vw,520px); max-height:calc(100dvh - 80px); }
+            }
             @media (max-width: 640px) {
               .world-status-card { left: max(8px, env(safe-area-inset-left)); top: max(8px, env(safe-area-inset-top)); width: calc(50% - 14px); padding: 7px 8px; border-width: 2px; box-shadow: 2px 2px 0 #172126; }
               .world-status-card .world-status-detail { font-size: 8px; line-height: 1.2; }
@@ -1666,7 +1714,26 @@ export default function App() {
             </div>
           )}
           {worldHudOpen ? (
-          <div className="world-controls-panel absolute bottom-3 left-1/2 z-30 w-[min(94%,620px)] border-[4px] border-[#35291f] bg-[#263b3b]/[.97] p-3 pt-5 font-mono shadow-[6px_6px_0_#172126]">
+          <div className="world-mobile-dock" aria-label="Điều khiển bản đồ trên điện thoại">
+            <div className="world-mobile-tabs">
+              {([{id:'MAP',icon:'🗺️',label:'Bản đồ'},{id:'BAG',icon:'🎒',label:'Túi đồ'},{id:'JOURNAL',icon:'📖',label:'Nhiệm vụ'},{id:'PHONE',icon:'📱',label:'Điện thoại'}] as const).map((item) => (
+                <button key={item.id} type="button" onClick={() => setWorldPanel((current) => current === item.id ? null : item.id)} aria-pressed={worldPanel === item.id} className={worldPanel === item.id ? 'world-mobile-tab is-active' : 'world-mobile-tab'}><span>{item.icon}</span><b>{item.label}</b></button>
+              ))}
+            </div>
+            <div className="world-mobile-controls">
+              <div className="world-mobile-dpad" aria-label="Di chuyển nhân vật">
+                {([{direction:'up',label:'Đi lên',symbol:'↑'},{direction:'left',label:'Đi trái',symbol:'←'},{direction:'down',label:'Đi xuống',symbol:'↓'},{direction:'right',label:'Đi phải',symbol:'→'}] as const).map((item) => (
+                  <button key={item.direction} type="button" onPointerDown={(event) => { event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); startWorldTouchMove(item.direction); }} onPointerUp={() => stopWorldTouchMove(item.direction)} onPointerCancel={() => stopWorldTouchMove(item.direction)} onLostPointerCapture={() => stopWorldTouchMove(item.direction)} aria-label={item.label}>{item.symbol}</button>
+                ))}
+              </div>
+              <div className="world-mobile-actions">
+                {nearbyWorldLocation?.id === 'cart' && !cartVisitorEventSeen && <button type="button" className="world-mobile-visitor" onClick={() => { setCartVisitorEventSeen(true); setWorldNotice(CURIOUS_CART_VISITOR_EVENT.dialogue); setWorldPanel(null); }}>💬 Khách tò mò</button>}
+                <button type="button" className="world-mobile-interact" onClick={handleWorldInteract}><span>Ⓔ</span><b>{nearbyWorldLocation ? nearbyWorldLocation.name : 'TƯƠNG TÁC'}</b></button>
+                <p>{worldNotice || (nearbyWorldLocation ? 'Đang ở gần địa điểm · Chạm E để tương tác' : 'Giữ phím mũi tên để di chuyển')}</p>
+              </div>
+            </div>
+          </div>
+          <div className="world-controls-panel world-desktop-controls absolute bottom-3 left-1/2 z-30 w-[min(94%,620px)] border-[4px] border-[#35291f] bg-[#263b3b]/[.97] p-3 pt-5 font-mono shadow-[6px_6px_0_#172126]">
             <button type="button" onClick={() => { setWorldHudOpen(false); setWorldPanel(null); }} aria-label="Ẩn bảng điều khiển" title="Ẩn bảng điều khiển" className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center border-2 border-[#5b2d25] bg-[#b95343] text-lg font-black leading-none text-white shadow-[2px_2px_0_#111] hover:bg-[#d46654]">×</button>
             <div className="world-tab-row mb-2 flex flex-wrap items-center justify-center gap-2">
               {([{id:'MAP',icon:'🗺️',label:'Bản đồ'},{id:'BAG',icon:'🎒',label:'Túi đồ'},{id:'JOURNAL',icon:'📖',label:'Nhiệm vụ'},{id:'PHONE',icon:'📱',label:'Điện thoại'}] as const).map((item) => (
