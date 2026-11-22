@@ -1289,20 +1289,122 @@ export default function App() {
               .world-daypart-card .world-event-description, .world-daypart-card .world-event-traffic { display: none; }
               .world-daypart-card > div { align-items: flex-start; flex-wrap: wrap; gap: 3px; }
               .world-daypart-card p { font-size: 9px; line-height: 1.2; }
-              .world-controls-panel { left: 8px; bottom: max(8px, env(safe-area-inset-bottom)); width: calc(100% - 16px); max-height: 42dvh; overflow-y: auto; padding: 9px 8px calc(9px + env(safe-area-inset-bottom)); border-width: 3px; box-shadow: 3px 3px 0 #172126; transform: none; translate: none; }
-              .world-tab-row { gap: 5px; margin-bottom: 6px; }
-              .world-tab-button { min-width: 0; padding: 4px 2px; border-width: 2px; font-size: 9px; line-height: 1.15; }
-              .world-tab-button span:first-child { font-size: 16px; line-height: 1.1; }
-              .world-hint { font-size: 10px; line-height: 1.25; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-              .world-dpad { gap: 8px; }
-              .world-dpad-button { width: 44px; height: 42px; padding: 0; touch-action: none; user-select: none; }
-              .world-action-row button { min-height: 38px; flex: 1 1 auto; padding: 7px 9px; font-size: 9px; }
-              .world-info-panel { top: max(72px, calc(env(safe-area-inset-top) + 64px)); bottom: calc(42dvh + 16px + env(safe-area-inset-bottom)); left: 10px; width: calc(100% - 20px); max-height: calc(100dvh - 160px); padding: 10px; transform: none; translate: none; }
+
+              .world-controls-panel {
+                left: max(8px, env(safe-area-inset-left));
+                right: max(8px, env(safe-area-inset-right));
+                bottom: max(8px, env(safe-area-inset-bottom));
+                width: auto;
+                max-height: none;
+                overflow: visible;
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
+                border-width: 2px;
+                border-radius: 12px;
+                box-shadow: 3px 3px 0 #172126;
+                transform: none;
+                translate: none;
+              }
+              .world-tab-row {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 5px;
+                margin: 0;
+              }
+              .world-tab-button {
+                min-width: 0;
+                min-height: 43px;
+                padding: 4px 2px;
+                border-width: 2px;
+                font-size: 9px;
+                line-height: 1.1;
+              }
+              .world-tab-button span:first-child { font-size: 17px; line-height: 1; }
+              .world-hint {
+                min-width: 0;
+                margin: 0;
+                overflow: hidden;
+                color: #dbe5df;
+                font-size: 9px;
+                line-height: 1.15;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+              }
+              .world-quest-reminders { display: none; }
+              .world-control-deck {
+                display: grid;
+                grid-template-columns: minmax(0, 1.08fr) minmax(108px, .92fr);
+                gap: 7px;
+                align-items: stretch;
+                margin: 0;
+              }
+              .world-dpad {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 4px;
+                margin: 0;
+              }
+              .world-dpad-button {
+                width: auto;
+                height: 44px;
+                padding: 0;
+                border-width: 2px;
+                font-size: 21px;
+                line-height: 1;
+                touch-action: none;
+                user-select: none;
+              }
+              .world-action-row {
+                display: flex;
+                min-width: 0;
+                flex-direction: column;
+                align-items: stretch;
+                justify-content: stretch;
+                gap: 4px;
+                margin: 0;
+              }
+              .world-action-row button {
+                min-width: 0;
+                min-height: 44px;
+                flex: 1 1 auto;
+                padding: 6px 5px;
+                font-size: 9px;
+                line-height: 1.1;
+              }
+              .world-guide-button { display: none !important; }
+              .world-info-panel {
+                top: max(72px, calc(env(safe-area-inset-top) + 64px));
+                bottom: calc(148px + env(safe-area-inset-bottom));
+                left: 10px;
+                width: calc(100% - 20px);
+                max-height: calc(100dvh - 220px);
+                padding: 10px;
+                transform: none;
+                translate: none;
+              }
             }
             @media (max-height: 620px) and (orientation: landscape) {
               .world-status-card { top: max(6px, env(safe-area-inset-top)); }
               .world-daypart-card { top: max(6px, env(safe-area-inset-top)); }
-              .world-controls-panel { left: auto; right: max(8px, env(safe-area-inset-right)); bottom: max(8px, env(safe-area-inset-bottom)); width: min(46vw, 420px); max-height: calc(100dvh - 16px); transform: none; translate: none; }
+              .world-controls-panel {
+                left: auto;
+                right: max(8px, env(safe-area-inset-right));
+                bottom: max(8px, env(safe-area-inset-bottom));
+                width: min(44vw, 390px);
+                max-height: calc(100dvh - 16px);
+                overflow-y: auto;
+                padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
+                transform: none;
+                translate: none;
+              }
+              .world-tab-row { gap: 4px; }
+              .world-tab-button { min-height: 38px; padding: 3px 1px; font-size: 8px; }
+              .world-control-deck { grid-template-columns: 1fr; gap: 5px; }
+              .world-dpad-button { height: 36px; font-size: 18px; }
+              .world-action-row { display: grid; grid-template-columns: minmax(0, 1fr); }
+              .world-action-row button { min-height: 38px; }
               .world-info-panel { left: 8px; top: max(64px, calc(env(safe-area-inset-top) + 56px)); bottom: 8px; width: min(50vw, 520px); max-height: calc(100dvh - 80px); transform: none; translate: none; }
             }
           `}</style>
@@ -1566,12 +1668,15 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <p className="world-hint text-center text-xs leading-relaxed text-slate-200">{worldNotice || (nearbyWorldLocation ? 'Đang ở gần: ' + nearbyWorldLocation.name + ' · Nhấn E để tương tác' : 'Dùng WASD / phím mũi tên để đi trên vỉa hè · Đến gần các địa điểm rồi nhấn E')}</p>
+            <p className="world-hint text-center text-xs leading-relaxed text-slate-200">{worldNotice || (nearbyWorldLocation ? 'ĐANG GẦN: ' + nearbyWorldLocation.name + ' · NHẤN E ĐỂ TƯƠNG TÁC' : 'GIỮ MŨI TÊN ĐỂ DI CHUYỂN · ĐẾN GẦN ĐỊA ĐIỂM RỒI NHẤN E')}</p>
+            <div className="world-quest-reminders">
             {neighborhoodHelpQuestStatus === 'ACCEPTED' && <p className="mt-1 text-center text-[10px] font-black text-amber-200">📌 NHIỆM VỤ PHỤ: {NEIGHBORHOOD_HELP_QUEST.objective}</p>}
             {neighborhoodHelpQuestStatus === 'COMPLETED' && <p className="mt-1 text-center text-[10px] font-black text-emerald-200">✓ ĐÃ HOÀN THÀNH: {NEIGHBORHOOD_HELP_QUEST.title}</p>}
             {neighborhoodParcelQuestStatus === 'ACCEPTED' && <p className="mt-1 text-center text-[10px] font-black text-amber-200">📌 NHIỆM VỤ PHỤ: {NEIGHBORHOOD_PARCEL_QUEST.objective}</p>}
             {neighborhoodParcelQuestStatus === 'COMPLETED' && <p className="mt-1 text-center text-[10px] font-black text-emerald-200">✓ ĐÃ HOÀN THÀNH: {NEIGHBORHOOD_PARCEL_QUEST.title}</p>}
-            <div className="world-dpad mt-2 flex items-center justify-center gap-2">
+            </div>
+            <div className="world-control-deck mt-2">
+            <div className="world-dpad flex items-center justify-center gap-2">
               {([
                 { direction: 'up', label: 'Đi lên', symbol: '↑' },
                 { direction: 'left', label: 'Đi trái', symbol: '←' },
@@ -1590,10 +1695,11 @@ export default function App() {
                 >{item.symbol}</button>
               ))}
             </div>
-            <div className="world-action-row mt-2 flex flex-wrap items-center justify-center gap-2">
-              {nearbyWorldLocation?.id === 'cart' && !cartVisitorEventSeen && <button type="button" onClick={() => { setCartVisitorEventSeen(true); setWorldNotice(CURIOUS_CART_VISITOR_EVENT.dialogue); setWorldPanel(null); }} className="max-w-full border-[3px] border-[#6b5430] bg-[#f6dfa0] px-3 py-2 font-mono text-[10px] font-black text-[#392819] shadow-[3px_3px_0_#111] hover:bg-[#ffe9b2]">💬 KHÁCH TÒ MÒ</button>}
-              <button type="button" onClick={handleWorldInteract} className="max-w-full whitespace-normal break-words border-[3px] border-[#543a25] bg-[#f1c65e] px-4 py-2 text-center font-mono text-xs font-black text-[#392819] shadow-[4px_4px_0_#111] hover:bg-[#ffda79]">E · {nearbyWorldLocation ? nearbyWorldLocation.name.toUpperCase() : 'TƯƠNG TÁC'}</button>
-              <button type="button" onClick={() => { setWorldPanel((current) => current === 'MAP' ? null : 'MAP'); setWorldNotice('Bạn đang ở khu phố bán bánh tráng. Hãy đi dọc vỉa hè, gặp khách và đến xe bánh tráng để bắt đầu ca bán hàng.'); }} className="max-w-full border-[3px] border-[#9cae91] bg-[#405653] px-3 py-2 font-mono text-[10px] font-bold text-[#fff2d1] shadow-[3px_3px_0_#111]">Hướng dẫn</button>
+            <div className={"world-action-row flex flex-wrap items-center justify-center gap-2 " + (nearbyWorldLocation?.id === 'cart' && !cartVisitorEventSeen ? "has-curious-visitor" : "")}>
+              {nearbyWorldLocation?.id === 'cart' && !cartVisitorEventSeen && <button type="button" onClick={() => { setCartVisitorEventSeen(true); setWorldNotice(CURIOUS_CART_VISITOR_EVENT.dialogue); setWorldPanel(null); }} className="world-curious-button max-w-full border-[3px] border-[#6b5430] bg-[#f6dfa0] px-3 py-2 font-mono text-[10px] font-black text-[#392819] shadow-[3px_3px_0_#111] hover:bg-[#ffe9b2]">💬 KHÁCH TÒ MÒ</button>}
+              <button type="button" onClick={handleWorldInteract} className="world-interact-button max-w-full whitespace-normal break-words border-[3px] border-[#543a25] bg-[#f1c65e] px-4 py-2 text-center font-mono text-xs font-black text-[#392819] shadow-[4px_4px_0_#111] hover:bg-[#ffda79]">E · {nearbyWorldLocation ? nearbyWorldLocation.name.toUpperCase() : 'TƯƠNG TÁC'}</button>
+              <button type="button" onClick={() => { setWorldPanel((current) => current === 'MAP' ? null : 'MAP'); setWorldNotice('Bạn đang ở khu phố bán bánh tráng. Hãy đi dọc vỉa hè, gặp khách và đến xe bánh tráng để bắt đầu ca bán hàng.'); }} className="world-guide-button max-w-full border-[3px] border-[#9cae91] bg-[#405653] px-3 py-2 font-mono text-[10px] font-bold text-[#fff2d1] shadow-[3px_3px_0_#111]">Hướng dẫn</button>
+            </div>
             </div>
           </div>
           ) : (
