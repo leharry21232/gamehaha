@@ -1285,7 +1285,7 @@ export default function App() {
             .world-scene-layer { position:absolute; inset:0; }
             .world-mobile-dock { display:none; }
             @media (max-width: 640px) {
-              .world-scene-layer { top:0; bottom:0; right:auto; height:100%; width:auto; aspect-ratio:5 / 3; }
+              .world-scene-layer { top:0; bottom:0; right:auto; left:clamp(calc(100% - 166.667dvh), var(--world-camera-left), 0px); height:100%; width:auto; aspect-ratio:5 / 3; }
 
               .world-mobile-dock { position:absolute; z-index:35; display:flex; flex-direction:column; gap:9px; left:max(9px,env(safe-area-inset-left)); right:max(9px,env(safe-area-inset-right)); bottom:max(9px,env(safe-area-inset-bottom)); padding:9px; border:2px solid #171f20; border-radius:17px; background:linear-gradient(180deg,rgba(38,59,59,.97),rgba(22,39,40,.98)); box-shadow:0 5px 0 #172126; font-family:var(--font-mono); }
               .world-mobile-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
@@ -1466,7 +1466,7 @@ export default function App() {
               .world-info-panel { left: 8px; top: max(64px, calc(env(safe-area-inset-top) + 56px)); bottom: 8px; width: min(50vw, 520px); max-height: calc(100dvh - 80px); transform: none; translate: none; }
             }
           `}</style>
-          <div className="world-scene-layer" style={{left: `clamp(calc(100% - 166.667dvh), calc(50% - ${worldPlayer.x * 1.666667}dvh), 0px)`}}>
+          <div className="world-scene-layer" style={{["--world-camera-left" as string]: `calc(50% - ${worldPlayer.x * 1.666667}dvh)`}}>
           <svg className="absolute inset-0 h-full w-full [image-rendering:pixelated]" viewBox="0 0 1200 720" preserveAspectRatio="none" shapeRendering="crispEdges" role="img" aria-label="Khu phố bán bánh tráng trộn phong cách pixel art">
             <defs>
               <pattern id="sidewalkTiles" width="32" height="32" patternUnits="userSpaceOnUse">
