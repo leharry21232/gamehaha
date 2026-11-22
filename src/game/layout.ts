@@ -327,7 +327,7 @@ export function computePrepLayout(w: number, h: number): PrepLayout {
   } else if (isCompact) {
     const cols = 4;
     const gapX = 5;
-    const gapY = isTinyPortrait ? 4 : 6;
+    const gapY = isTinyPortrait || width <= 340 ? 4 : 6;
     const sidePad = Math.max(8, insets.left + 6);
     const trayW = Math.max(1, Math.floor((width - sidePad * 2 - gapX * (cols - 1)) / cols));
     const trayH = isTinyPortrait
