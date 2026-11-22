@@ -389,10 +389,10 @@ export function computePrepLayout(w: number, h: number): PrepLayout {
   const limeHoldW = isCompact ? Math.min(122, Math.floor(width * 0.33)) : 144;
   const gapHold = isCompact ? 8 : 18;
   const barW = isCompact ? Math.max(1, width - limeHoldW - gapHold - 24) : Math.min(340, maxSceneW * 0.48);
-  const barH = isTinyPortrait || isShortLandscape ? 18 : 26;
-  const holdH = isTinyPortrait || isShortLandscape ? 34 : isCompact ? 48 : 58;
-  const seasonGap = isTinyPortrait || isShortLandscape ? 6 : 16;
-  const seasonStartY = isTinyPortrait || isShortLandscape ? workTop + 6 : isCompact ? workTop + 24 : bowlCenterY - 56;
+  const barH = isShortLandscape ? 14 : isTinyPortrait ? 18 : 26;
+  const holdH = isShortLandscape ? 26 : isTinyPortrait ? 34 : isCompact ? 48 : 58;
+  const seasonGap = isShortLandscape ? 4 : isTinyPortrait ? 6 : 16;
+  const seasonStartY = isShortLandscape ? workTop + 2 : isTinyPortrait ? workTop + 6 : isCompact ? workTop + 24 : bowlCenterY - 56;
   const seasonLeftX = width * 0.5 - (limeHoldW + gapHold + barW) * 0.5;
   const limeHoldRect: Rect = { x: seasonLeftX, y: seasonStartY, w: limeHoldW, h: holdH };
   const limeBarRect: Rect = { x: seasonLeftX + limeHoldW + gapHold, y: seasonStartY + (holdH - barH) * 0.5, w: barW, h: barH };

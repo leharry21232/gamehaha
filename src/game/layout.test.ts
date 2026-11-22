@@ -147,7 +147,7 @@ test('compact portrait seasoning controls and topping trays clear the action row
     }
     assert.ok(layout.chiliHoldRect.y + layout.chiliHoldRect.h <= layout.primaryBtn.y, `second seasoning hold target clears continue button at ${width}x${height}`);
     for (const tray of Object.values(layout.trayRects)) {
-      assert.ok(tray.y + tray.h <= layout.primaryBtn.y, `portrait topping tray clears continue button at ${width}x${height}`);
+      assert.ok(tray.y + tray.h <= layout.primaryBtn.y, `portrait topping tray clears continue button at ${width}x${height}: tray=${tray.y}+${tray.h}, button=${layout.primaryBtn.y}`);
       assert.ok(tray.h >= 28, `portrait topping target remains touchable at ${width}x${height}`);
     }
   }

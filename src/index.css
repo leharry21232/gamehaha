@@ -168,9 +168,10 @@
 .mobile-game-hub {
   display: none;
 }
- .mobile-game-hub__card {
+  .mobile-game-hub__card {
   box-sizing: border-box;
   min-height: calc(var(--mobile-game-hub-base-height) + max(8px, var(--sat)));
+  padding-top: max(8px, var(--sat));
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -377,6 +378,7 @@
 }
 @media (orientation: landscape) and (max-height: 520px) {
   :root { --mobile-game-hub-base-height: 78px; }
+  .mobile-game-hub__card { padding: max(8px, var(--sat)) 6px 5px; }
   .mobile-game-hub__level,
   .mobile-game-hub__stats,
   .mobile-game-hub__mission,
