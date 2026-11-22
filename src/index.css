@@ -161,3 +161,195 @@
   .game-top-hud__actions { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:3px; }
   .game-top-hud__actions > button { height:24px; font-size:7px; padding:1px; }
 }
+
+
+/* Dedicated phone hub: desktop keeps its original HUD, phones get a touch-first dashboard. */
+.mobile-game-hub {
+  display: none;
+}
+.mobile-game-hub__card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px 8px 8px;
+  color: #F8FAFC;
+  background: rgba(24, 25, 32, 0.97);
+  border: 2px solid #090B10;
+  border-top: 0;
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.32);
+}
+.mobile-game-hub__topline,
+.mobile-game-hub__level,
+.mobile-game-hub__utility,
+.mobile-game-hub__condition,
+.mobile-game-hub__heat,
+.mobile-game-hub__chairs {
+  display: flex;
+  align-items: center;
+}
+.mobile-game-hub__topline {
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+.mobile-game-hub__level { gap: 6px; flex: 1; min-width: 0; }
+.mobile-game-hub__level-label {
+  color: #FCD34D;
+  font: 900 10px/1 var(--font-display);
+  white-space: nowrap;
+}
+.mobile-game-hub__xp-track {
+  height: 7px;
+  min-width: 26px;
+  flex: 1;
+  overflow: hidden;
+  background: #334155;
+  border: 1px solid #64748B;
+  border-radius: 999px;
+}
+.mobile-game-hub__xp-fill { height: 100%; background: #FBBF24; border-radius: inherit; }
+.mobile-game-hub__xp-text {
+  color: #FEF3C7;
+  font: 700 8px/1 var(--font-mono);
+  white-space: nowrap;
+}
+.mobile-game-hub__utility { gap: 5px; flex: 0 0 auto; }
+.mobile-game-hub__day { color: #FBBF24; font: 900 9px/1 var(--font-display); white-space: nowrap; }
+.mobile-game-hub__clock { color: #7DD3FC; font: 800 10px/1 var(--font-mono); }
+.mobile-game-hub__clock.is-urgent { color: #FB7185; }
+.mobile-hub-icon-button {
+  width: 31px;
+  height: 31px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #475569;
+  border-radius: 9px;
+  color: #F8FAFC;
+  background: #272A36;
+  touch-action: manipulation;
+}
+.mobile-hub-icon-button svg { width: 15px; height: 15px; }
+.mobile-hub-icon-button--pause { color: #111318; background: #FBBF24; border-color: #090B10; }
+.mobile-game-hub__stats {
+  display: grid;
+  grid-template-columns: 1.45fr 0.9fr 0.7fr 0.8fr;
+  gap: 5px;
+}
+.mobile-hub-stat {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px 3px;
+  background: #252936;
+  border: 1px solid #3F4656;
+  border-radius: 8px;
+}
+.mobile-hub-stat b {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #F8FAFC;
+  font: 800 10px/1.1 var(--font-mono);
+  white-space: nowrap;
+}
+.mobile-hub-stat small {
+  color: #94A3B8;
+  font: 800 7px/1 var(--font-display);
+  letter-spacing: 0.08em;
+}
+.mobile-hub-stat--money b { color: #6EE7B7; }
+.mobile-hub-stat--xu b { color: #FCD34D; }
+.mobile-game-hub__mission {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 3px 6px;
+  border-radius: 7px;
+  background: rgba(51, 65, 85, 0.6);
+  color: #CBD5E1;
+  font-size: 9px;
+  line-height: 1.2;
+}
+.mobile-game-hub__mission-title {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mobile-game-hub__mission b { color: #FCD34D; font: 800 9px var(--font-mono); }
+.mobile-game-hub__condition { justify-content: space-between; gap: 10px; min-width: 0; }
+.mobile-game-hub__heat { gap: 5px; min-width: 0; color: #FCA5A5; font: 800 8px var(--font-mono); }
+.mobile-hub-heat-track { width: 54px; height: 6px; overflow: hidden; border-radius: 10px; background: #334155; }
+.mobile-hub-heat-track > div { height: 100%; border-radius: inherit; background: #F59E0B; }
+.mobile-game-hub__chairs { gap: 5px; color: #FDA4AF; font: 800 8px var(--font-mono); }
+.mobile-game-hub__chairs-icons { display: flex; gap: 2px; }
+.mobile-game-hub__chairs-icons i {
+  width: 8px; height: 6px; display: block; border-radius: 2px 2px 1px 1px;
+  background: #475569; border: 1px solid #0F172A;
+}
+.mobile-game-hub__chairs-icons i.is-active { background: #EF4444; }
+.mobile-game-hub__actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+.mobile-hub-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: 36px;
+  padding: 4px 3px;
+  border: 2px solid #090B10;
+  border-radius: 9px;
+  box-shadow: 0 2px 0 rgba(0,0,0,.3);
+  font: 900 9px/1.05 var(--font-display);
+  white-space: nowrap;
+  touch-action: manipulation;
+}
+.mobile-hub-action svg { width: 13px; height: 13px; flex: 0 0 auto; }
+.mobile-hub-action:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(0,0,0,.3); }
+.mobile-hub-action:disabled { opacity: .45; }
+.mobile-hub-action--violet { background: #6366F1; color: white; }
+.mobile-hub-action--purple { background: #A855F7; color: white; }
+.mobile-hub-action--yellow { background: #FACC15; color: #111318; }
+.mobile-hub-action--green { background: #10B981; color: white; }
+.mobile-hub-action--rose { background: #F43F5E; color: white; }
+.mobile-game-hub__raid {
+  color: #FDA4AF;
+  font: 800 9px var(--font-mono);
+  text-align: center;
+}
+
+@media (max-width: 680px), (orientation: landscape) and (max-height: 520px) {
+  .desktop-game-hud { display: none !important; }
+  .mobile-game-hub { display: block; }
+}
+
+@media (max-width: 360px) {
+  .mobile-game-hub__card { gap: 4px; padding: 5px 6px 6px; }
+  .mobile-game-hub__level-label { font-size: 9px; }
+  .mobile-game-hub__xp-text { font-size: 7px; }
+  .mobile-hub-action { min-height: 34px; gap: 2px; font-size: 8px; }
+  .mobile-hub-action svg { width: 12px; height: 12px; }
+  .mobile-hub-stat b { font-size: 9px; }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .mobile-game-hub__card { gap: 3px; padding: 3px 6px 5px; }
+  .mobile-game-hub__mission,
+  .mobile-game-hub__condition { display: none; }
+  .mobile-game-hub__stats { grid-template-columns: 1.5fr 0.8fr 0.7fr 0.8fr; }
+  .mobile-game-hub__stat { padding: 2px; }
+  .mobile-game-hub__actions { gap: 3px; }
+  .mobile-hub-action { min-height: 30px; padding: 2px; font-size: 8px; }
+  .mobile-hub-icon-button { width: 28px; height: 28px; }
+}

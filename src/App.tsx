@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Volume2, VolumeX, Pause, Play, RotateCcw, Home, Store, X, Check, Newspaper, TrendingUp, TrendingDown, Truck, Zap, Wrench, Scissors, Clock, LogOut, Map as MapIcon, Swords, Shield, Sparkles, Users, AlertTriangle, Trash2, Megaphone, Smartphone } from 'lucide-react';
 import { GameEngine } from './game/engine';
 import { TesterPanel } from './TesterPanel';
+import { MobileGameHub } from './MobileGameHub';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
 import { DECORATIONS, getUnlockedSkills } from './game/progression';
 import { findNearbyWorldLocation, getNeighborhoodEvent, getNeighborhoodDialogue, isNeighborhoodDialogueLocationId, getVendorLocation, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, getNeighborhoodQuestFollowUpDialogue, NEIGHBORHOOD_PARCEL_QUEST, getWorldMovementDelta, moveWorldPlayer, WORLD_INTERACTABLES, type NeighborhoodHelpQuestStatus, type NeighborhoodParcelQuestStatus, type WorldInteractable } from './game/world';
@@ -938,7 +939,7 @@ export default function App() {
 
       {/* Lightweight Top HUD Bar during active play / prep / end-of-day / pause / game over */}
       {hud.screen !== 'TITLE_MENU' && (
-        <div data-game-hud="true" className="game-top-hud pointer-events-none safe-top-bar px-3 pb-2 pt-1 absolute top-0 left-0 right-0 z-10 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 bg-[#181920]/95 border-b-[3px] border-[#111318]">
+        <div data-game-hud="true" className="desktop-game-hud game-top-hud pointer-events-none safe-top-bar px-3 pb-2 pt-1 absolute top-0 left-0 right-0 z-10 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 bg-[#181920]/95 border-b-[3px] border-[#111318]">
           <div className="game-top-hud__progress basis-full flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-xs">
             <span className="shrink-0 font-display font-black text-amber-300">⭐ CẤP {hud.playerLevel}</span>
             <div className="h-2 min-w-20 max-w-36 flex-1 overflow-hidden rounded-full border border-slate-500 bg-slate-700">
@@ -1200,6 +1201,20 @@ export default function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {hud.screen !== 'TITLE_MENU' && (
+        <MobileGameHub
+          hud={hud}
+          onFortune={() => engineRef.current?.summonFortuneCustomer()}
+          onFlow={() => engineRef.current?.triggerScissorRhythm()}
+          onLoan={() => engineRef.current?.setLoanModalOpen(true)}
+          onShop={handleOpenShop}
+          onMute={handleToggleMute}
+          onPause={handleTogglePause}
+          onCloseShift={() => engineRef.current?.closeShopNow()}
+          onAppease={() => engineRef.current?.appeaseAngryCustomer()}
+        />
       )}
 
       {/* STORY INTRO + REAL VENDOR LOCATION SELECTOR */}
