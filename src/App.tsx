@@ -1290,6 +1290,13 @@ export default function App() {
               .world-daypart-card > div { align-items: flex-start; flex-wrap: wrap; gap: 3px; }
               .world-daypart-card p { font-size: 9px; line-height: 1.2; }
 
+              .world-controls-panel > button:first-child {
+                top: -24px;
+                right: 6px;
+                width: 24px;
+                height: 24px;
+                font-size: 14px;
+              }
               .world-controls-panel {
                 left: max(8px, env(safe-area-inset-left));
                 right: max(8px, env(safe-area-inset-right));
@@ -1675,8 +1682,8 @@ export default function App() {
             {neighborhoodParcelQuestStatus === 'ACCEPTED' && <p className="mt-1 text-center text-[10px] font-black text-amber-200">📌 NHIỆM VỤ PHỤ: {NEIGHBORHOOD_PARCEL_QUEST.objective}</p>}
             {neighborhoodParcelQuestStatus === 'COMPLETED' && <p className="mt-1 text-center text-[10px] font-black text-emerald-200">✓ ĐÃ HOÀN THÀNH: {NEIGHBORHOOD_PARCEL_QUEST.title}</p>}
             </div>
-            <div className="world-control-deck mt-2">
-            <div className="world-dpad flex items-center justify-center gap-2">
+            <div className="world-control-deck">
+            <div className="world-dpad mt-2 flex items-center justify-center gap-2">
               {([
                 { direction: 'up', label: 'Đi lên', symbol: '↑' },
                 { direction: 'left', label: 'Đi trái', symbol: '←' },
@@ -1695,7 +1702,7 @@ export default function App() {
                 >{item.symbol}</button>
               ))}
             </div>
-            <div className={"world-action-row flex flex-wrap items-center justify-center gap-2 " + (nearbyWorldLocation?.id === 'cart' && !cartVisitorEventSeen ? "has-curious-visitor" : "")}>
+            <div className={"world-action-row mt-2 flex flex-wrap items-center justify-center gap-2 " + (nearbyWorldLocation?.id === 'cart' && !cartVisitorEventSeen ? "has-curious-visitor" : "")}>
               {nearbyWorldLocation?.id === 'cart' && !cartVisitorEventSeen && <button type="button" onClick={() => { setCartVisitorEventSeen(true); setWorldNotice(CURIOUS_CART_VISITOR_EVENT.dialogue); setWorldPanel(null); }} className="world-curious-button max-w-full border-[3px] border-[#6b5430] bg-[#f6dfa0] px-3 py-2 font-mono text-[10px] font-black text-[#392819] shadow-[3px_3px_0_#111] hover:bg-[#ffe9b2]">💬 KHÁCH TÒ MÒ</button>}
               <button type="button" onClick={handleWorldInteract} className="world-interact-button max-w-full whitespace-normal break-words border-[3px] border-[#543a25] bg-[#f1c65e] px-4 py-2 text-center font-mono text-xs font-black text-[#392819] shadow-[4px_4px_0_#111] hover:bg-[#ffda79]">E · {nearbyWorldLocation ? nearbyWorldLocation.name.toUpperCase() : 'TƯƠNG TÁC'}</button>
               <button type="button" onClick={() => { setWorldPanel((current) => current === 'MAP' ? null : 'MAP'); setWorldNotice('Bạn đang ở khu phố bán bánh tráng. Hãy đi dọc vỉa hè, gặp khách và đến xe bánh tráng để bắt đầu ca bán hàng.'); }} className="world-guide-button max-w-full border-[3px] border-[#9cae91] bg-[#405653] px-3 py-2 font-mono text-[10px] font-bold text-[#fff2d1] shadow-[3px_3px_0_#111]">Hướng dẫn</button>
