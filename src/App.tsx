@@ -1714,6 +1714,7 @@ export default function App() {
             </div>
           )}
           {worldHudOpen ? (
+          <>
           <div className="world-mobile-dock" aria-label="Điều khiển bản đồ trên điện thoại">
             <div className="world-mobile-tabs">
               {([{id:'MAP',icon:'🗺️',label:'Bản đồ'},{id:'BAG',icon:'🎒',label:'Túi đồ'},{id:'JOURNAL',icon:'📖',label:'Nhiệm vụ'},{id:'PHONE',icon:'📱',label:'Điện thoại'}] as const).map((item) => (
@@ -1776,6 +1777,7 @@ export default function App() {
             </div>
             </div>
           </div>
+          </>
           ) : (
             <button type="button" onClick={() => setWorldHudOpen(true)} className="absolute bottom-3 left-1/2 z-30 -translate-x-1/2 border-[3px] border-[#e7c77e] bg-[#263b3b]/95 px-4 py-2 font-mono text-xs font-black text-[#fff2d1] shadow-[4px_4px_0_#111] hover:bg-[#405653]">☰ MỞ BẢNG ĐIỀU KHIỂN</button>
           )}
