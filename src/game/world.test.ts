@@ -310,3 +310,11 @@ test('grocery shop and Cô Năm are clearly different map characters', () => {
   assert.equal(coNam?.name, 'Cô Năm hàng xóm');
   assert.match(getNeighborhoodDialogue('co_nam', 'MORNING'), /Cô Năm/);
 });
+
+
+test('Cô Năm spawn is spaced away from the player and still interactable', () => {
+  const coNam = WORLD_INTERACTABLES.find((location) => location.id === 'co_nam');
+  assert.deepEqual({ x: coNam?.x, y: coNam?.y }, { x: 56, y: 55 });
+  assert.equal(findNearbyWorldLocation(48, 45), null);
+  assert.equal(findNearbyWorldLocation(56, 55)?.id, 'co_nam');
+});

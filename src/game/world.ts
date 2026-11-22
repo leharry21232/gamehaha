@@ -266,8 +266,8 @@ export const WORLD_INTERACTABLES: readonly WorldInteractable[] = [
   {
     id: 'co_nam',
     name: 'Cô Năm hàng xóm',
-    x: 46,
-    y: 53,
+    x: 56,
+    y: 55,
     radius: 7,
     kind: 'NPC',
     description: 'Một người hàng xóm thân thiện đang quan sát xe bánh tráng mới mở.',

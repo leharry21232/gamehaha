@@ -3,6 +3,8 @@ import { Volume2, VolumeX, Pause, Play, RotateCcw, Home, Store, X, Check, Newspa
 import { GameEngine } from './game/engine';
 import { TesterPanel } from './TesterPanel';
 import { MobileGameHub } from './MobileGameHub';
+import { NeighborhoodMapArt } from './game/NeighborhoodMapArt';
+import { getPortraitWorldTop } from './game/neighborhoodLayout';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
 import { DECORATIONS, getUnlockedSkills } from './game/progression';
 import { findNearbyWorldLocation, getNeighborhoodEvent, getNeighborhoodDialogue, isNeighborhoodDialogueLocationId, getVendorLocation, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, getNeighborhoodQuestFollowUpDialogue, NEIGHBORHOOD_PARCEL_QUEST, getWorldMovementDelta, moveWorldPlayer, WORLD_INTERACTABLES, type NeighborhoodHelpQuestStatus, type NeighborhoodParcelQuestStatus, type WorldInteractable } from './game/world';
@@ -57,26 +59,53 @@ function WorldNpcSprite({ npc }: { npc: WorldInteractable }) {
       ? { shirt: '#2d8d9c', hair: '#292b31', accent: '#f2c94c', hat: true }
       : npc.id === 'chu_bay'
         ? { shirt: '#63865a', hair: '#554235', accent: '#d6b47a', hat: true }
-        : { shirt: '#8467a8', hair: '#77706a', accent: '#f0d99b', hat: false };
-
+        : npc.id === 'co_nam'
+          ? { shirt: '#c45f4d', hair: '#563a2f', accent: '#f2c94c', hat: false }
+          : { shirt: '#8467a8', hair: '#77706a', accent: '#f0d99b', hat: false };
   return (
-    <div className="absolute z-10 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]" style={{ left: npc.x + '%', top: npc.y + '%' }} title={npc.name}>
+    <div className={`world-map-npc world-map-npc--${npc.id} absolute z-10 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]`}
+      style={{ left: npc.x + '%', top: npc.y + '%', ['--portrait-top' as string]: getPortraitWorldTop(npc.y) + '%', ['--logic-top' as string]: npc.y + '%' }} title={npc.name}>
       <svg viewBox="0 0 42 64" className="h-11 w-8 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label={npc.name}>
         {palette.hat && <rect x="6" y="2" width="30" height="7" fill={palette.accent} stroke="#46352b" strokeWidth="2" />}
         <rect x="12" y="5" width="18" height="17" fill="#d39a78" />
         <path d="M8 15Q8 0 21 0Q34 0 34 15L29 18H13Z" fill={palette.hair} />
         <rect x="8" y="22" width="26" height="22" fill={palette.shirt} stroke="#49382d" strokeWidth="2" />
-        <rect x="10" y="44" width="9" height="16" fill="#344052" />
-        <rect x="23" y="44" width="9" height="16" fill="#344052" />
-        <rect x="8" y="59" width="13" height="5" fill="#49352b" />
-        <rect x="21" y="59" width="13" height="5" fill="#49352b" />
-        {npc.id === 'co_sau' && <><rect x="2" y="28" width="5" height="13" fill="#6f9b53" /><rect x="1" y="23" width="7" height="6" fill="#f2b8c7" /></>}
-        {npc.id === 'shipper_ti' && <rect x="31" y="25" width="9" height="13" fill="#f2c94c" stroke="#49382d" strokeWidth="2" />}
-        {npc.id === 'chu_bay' && <rect x="2" y="28" width="6" height="12" fill="#b6b1a2" />}
-        {npc.id === 'ba_tu' && <rect x="7" y="19" width="28" height="5" fill="#e7d8b7" />}
+        <rect x="10" y="44" width="9" height="16" fill="#344052" /><rect x="23" y="44" width="9" height="16" fill="#344052" />
+        <rect x="8" y="59" width="13" height="5" fill="#49352b" /><rect x="21" y="59" width="13" height="5" fill="#49352b" />
+        {npc.id === 'co_sau' && <><rect x="2" y="28" width="5" height="13" fill="#6f9b53" /><rect x="1" y="23" width="7" height="6" fill="#f2b8c7" /><path d="M2 22Q-3 13 5 13Q11 14 7 22" fill="#f3c5d1" stroke="#6f9b53" strokeWidth="1.5" /></>}
+        {npc.id === 'shipper_ti' && <><rect x="31" y="25" width="9" height="13" fill="#f2c94c" stroke="#49382d" strokeWidth="2" /><path d="M31 25L39 21" stroke="#49382d" strokeWidth="2"/></>}
+        {npc.id === 'chu_bay' && <><rect x="2" y="28" width="6" height="12" fill="#b6b1a2" /><path d="M4 26L10 18L13 20L8 29" fill="none" stroke="#d8d0bd" strokeWidth="2.5"/></>}
+        {npc.id === 'co_nam' && <><rect x="31" y="27" width="8" height="10" fill="#d3a35a" stroke="#49382d" strokeWidth="1.5"/><path d="M31 26H39" stroke="#f5e5c2" strokeWidth="2"/></>}
+        {npc.id === 'ba_tu' && <><rect x="7" y="19" width="28" height="5" fill="#e7d8b7"/><path d="M32 30L39 37" stroke="#e8d8b7" strokeWidth="3"/></>}
       </svg>
-      <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap border border-[#4b3428] bg-[#ffe3a6] px-1.5 py-0.5 text-[8px] font-black text-[#35291f]">{npc.name.toUpperCase()}</span>
+      <span className={`world-npc-nameplate world-npc-nameplate--${npc.id}`}>{npc.name}</span>
     </div>
+  );
+}
+
+function WorldDialoguePanel({ npc, message, onContinue }: { npc: WorldInteractable; message: string; onContinue: () => void }) {
+  const [visibleText, setVisibleText] = useState('');
+  useEffect(() => {
+    setVisibleText('');
+    let index = 0;
+    const timer = window.setInterval(() => {
+      index = Math.min(message.length, index + 2);
+      setVisibleText(message.slice(0, index));
+      if (index >= message.length) window.clearInterval(timer);
+    }, 18);
+    return () => window.clearInterval(timer);
+  }, [message]);
+  return (
+    <section className="world-dialogue-card" role="dialog" aria-label={`Lời thoại của ${npc.name}`}>
+      <div className="world-dialogue-avatar" aria-hidden="true">
+        <svg viewBox="0 0 42 64" shapeRendering="crispEdges"><rect x="12" y="5" width="18" height="17" fill="#d39a78"/><path d="M8 15Q8 0 21 0Q34 0 34 15L29 18H13Z" fill="#563b30"/><rect x="8" y="22" width="26" height="22" fill={npc.id === 'co_sau' ? '#b86b91' : npc.id === 'shipper_ti' ? '#2d8d9c' : npc.id === 'chu_bay' ? '#63865a' : npc.id === 'co_nam' ? '#c45f4d' : '#8467a8'}/><rect x="10" y="44" width="9" height="16" fill="#344052"/><rect x="23" y="44" width="9" height="16" fill="#344052"/></svg>
+      </div>
+      <div className="world-dialogue-copy">
+        <div className="world-dialogue-heading"><strong>{npc.name}</strong><span>ĐANG TRÒ CHUYỆN</span></div>
+        <p>{visibleText}<i aria-hidden="true" /></p>
+        <button type="button" onClick={onContinue}>TIẾP TỤC <span>›</span></button>
+      </div>
+    </section>
   );
 }
 
@@ -725,6 +754,8 @@ export default function App() {
             if (playerElement) {
               playerElement.style.left = next.x + '%';
               playerElement.style.top = next.y + '%';
+              playerElement.style.setProperty('--portrait-top', getPortraitWorldTop(next.y) + '%');
+              playerElement.style.setProperty('--logic-top', next.y + '%');
             }
             hasUncommittedPosition = true;
           }
@@ -812,6 +843,9 @@ export default function App() {
 
   const nearbyWorldLocation = findNearbyWorldLocation(worldPlayer.x, worldPlayer.y);
   const neighborhoodEvent = getNeighborhoodEvent(hud.day, hud.dayTimeLeft, hud.dayDuration);
+  const worldElapsedRatio = hud.dayDuration > 0 ? Math.min(1, Math.max(0, 1 - hud.dayTimeLeft / hud.dayDuration)) : 0.5;
+  const worldLighting = worldElapsedRatio < 0.25 ? 'morning' : worldElapsedRatio < 0.5 ? 'noon' : worldElapsedRatio < 0.75 ? 'afternoon' : 'evening';
+  const worldLightingLabel = worldLighting === 'morning' ? 'BUỔI SÁNG' : worldLighting === 'noon' ? 'BUỔI TRƯA' : worldLighting === 'afternoon' ? 'BUỔI CHIỀU' : 'BUỔI TỐI';
   const getWorldDialogue = (location: NonNullable<typeof nearbyWorldLocation>) => {
     if (!isNeighborhoodDialogueLocationId(location.id)) return location.interactionText;
     const visitCount = neighborhoodVisitCounts[location.id] ?? 0;
@@ -1282,569 +1316,10 @@ export default function App() {
             @keyframes walkWest { from { transform: translateX(34vw); } to { transform: translateX(-26vw); } }
             @keyframes trafficEast { from { transform: translateX(-180px); } to { transform: translateX(calc(100vw + 180px)); } }
             @keyframes trafficWest { from { transform: translateX(calc(100vw + 180px)); } to { transform: translateX(-180px); } }
-            .world-scene-layer { position:absolute; inset:0; }
-            .world-mobile-dock { display:none; }
-            @media (max-width: 640px) {
-              .world-scene-layer { top:0; bottom:0; right:auto; left:clamp(calc(100% - 166.667dvh), var(--world-camera-left), 0px); height:100%; width:auto; aspect-ratio:5 / 3; }
-
-              .world-mobile-dock { position:absolute; z-index:35; display:flex; flex-direction:column; gap:9px; left:max(9px,env(safe-area-inset-left)); right:max(9px,env(safe-area-inset-right)); bottom:max(9px,env(safe-area-inset-bottom)); padding:9px; border:2px solid #171f20; border-radius:17px; background:linear-gradient(180deg,rgba(38,59,59,.97),rgba(22,39,40,.98)); box-shadow:0 5px 0 #172126; font-family:var(--font-mono); }
-              .world-mobile-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
-              .world-mobile-tab { min-width:0; min-height:48px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; border:1.5px solid #91a28e; border-radius:10px; background:#405653; color:#fff2d1; box-shadow:0 2px 0 #111; }
-              .world-mobile-tab span { font-size:19px; line-height:1; }
-              .world-mobile-tab b { font:900 9px/1 var(--font-display); white-space:nowrap; }
-              .world-mobile-tab.is-active { border-color:#f6cf70; background:#a56e35; color:#fff4ce; box-shadow:inset 0 0 0 1px #f6cf70,0 2px 0 #111; }
-              .world-mobile-controls { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.12fr); align-items:center; gap:12px; }
-              .world-mobile-dpad { width:min(100%,174px); display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(2,38px); gap:4px; justify-self:center; }
-              .world-mobile-dpad button { display:grid; place-items:center; border:2px solid #9cae91; border-radius:9px; background:#526c61; color:#fff4d6; font:900 22px/1 var(--font-display); box-shadow:0 3px 0 #111; touch-action:none; user-select:none; }
-              .world-mobile-dpad button:nth-child(1) { grid-column:2; grid-row:1; }
-              .world-mobile-dpad button:nth-child(2) { grid-column:1; grid-row:2; }
-              .world-mobile-dpad button:nth-child(3) { grid-column:2; grid-row:2; }
-              .world-mobile-dpad button:nth-child(4) { grid-column:3; grid-row:2; }
-              .world-mobile-dpad button:active { background:#9b7548; transform:translateY(2px); box-shadow:0 1px 0 #111; }
-              .world-mobile-actions { display:flex; min-width:0; flex-direction:column; gap:5px; }
-              .world-mobile-interact { min-height:66px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:5px; border:3px solid #543a25; border-radius:11px; background:linear-gradient(180deg,#ffdc80,#e9ad42); color:#392819; box-shadow:0 4px 0 #111; text-align:center; }
-              .world-mobile-interact span { font:900 17px/1 var(--font-display); }
-              .world-mobile-interact b { max-width:100%; overflow:hidden; font:900 9px/1.15 var(--font-display); text-overflow:ellipsis; }
-              .world-mobile-visitor { border:2px solid #6b5430; border-radius:8px; background:#f6dfa0; color:#392819; padding:5px; font:900 9px var(--font-display); }
-              .world-mobile-actions p { min-height:20px; margin:0; overflow:hidden; color:#dbe5df; font:700 8px/1.2 var(--font-display); text-align:center; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
-              .world-desktop-controls { display:none !important; }
-              .world-status-card { top:max(8px,env(safe-area-inset-top)); width:calc(50% - 14px); }
-              .world-daypart-card { top:max(8px,env(safe-area-inset-top)); }
-              .world-info-panel { top:max(76px,calc(env(safe-area-inset-top) + 68px)); bottom:calc(188px + env(safe-area-inset-bottom)); max-height:calc(100dvh - 270px); }
-            }
-            @media (max-width: 360px) and (orientation: portrait) {
-              .world-mobile-dock { gap:7px; padding:7px; }
-              .world-mobile-tab { min-height:43px; }
-              .world-mobile-tab span { font-size:17px; }
-              .world-mobile-tab b { font-size:8px; }
-              .world-mobile-controls { gap:7px; }
-              .world-mobile-dpad { grid-template-rows:repeat(2,34px); }
-              .world-mobile-interact { min-height:60px; }
-            }
-            @media (max-height: 620px) and (orientation: landscape) {
-              .world-mobile-dock { left:auto; right:max(8px,env(safe-area-inset-right)); bottom:max(8px,env(safe-area-inset-bottom)); width:min(47vw,390px); gap:5px; padding:6px; }
-              .world-mobile-tabs { gap:4px; }
-              .world-mobile-tab { min-height:37px; }
-              .world-mobile-tab span { font-size:15px; }
-              .world-mobile-tab b { font-size:7px; }
-              .world-mobile-controls { grid-template-columns:1fr 1fr; gap:6px; }
-              .world-mobile-dpad { grid-template-rows:repeat(2,29px); }
-              .world-mobile-interact { min-height:54px; }
-              .world-mobile-actions p { font-size:7px; }
-              .world-info-panel { left:8px; top:max(64px,calc(env(safe-area-inset-top) + 56px)); bottom:8px; width:min(50vw,520px); max-height:calc(100dvh - 80px); }
-            }
-            @media (max-width: 640px) {
-              .world-status-card { left: max(8px, env(safe-area-inset-left)); top: max(8px, env(safe-area-inset-top)); width: calc(50% - 14px); padding: 7px 8px; border-width: 2px; box-shadow: 2px 2px 0 #172126; }
-              .world-status-card .world-status-detail { font-size: 8px; line-height: 1.2; }
-              .world-daypart-card { right: max(8px, env(safe-area-inset-right)); top: max(8px, env(safe-area-inset-top)); width: calc(50% - 14px); padding: 7px 8px; border-width: 2px; box-shadow: 2px 2px 0 #172126; }
-              .world-daypart-card .world-event-description, .world-daypart-card .world-event-traffic { display: none; }
-              .world-daypart-card > div { align-items: flex-start; flex-wrap: wrap; gap: 3px; }
-              .world-daypart-card p { font-size: 9px; line-height: 1.2; }
-
-              .world-controls-panel > button:first-child {
-                top: -24px;
-                right: 6px;
-                width: 24px;
-                height: 24px;
-                font-size: 14px;
-              }
-              .world-controls-panel {
-                left: max(8px, env(safe-area-inset-left));
-                right: max(8px, env(safe-area-inset-right));
-                bottom: max(8px, env(safe-area-inset-bottom));
-                width: auto;
-                max-height: none;
-                overflow: visible;
-                display: flex;
-                flex-direction: column;
-                gap: 6px;
-                padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
-                border-width: 2px;
-                border-radius: 12px;
-                box-shadow: 3px 3px 0 #172126;
-                transform: none;
-                translate: none;
-              }
-              .world-tab-row {
-                display: grid;
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-                gap: 5px;
-                margin: 0;
-              }
-              .world-tab-button {
-                min-width: 0;
-                min-height: 43px;
-                padding: 4px 2px;
-                border-width: 2px;
-                font-size: 9px;
-                line-height: 1.1;
-              }
-              .world-tab-button span:first-child { font-size: 17px; line-height: 1; }
-              .world-hint {
-                min-width: 0;
-                margin: 0;
-                overflow: hidden;
-                color: #dbe5df;
-                font-size: 9px;
-                line-height: 1.15;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-              }
-              .world-quest-reminders { display: none; }
-              .world-control-deck {
-                display: grid;
-                grid-template-columns: minmax(0, 1.08fr) minmax(108px, .92fr);
-                gap: 7px;
-                align-items: stretch;
-                margin: 0;
-              }
-              .world-dpad {
-                display: grid;
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-                gap: 4px;
-                margin: 0;
-              }
-              .world-dpad-button {
-                width: auto;
-                height: 44px;
-                padding: 0;
-                border-width: 2px;
-                font-size: 21px;
-                line-height: 1;
-                touch-action: none;
-                user-select: none;
-              }
-              .world-action-row {
-                display: flex;
-                min-width: 0;
-                flex-direction: column;
-                align-items: stretch;
-                justify-content: stretch;
-                gap: 4px;
-                margin: 0;
-              }
-              .world-action-row button {
-                min-width: 0;
-                min-height: 44px;
-                flex: 1 1 auto;
-                padding: 6px 5px;
-                font-size: 9px;
-                line-height: 1.1;
-              }
-              .world-guide-button { display: none !important; }
-              .world-info-panel {
-                top: max(72px, calc(env(safe-area-inset-top) + 64px));
-                bottom: calc(148px + env(safe-area-inset-bottom));
-                left: 10px;
-                width: calc(100% - 20px);
-                max-height: calc(100dvh - 220px);
-                padding: 10px;
-                transform: none;
-                translate: none;
-              }
-            }
-            @media (max-height: 620px) and (orientation: landscape) {
-              .world-status-card { top: max(6px, env(safe-area-inset-top)); }
-              .world-daypart-card { top: max(6px, env(safe-area-inset-top)); }
-              .world-controls-panel {
-                left: auto;
-                right: max(8px, env(safe-area-inset-right));
-                bottom: max(8px, env(safe-area-inset-bottom));
-                width: min(44vw, 390px);
-                max-height: calc(100dvh - 16px);
-                overflow-y: auto;
-                padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
-                transform: none;
-                translate: none;
-              }
-              .world-tab-row { gap: 4px; }
-              .world-tab-button { min-height: 38px; padding: 3px 1px; font-size: 8px; }
-              .world-control-deck { grid-template-columns: 1fr; gap: 5px; }
-              .world-dpad-button { height: 36px; font-size: 18px; }
-              .world-action-row { display: grid; grid-template-columns: minmax(0, 1fr); }
-              .world-action-row button { min-height: 38px; }
-              .world-info-panel { left: 8px; top: max(64px, calc(env(safe-area-inset-top) + 56px)); bottom: 8px; width: min(50vw, 520px); max-height: calc(100dvh - 80px); transform: none; translate: none; }
-            }
-
-            /* Responsive neighborhood scene: preserve pixel-art proportions on touch screens. */
-            @media (max-width: 900px) {
-              .world-scene-layer {
-                top: 0; bottom: auto; right: auto;
-                left: clamp(calc(100vw - 166.667dvh), var(--world-camera-left), 0px);
-                width: auto; height: 100dvh; aspect-ratio: 5 / 3;
-              }
-              .world-mobile-dock {
-                position: absolute; z-index: 35; display: flex;
-                left: max(10px, env(safe-area-inset-left));
-                right: max(10px, env(safe-area-inset-right));
-                bottom: max(10px, env(safe-area-inset-bottom));
-                gap: 6px; padding: 7px;
-                border: 2px solid #172126; border-radius: 14px;
-                background: linear-gradient(180deg,rgba(38,59,59,.96),rgba(22,39,40,.97));
-                box-shadow: 0 3px 0 #172126;
-              }
-              .world-mobile-tabs { gap: 5px; }
-              .world-mobile-tab { min-height: 40px; border-radius: 8px; }
-              .world-mobile-tab span { font-size: 16px; }
-              .world-mobile-tab b { font-size: 8px; }
-              .world-mobile-controls { gap: 8px; }
-              .world-mobile-dpad { width: min(100%, 150px); grid-template-rows: repeat(2, 30px); gap: 4px; }
-              .world-mobile-dpad button { border-width: 1.5px; border-radius: 8px; font-size: 19px; }
-              .world-mobile-interact { min-height: 54px; border-width: 2px; box-shadow: 0 3px 0 #111; }
-              .world-mobile-interact span { font-size: 15px; }
-              .world-mobile-interact b { font-size: 8px; }
-              .world-mobile-actions p { min-height: 15px; font-size: 7px; }
-              .world-desktop-controls { display: none !important; }
-              .world-info-panel {
-                top: auto; bottom: calc(150px + env(safe-area-inset-bottom));
-                left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right));
-                width: auto; max-height: 42dvh; padding: 10px;
-                transform: none; translate: none;
-              }
-              .world-status-card { top: max(8px, env(safe-area-inset-top)); }
-              .world-daypart-card { top: max(8px, env(safe-area-inset-top)); }
-            }
-            @media (max-width: 380px) and (orientation: portrait) {
-              .world-mobile-dock { gap: 5px; padding: 6px; }
-              .world-mobile-tab { min-height: 36px; }
-              .world-mobile-tab b { font-size: 7px; }
-              .world-mobile-dpad { grid-template-rows: repeat(2, 27px); }
-              .world-mobile-interact { min-height: 48px; }
-            }
-            @media (orientation: landscape) and (max-height: 900px) {
-              .world-scene-layer {
-                top: 50%; left: 0; right: auto; bottom: auto;
-                width: 100vw; height: auto; aspect-ratio: 5 / 3;
-                transform: translateY(-50%);
-              }
-              .world-mobile-dock {
-                left: auto; right: max(12px, env(safe-area-inset-right));
-                bottom: max(10px, env(safe-area-inset-bottom));
-                width: min(42vw, 350px); gap: 5px; padding: 6px;
-              }
-              .world-mobile-tab { min-height: 36px; }
-              .world-mobile-tab span { font-size: 15px; }
-              .world-mobile-tab b { font-size: 7px; }
-              .world-mobile-dpad { width: min(100%, 132px); grid-template-rows: repeat(2, 26px); }
-              .world-mobile-interact { min-height: 46px; }
-              .world-mobile-actions p { font-size: 7px; }
-              .world-info-panel {
-                top: max(10px, env(safe-area-inset-top)); bottom: 10px;
-                left: max(10px, env(safe-area-inset-left)); right: auto;
-                width: min(42vw, 420px); max-height: none;
-              }
-              .world-status-card { width: min(31vw, 300px); }
-              .world-daypart-card { width: min(31vw, 300px); }
-            }
-
-
-            /* Final map framing: show the entire 5:3 neighborhood on portrait phones,
-               use the maximum available height on landscape/tablets, and clip traffic to the map. */
-            @media (pointer: coarse), (max-width: 1100px) {
-              .world-scene-layer {
-                position: absolute !important;
-                inset: auto !important;
-                width: min(100vw, 166.6667dvh) !important;
-                height: min(60vw, 100dvh) !important;
-                max-width: none !important;
-                aspect-ratio: 5 / 3 !important;
-                left: 50% !important;
-                top: 50% !important;
-                right: auto !important;
-                bottom: auto !important;
-                transform: translate(-50%, -50%) !important;
-                overflow: hidden !important;
-                contain: layout paint;
-                isolation: isolate;
-              }
-              .world-mobile-dock {
-                position: absolute !important;
-                display: flex !important;
-                left: max(8px, env(safe-area-inset-left)) !important;
-                right: max(8px, env(safe-area-inset-right)) !important;
-                bottom: max(8px, env(safe-area-inset-bottom)) !important;
-                width: auto !important;
-                max-height: 126px !important;
-                gap: 5px !important;
-                padding: 6px !important;
-                border: 2px solid #172126 !important;
-                border-radius: 12px !important;
-                background: linear-gradient(180deg, rgba(30,50,49,.94), rgba(19,35,35,.96)) !important;
-                box-shadow: 0 3px 0 #172126 !important;
-              }
-              .world-desktop-controls { display: none !important; }
-              .world-mobile-tabs {
-                display: grid !important;
-                grid-template-columns: repeat(4, minmax(0,1fr)) !important;
-                gap: 4px !important;
-              }
-              .world-mobile-tab {
-                display: flex !important;
-                min-width: 0 !important;
-                min-height: 32px !important;
-                flex-direction: row !important;
-                align-items: center !important;
-                justify-content: center !important;
-                gap: 4px !important;
-                padding: 3px 2px !important;
-                border-width: 1px !important;
-                border-radius: 7px !important;
-              }
-              .world-mobile-tab span { font-size: 14px !important; }
-              .world-mobile-tab b { font-size: 8px !important; }
-              .world-mobile-controls {
-                display: grid !important;
-                grid-template-columns: 96px minmax(0,1fr) !important;
-                align-items: center !important;
-                gap: 6px !important;
-              }
-              .world-mobile-dpad {
-                width: 96px !important;
-                display: grid !important;
-                grid-template-columns: repeat(3,30px) !important;
-                grid-template-rows: repeat(2,24px) !important;
-                gap: 3px !important;
-              }
-              .world-mobile-dpad button {
-                display: grid !important;
-                min-width: 0 !important;
-                min-height: 0 !important;
-                place-items: center !important;
-                padding: 0 !important;
-                border-width: 1.5px !important;
-                border-radius: 7px !important;
-                font-size: 18px !important;
-              }
-              .world-mobile-actions { display: flex !important; min-width: 0 !important; flex-direction: column !important; gap: 3px !important; }
-              .world-mobile-interact {
-                display: flex !important;
-                min-width: 0 !important;
-                min-height: 39px !important;
-                flex-direction: row !important;
-                align-items: center !important;
-                justify-content: center !important;
-                gap: 5px !important;
-                padding: 4px 6px !important;
-                border-width: 2px !important;
-                border-radius: 8px !important;
-                box-shadow: 0 2px 0 #111 !important;
-              }
-              .world-mobile-interact span { font-size: 14px !important; }
-              .world-mobile-interact b { font-size: 8px !important; white-space: nowrap !important; }
-              .world-mobile-actions p {
-                min-height: 10px !important;
-                margin: 0 !important;
-                overflow: hidden !important;
-                font-size: 7px !important;
-                line-height: 1.1 !important;
-                white-space: nowrap !important;
-                text-overflow: ellipsis !important;
-              }
-              .world-info-panel {
-                top: max(72px, calc(env(safe-area-inset-top) + 64px)) !important;
-                bottom: calc(116px + env(safe-area-inset-bottom)) !important;
-                left: max(8px, env(safe-area-inset-left)) !important;
-                right: max(8px, env(safe-area-inset-right)) !important;
-                width: auto !important;
-                max-height: 48dvh !important;
-                padding: 9px !important;
-                transform: none !important;
-                translate: none !important;
-              }
-              .world-status-card {
-                left: max(8px, env(safe-area-inset-left)) !important;
-                top: max(8px, env(safe-area-inset-top)) !important;
-                width: calc(50% - 14px) !important;
-                max-width: 245px !important;
-                padding: 6px 7px !important;
-                border-width: 2px !important;
-                box-shadow: 2px 2px 0 #172126 !important;
-              }
-              .world-status-card .world-status-detail { font-size: 8px !important; line-height: 1.15 !important; }
-              .world-daypart-card {
-                right: max(8px, env(safe-area-inset-right)) !important;
-                top: max(8px, env(safe-area-inset-top)) !important;
-                width: calc(50% - 14px) !important;
-                max-width: 245px !important;
-                padding: 6px 7px !important;
-                border-width: 2px !important;
-                box-shadow: 2px 2px 0 #172126 !important;
-              }
-              .world-daypart-card .world-event-description,
-              .world-daypart-card .world-event-traffic { display: none !important; }
-              .world-daypart-card p { font-size: 9px !important; line-height: 1.15 !important; }
-            }
-            @media (orientation: portrait) and (pointer: coarse) {
-              .world-scene-layer {
-                width: 100vw !important;
-                height: 60vw !important;
-                left: 50% !important;
-                top: 49% !important;
-              }
-              .world-mobile-dock { max-height: 122px !important; }
-              .world-info-panel {
-                top: max(72px, calc(env(safe-area-inset-top) + 64px)) !important;
-                bottom: calc(112px + env(safe-area-inset-bottom)) !important;
-                max-height: 44dvh !important;
-              }
-            }
-            @media (orientation: landscape) and (pointer: coarse) {
-              .world-scene-layer {
-                width: min(100vw, 166.6667dvh) !important;
-                height: min(60vw, 100dvh) !important;
-                top: 48% !important;
-              }
-              .world-mobile-dock {
-                left: auto !important;
-                right: max(8px, env(safe-area-inset-right)) !important;
-                bottom: max(8px, env(safe-area-inset-bottom)) !important;
-                width: min(38vw, 340px) !important;
-              }
-              .world-info-panel {
-                top: max(8px, env(safe-area-inset-top)) !important;
-                bottom: 8px !important;
-                left: max(8px, env(safe-area-inset-left)) !important;
-                right: auto !important;
-                width: min(40vw, 390px) !important;
-                max-height: none !important;
-              }
-            }
           `}</style>
-          <div className="world-scene-layer" style={{["--world-camera-left" as string]: `calc(50vw - ${worldPlayer.x * 0.933333}dvh)`}}>
-          <svg className="absolute inset-0 h-full w-full [image-rendering:pixelated]" viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid meet" shapeRendering="crispEdges" role="img" aria-label="Khu phố bán bánh tráng trộn phong cách pixel art">
-            <defs>
-              <pattern id="sidewalkTiles" width="32" height="32" patternUnits="userSpaceOnUse">
-                <rect width="32" height="32" fill="#c9b995"/>
-                <path d="M0 0H32V32H0Z" fill="none" stroke="#9d8969" strokeWidth="2"/>
-                <path d="M16 0V16H32M0 16H16V32" fill="none" stroke="#e0d0ad" strokeWidth="2"/>
-                <rect x="3" y="3" width="3" height="3" fill="#b09d7c"/>
-              </pattern>
-              <pattern id="roadTexture" width="64" height="64" patternUnits="userSpaceOnUse">
-                <rect width="64" height="64" fill="#566267"/>
-                <path d="M8 10h8v3H8zM42 42h5v3h-5zM26 25h3v3h-3z" fill="#68767a"/>
-                <path d="M0 63H64" stroke="#4b585d" strokeWidth="2"/>
-              </pattern>
-              <pattern id="brickWall" width="48" height="24" patternUnits="userSpaceOnUse">
-                <rect width="48" height="24" fill="#bd7951"/>
-                <path d="M0 0H48M0 12H48M24 0V12M0 12V24" stroke="#995d40" strokeWidth="2"/>
-                <rect x="4" y="4" width="4" height="2" fill="#d99565"/>
-              </pattern>
-              <pattern id="awningStripe" width="24" height="24" patternUnits="userSpaceOnUse">
-                <rect width="24" height="24" fill="#f1d9a5"/>
-                <rect width="12" height="24" fill="#bd5548"/>
-                <path d="M0 20H24" stroke="#76503b" strokeWidth="3"/>
-              </pattern>
-              <filter id="pixelShadow" x="-30%" y="-30%" width="160%" height="160%">
-                <feDropShadow dx="0" dy="7" stdDeviation="0" floodColor="#172126" floodOpacity=".5"/>
-              </filter>
-            </defs>
-            <rect width="1200" height="720" fill="#7f9b82"/>
-            <rect y="0" width="1200" height="222" fill="url(#brickWall)"/>
-            <rect y="0" width="1200" height="20" fill="#754a3b"/>
-            <rect y="210" width="1200" height="24" fill="#79523d"/>
-            <rect y="218" width="1200" height="5" fill="#e4b77b"/>
-            <g fill="#f0d5a1" opacity=".8"><rect x="18" y="30" width="7" height="7"/><rect x="280" y="28" width="7" height="7"/><rect x="548" y="30" width="7" height="7"/><rect x="810" y="28" width="7" height="7"/><rect x="1170" y="30" width="7" height="7"/></g>
-            <g stroke="#543c32" strokeWidth="8" filter="url(#pixelShadow)">
-              <rect x="28" y="42" width="250" height="166" fill="#e9c58d"/>
-              <rect x="292" y="42" width="250" height="166" fill="#e9d4a8"/>
-              <rect x="556" y="42" width="250" height="166" fill="#d8b88b"/>
-              <rect x="820" y="42" width="350" height="166" fill="#e9c58d"/>
-            </g>
-            <g>
-              <rect x="28" y="42" width="250" height="38" fill="#276d77"/><path d="M28 80h250l-14 18H42z" fill="#e7c36e"/>
-              <rect x="292" y="42" width="250" height="38" fill="#b94e3e"/><path d="M292 80h250l-14 18H306z" fill="#f2d18a"/>
-              <rect x="556" y="42" width="250" height="38" fill="#4b7651"/><path d="M556 80h250l-14 18H570z" fill="#e4bd73"/>
-              <rect x="820" y="42" width="350" height="38" fill="#a64f47"/><path d="M820 80h350l-14 18H834z" fill="#f0c779"/>
-              <g fill="#fff0cf" fontFamily="monospace" fontWeight="bold" fontSize="18" textAnchor="middle">
-                <text x="153" y="68">TẠP HÓA</text><text x="417" y="68">ĂN VẶT</text><text x="681" y="68">NƯỚC GIẢI KHÁT</text><text x="995" y="68">SẠP CHỢ</text>
-              </g>
-            </g>
-            <g fill="#6e4937" stroke="#4b382f" strokeWidth="7">
-              <rect x="66" y="112" width="76" height="90" fill="#8bc2c0"/><rect x="162" y="112" width="76" height="90" fill="#e6d5a7"/>
-              <rect x="330" y="112" width="78" height="90" fill="#9ac8c2"/><rect x="426" y="112" width="78" height="90" fill="#e7b87c"/>
-              <rect x="594" y="112" width="78" height="90" fill="#a5c9bd"/><rect x="690" y="112" width="78" height="90" fill="#e4c18e"/>
-              <rect x="858" y="112" width="94" height="90" fill="#a9c9c0"/><rect x="974" y="112" width="150" height="90" fill="#e7bd83"/>
-            </g>
-            <g fill="#d9e9dd" stroke="#6b5947" strokeWidth="4">
-              <path d="M75 124h58v68H75zM339 124h60v68h-60zM603 124h60v68h-60zM867 124h76v68h-76z"/>
-            </g>
-            <g shapeRendering="crispEdges">
-              <path d="M28 98H278V108H28zM292 98H542V108H292zM556 98H806V108H556zM820 98H1170V108H820z" fill="#714832"/>
-              <path d="M28 42H278V80H28zM292 42H542V80H292zM556 42H806V80H556zM820 42H1170V80H820z" fill="none" stroke="#4c382d" strokeWidth="5"/>
-              <rect x="88" y="136" width="34" height="4" fill="#e9f2dc"/><rect x="352" y="136" width="34" height="4" fill="#e9f2dc"/><rect x="616" y="136" width="34" height="4" fill="#e9f2dc"/><rect x="884" y="136" width="42" height="4" fill="#e9f2dc"/>
-              <rect x="78" y="178" width="52" height="8" fill="#548c82"/><rect x="342" y="178" width="54" height="8" fill="#548c82"/><rect x="606" y="178" width="54" height="8" fill="#548c82"/><rect x="876" y="178" width="58" height="8" fill="#548c82"/>
-              <rect x="156" y="118" width="8" height="84" fill="#654632"/><rect x="420" y="118" width="8" height="84" fill="#654632"/><rect x="684" y="118" width="8" height="84" fill="#654632"/>
-              <rect x="952" y="118" width="8" height="84" fill="#654632"/>
-              <g fill="#f8d77e"><rect x="46" y="112" width="10" height="10"/><rect x="310" y="112" width="10" height="10"/><rect x="574" y="112" width="10" height="10"/><rect x="838" y="112" width="10" height="10"/></g>
-            </g>
-            <g fill="#d8c8a8"><rect y="232" width="1200" height="174"/></g>
-            <rect y="232" width="1200" height="174" fill="url(#sidewalkTiles)"/>
-            <path d="M0 232H1200M0 406H1200" stroke="#7b654c" strokeWidth="12"/>
-            <path d="M0 244H1200M0 394H1200" stroke="#eadfc9" strokeWidth="4"/>
-            <g opacity=".9">
-              <rect x="24" y="266" width="1152" height="5" fill="#b7a788"/>
-              <rect x="24" y="366" width="1152" height="5" fill="#b7a788"/>
-            </g>
-            <g shapeRendering="crispEdges">
-              <rect x="164" y="236" width="242" height="10" fill="#68442f"/>
-              <rect x="172" y="228" width="226" height="8" fill="#f5d17b"/>
-              <path d="M172 228H398V246H172z" fill="url(#awningStripe)" stroke="#68442f" strokeWidth="4"/>
-              <rect x="178" y="242" width="10" height="14" fill="#7d4b32"/><rect x="382" y="242" width="10" height="14" fill="#7d4b32"/>
-              <rect x="210" y="254" width="10" height="10" fill="#f6e5b8"/><rect x="352" y="254" width="10" height="10" fill="#f6e5b8"/>
-            </g>
-            <g filter="url(#pixelShadow)">
-              <rect x="180" y="264" width="210" height="116" fill="#a64e36" stroke="#593c2d" strokeWidth="8"/>
-              <rect x="168" y="246" width="234" height="36" fill="#f2c45f" stroke="#593c2d" strokeWidth="7"/>
-              <path d="M168 282h234l-14 22H182z" fill="#e5a84d"/>
-              <g fill="#f7e8c5" fontFamily="monospace" fontSize="19" fontWeight="bold" textAnchor="middle"><text x="285" y="271">BÁNH TRÁNG</text></g>
-              <rect x="202" y="309" width="164" height="58" fill="#e8d8b2" stroke="#684633" strokeWidth="6"/>
-              <rect x="208" y="315" width="152" height="8" fill="#f8edcf"/>
-              <rect x="208" y="358" width="152" height="6" fill="#a8784e"/>
-              <rect x="278" y="326" width="7" height="30" fill="#684633"/>
-              <rect x="218" y="319" width="52" height="36" fill="#7caaa0"/><rect x="282" y="319" width="68" height="36" fill="#f0c477"/>
-              <rect x="194" y="374" width="184" height="10" fill="#6e4937"/>
-              <circle cx="220" cy="392" r="13" fill="#343a3d" stroke="#d2b58a" strokeWidth="5"/><circle cx="350" cy="392" r="13" fill="#343a3d" stroke="#d2b58a" strokeWidth="5"/>
-              <rect x="224" y="294" width="122" height="10" fill="#f8e6bd"/>
-              <g fill="#dc754b"><rect x="234" y="286" width="18" height="8"/><rect x="258" y="286" width="18" height="8"/><rect x="282" y="286" width="18" height="8"/><rect x="306" y="286" width="18" height="8"/></g>
-              <g fill="#6d8b49"><rect x="240" y="282" width="8" height="5"/><rect x="288" y="282" width="8" height="5"/><rect x="318" y="282" width="8" height="5"/></g>
-              <g fill="#b85b38"><circle cx="246" cy="300" r="5"/><circle cx="264" cy="300" r="5"/><circle cx="282" cy="300" r="5"/><circle cx="300" cy="300" r="5"/><circle cx="318" cy="300" r="5"/></g>
-            </g>
-            <g filter="url(#pixelShadow)">
-              <rect x="700" y="276" width="150" height="92" fill="#d7a35d" stroke="#76503a" strokeWidth="7"/>
-              <path d="M690 278l84-52 86 52z" fill="#b94e3e" stroke="#684333" strokeWidth="7"/>
-              <rect x="723" y="310" width="105" height="58" fill="#a9c8bc" stroke="#76503a" strokeWidth="5"/>
-              <text x="775" y="302" fontSize="13" fontFamily="monospace" fontWeight="bold" textAnchor="middle" fill="#fff0cf">QUÁN NƯỚC</text>
-            </g>
-            <g>
-              <rect y="418" width="1200" height="260" fill="url(#roadTexture)"/>
-              <path d="M0 418H1200M0 678H1200" stroke="#d8c9a9" strokeWidth="12"/>
-              <path d="M0 550H1200" stroke="#f4e5b4" strokeWidth="5" strokeDasharray="48 38"/>
-              <rect x="560" y="418" width="80" height="260" fill="#e5d7b9" opacity=".2"/>
-              <path d="M600 418V678" stroke="#f8e9bd" strokeWidth="4" strokeDasharray="16 12" opacity=".65"/>
-            </g>
-            <g transform="translate(1050 260)" shapeRendering="crispEdges">
-              <rect x="-8" y="102" width="36" height="22" fill="#a77a4d" stroke="#694a35" strokeWidth="5"/>
-              <rect x="0" y="0" width="18" height="120" fill="#8b6c4e"/><circle cx="8" cy="-12" r="42" fill="#4d8051" stroke="#356342" strokeWidth="8"/><circle cx="-18" cy="-25" r="19" fill="#63965b"/><circle cx="28" cy="-34" r="20" fill="#63965b"/>
-            </g>
-            <g transform="translate(36 280)" shapeRendering="crispEdges">
-              <rect x="-8" y="72" width="34" height="20" fill="#a77a4d" stroke="#694a35" strokeWidth="5"/>
-              <rect x="0" y="0" width="14" height="90" fill="#8b6c4e"/><circle cx="8" cy="-8" r="34" fill="#4e8153" stroke="#356342" strokeWidth="7"/><circle cx="-12" cy="-22" r="17" fill="#67985e"/><circle cx="26" cy="-27" r="17" fill="#67985e"/>
-            </g>
-            <g fill="#f6d88d" fontFamily="monospace" fontSize="16" fontWeight="bold">
-              <text x="36" y="700">KHU PHỐ BÁN BÁNH TRÁNG · SÀI GÒN</text>
-            </g>
-          </svg>
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 z-[4] mix-blend-soft-light"
-            style={{
-              background: neighborhoodEvent.dayPart === 'MORNING'
-                ? 'linear-gradient(180deg, rgba(255,220,150,.16) 0%, rgba(255,220,150,.04) 48%, transparent 78%)'
-                : neighborhoodEvent.dayPart === 'NOON'
-                  ? 'linear-gradient(180deg, rgba(255,250,215,.08) 0%, transparent 62%)'
-                  : 'linear-gradient(180deg, rgba(255,155,100,.17) 0%, rgba(255,155,100,.05) 56%, transparent 82%)',
-            }}
-          />
+          <div className="world-scene-layer world-map-redesign" data-time={worldLighting}>
+          <NeighborhoodMapArt />
+                    <div className={`world-light-overlay world-light-overlay--${worldLighting}`} aria-hidden="true" />
           <div className="world-status-card absolute left-2 top-2 z-20 w-[min(46%,250px)] border-[3px] border-[#35291f] bg-[#263b3b] px-2 py-2 font-mono shadow-[4px_4px_0_#172126] [image-rendering:pixelated] sm:left-[2%] sm:top-[2%] sm:w-auto sm:px-4 sm:py-3">
             <p className="text-[9px] font-black tracking-[.1em] text-amber-300 sm:text-[10px] sm:tracking-[.16em]">GÓC PHỐ BÁNH TRÁNG</p>
             <p className="text-[11px] font-extrabold sm:text-sm">Ngày {hud.day} · {hud.money.toLocaleString('vi-VN')}đ</p>
@@ -1853,44 +1328,40 @@ export default function App() {
           <div className="world-daypart-card absolute right-2 top-16 z-20 w-[min(48%,270px)] border-[3px] border-[#35291f] bg-[#263b3b]/95 p-2 font-mono shadow-[4px_4px_0_#172126] sm:right-5 sm:top-16 sm:w-[270px] sm:p-2.5">
             <div className="flex items-center justify-between gap-2">
               <p className="text-[9px] font-black tracking-[.12em] text-amber-300">NHỊP SỐNG KHU PHỐ</p>
-              <span className="shrink-0 border border-amber-200/40 bg-amber-100/10 px-1.5 py-0.5 text-[8px] font-bold text-amber-100">{neighborhoodEvent.dayPartLabel}</span>
+              <span className="shrink-0 border border-amber-200/40 bg-amber-100/10 px-1.5 py-0.5 text-[8px] font-bold text-amber-100">{worldLightingLabel}</span>
             </div>
             <p className="mt-1 text-[11px] font-extrabold text-white">{neighborhoodEvent.title}</p>
             <p className="world-event-description mt-1 text-[9px] leading-relaxed text-slate-200">{neighborhoodEvent.description}</p>
             <p className="world-event-traffic mt-1 text-[8px] font-bold text-emerald-200">● {neighborhoodEvent.trafficLabel}</p>
           </div>
-          <div className="absolute left-[18%] top-[38%] z-10 flex items-end gap-2" style={{animation:"walkEast 24s linear infinite"}}>
+          <div className="world-pedestrian world-pedestrian--one absolute left-[18%] top-[38%] z-10 flex items-end gap-2" style={{animation:"walkEast 24s linear infinite"}}>
             <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#d99b70"/><rect x="10" y="0" width="22" height="8" fill="#292b31"/><rect x="8" y="20" width="26" height="22" fill="#3d78a0"/><rect x="10" y="42" width="9" height="18" fill="#343d4c"/><rect x="23" y="42" width="9" height="18" fill="#343d4c"/></svg>
             <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#bd805d"/><rect x="9" y="0" width="24" height="8" fill="#4d332b"/><rect x="8" y="20" width="26" height="22" fill="#d16c4e"/><rect x="10" y="42" width="9" height="18" fill="#384b42"/><rect x="23" y="42" width="9" height="18" fill="#384b42"/></svg>
           </div>
-          <div className="absolute left-[57%] top-[38%] z-10" style={{animation:"walkWest 29s linear infinite"}}>
+          <div className="world-pedestrian world-pedestrian--two absolute left-[57%] top-[38%] z-10" style={{animation:"walkWest 29s linear infinite"}}>
             <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#e0aa82"/><rect x="8" y="0" width="26" height="8" fill="#47382c"/><rect x="8" y="20" width="26" height="22" fill="#e2b44e"/><rect x="10" y="42" width="9" height="18" fill="#34475a"/><rect x="23" y="42" width="9" height="18" fill="#34475a"/></svg>
           </div>
-          <div className="pointer-events-none absolute left-0 top-[66%] z-[5]" style={{animation:"trafficEast 20s linear infinite"} } aria-hidden="true">
+          <div className="world-traffic world-traffic--one pointer-events-none absolute left-0 top-[66%] z-[5]" style={{animation:"trafficEast 20s linear infinite"} } aria-hidden="true">
             <svg viewBox="0 0 150 72" className="h-12 w-28 sm:h-14 sm:w-36" shapeRendering="crispEdges"><rect x="8" y="25" width="132" height="30" fill="#2c83b9" stroke="#203f56" strokeWidth="5"/><path d="M34 25L48 8H105L124 25Z" fill="#d5e8e6" stroke="#203f56" strokeWidth="5"/><rect x="54" y="13" width="22" height="10" fill="#77aeb8"/><rect x="81" y="13" width="20" height="10" fill="#77aeb8"/><circle cx="36" cy="57" r="10" fill="#242a2e" stroke="#bcae8c" strokeWidth="3"/><circle cx="113" cy="57" r="10" fill="#242a2e" stroke="#bcae8c" strokeWidth="3"/><rect x="5" y="34" width="8" height="8" fill="#f7df91"/></svg>
           </div>
-          <div className="pointer-events-none absolute right-0 top-[81%] z-[5]" style={{animation:"trafficWest 16s linear infinite",animationDelay:"-7s"}} aria-hidden="true">
+          <div className="world-traffic world-traffic--two pointer-events-none absolute right-0 top-[81%] z-[5]" style={{animation:"trafficWest 16s linear infinite",animationDelay:"-7s"}} aria-hidden="true">
             <svg viewBox="0 0 112 62" className="h-10 w-20 sm:h-12 sm:w-24" shapeRendering="crispEdges"><path d="M12 38L22 18H76L96 38V48H12Z" fill="#d5a84f" stroke="#544331" strokeWidth="5"/><rect x="31" y="22" width="34" height="12" fill="#b8d7d4" stroke="#544331" strokeWidth="3"/><circle cx="30" cy="49" r="8" fill="#292e31"/><circle cx="80" cy="49" r="8" fill="#292e31"/><rect x="4" y="36" width="9" height="7" fill="#f7e5ad"/></svg>
           </div>
-          <div className="pointer-events-none absolute left-0 top-[73%] z-[5]" style={{animation:"trafficEast 13s linear infinite",animationDelay:"-4s"}} aria-hidden="true">
+          <div className="world-traffic world-traffic--three pointer-events-none absolute left-0 top-[73%] z-[5]" style={{animation:"trafficEast 13s linear infinite",animationDelay:"-4s"}} aria-hidden="true">
             <svg viewBox="0 0 110 64" className="h-9 w-16 sm:h-10 sm:w-20" shapeRendering="crispEdges"><circle cx="23" cy="49" r="9" fill="#242a2e"/><circle cx="83" cy="49" r="9" fill="#242a2e"/><path d="M20 42L32 26H69L85 42Z" fill="#d65a45" stroke="#593b31" strokeWidth="4"/><rect x="40" y="29" width="23" height="10" fill="#b8d7d4" stroke="#593b31" strokeWidth="3"/><path d="M12 40H95" stroke="#593b31" strokeWidth="4"/></svg>
           </div>
-          {WORLD_INTERACTABLES.filter((location) => location.kind === 'NPC' && location.id !== 'co_nam').map((npc) => (
+          {WORLD_INTERACTABLES.filter((location) => location.kind === 'NPC').map((npc) => (
             <WorldNpcSprite key={npc.id} npc={npc} />
           ))}
-          <div className="absolute z-10 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]" style={{left:"46%",top:"52%"}} title="Cô Năm hàng xóm">
-            <svg viewBox="0 0 42 64" className="h-11 w-8 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label="Cô Năm hàng xóm">
-              <rect x="12" y="3" width="18" height="18" fill="#c98f70"/><path d="M7 13Q21 -3 35 13L31 19H11Z" fill="#8b3f35"/><rect x="8" y="22" width="26" height="22" fill="#d65f4c"/><rect x="10" y="44" width="9" height="16" fill="#344b3d"/><rect x="23" y="44" width="9" height="16" fill="#344b3d"/><rect x="9" y="59" width="12" height="5" fill="#49352b"/><rect x="22" y="59" width="12" height="5" fill="#49352b"/>
-            </svg>
-            <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap border border-[#4b3428] bg-[#ffe3a6] px-1.5 py-0.5 text-[8px] font-black text-[#35291f]">CÔ NĂM</span>
-          </div>
-          <div className="absolute z-20 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]" ref={worldPlayerElementRef} style={{left:worldPlayer.x+"%",top:worldPlayer.y+"%",willChange:"left, top"}}>
+
+          <div className="world-map-player absolute z-20 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]" ref={worldPlayerElementRef} style={{left:worldPlayer.x+"%",top:worldPlayer.y+"%",["--portrait-top" as string]:getPortraitWorldTop(worldPlayer.y)+"%",["--logic-top" as string]:worldPlayer.y+"%",willChange:"left, top"}}>
             <svg viewBox="0 0 48 72" className="h-14 w-10 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label="Nhân vật người chơi">
               <rect x="14" y="3" width="20" height="19" fill="#d99b76"/><rect x="11" y="0" width="26" height="9" fill="#292b31"/><rect x="8" y="22" width="32" height="25" fill="#2f83a0"/><rect x="1" y="25" width="8" height="21" fill="#d99b76"/><rect x="39" y="25" width="8" height="21" fill="#d99b76"/><rect x="11" y="47" width="10" height="21" fill="#303947"/><rect x="27" y="47" width="10" height="21" fill="#303947"/><rect x="9" y="66" width="13" height="5" fill="#392c27"/><rect x="26" y="66" width="13" height="5" fill="#392c27"/>
             </svg>
-            <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap border border-[#243d36] bg-[#9ee4a8] px-2 py-0.5 text-[8px] font-black text-[#17251e]">BẠN</span>
+            <span className="world-player-nameplate">BẠN</span>
           </div>
           </div>
+          {worldPanel && <button type="button" className="world-panel-scrim absolute inset-0 z-20" aria-label="Đóng bảng thông tin" onClick={() => setWorldPanel(null)} />}
           {worldPanel && (
             <div className="world-info-panel absolute top-[14%] bottom-[32%] left-1/2 z-30 w-[min(92%,520px)] -translate-x-1/2 overflow-y-auto overscroll-contain touch-pan-y border-2 border-[#e7c77e] bg-[#18262b]/95 p-4 shadow-[6px_6px_0_#111]">
               <div className="flex items-center justify-between gap-3">
@@ -2029,6 +1500,9 @@ export default function App() {
           </>
           ) : (
             <button type="button" onClick={() => setWorldHudOpen(true)} className="absolute bottom-3 left-1/2 z-30 -translate-x-1/2 border-[3px] border-[#e7c77e] bg-[#263b3b]/95 px-4 py-2 font-mono text-xs font-black text-[#fff2d1] shadow-[4px_4px_0_#111] hover:bg-[#405653]">☰ MỞ BẢNG ĐIỀU KHIỂN</button>
+          )}
+          {worldNotice && nearbyWorldLocation && !worldPanel && !neighborhoodHelpQuestOfferOpen && !neighborhoodParcelQuestOfferOpen && (
+            <WorldDialoguePanel npc={nearbyWorldLocation} message={worldNotice} onContinue={() => setWorldNotice('')} />
           )}
           {neighborhoodParcelQuestOfferOpen && (
             <div className="absolute inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="parcel-quest-title">
