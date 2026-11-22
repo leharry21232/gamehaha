@@ -3,7 +3,7 @@ export const PORTRAIT_WORLD_LAYOUT = {
   logicalMinY: 33,
   logicalMaxY: 56,
   screenMinY: 43,
-  screenMaxY: 67,
+  screenMaxY: 62,
 } as const;
 
 export function getPortraitWorldTop(logicalY: number): number {

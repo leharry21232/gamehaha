@@ -472,23 +472,22 @@
 }
 
 
-/* ===== FIX MAP ANCHORS + MODAL: sprite feet stay on sidewalk, panels stay centered ===== */
+
+/* Neo sprite anchor: toa do top cua NPC/player la vi tri ban chan. */
 .world-map-player,.world-map-npc { transform:translate(-50%,-100%) !important; }
-.world-map-npc .world-npc-nameplate { top:-62px !important; left:50% !important; right:auto !important; transform:translateX(-50%) !important; }
-.world-map-player .world-player-nameplate { top:-74px !important; left:50% !important; transform:translateX(-50%) !important; }
+.world-map-npc .world-npc-nameplate { top:-62px !important; }
+.world-map-npc .world-npc-nameplate--shipper_ti { top:-84px !important; }
+.world-map-player .world-player-nameplate { top:-74px !important; }
+
+/* Desktop mac dinh can giua; mobile/landscape dung lai vi tri va kich thuoc trong media query phia tren. */
 .world-info-panel {
-  position:absolute !important;
-  top:50% !important;
-  left:50% !important;
-  right:auto !important;
-  bottom:auto !important;
-  width:min(92vw,560px) !important;
-  max-height:min(72dvh,620px) !important;
-  transform:translate(-50%,-50%) !important;
-  translate:none !important;
-  padding:14px !important;
-  z-index:90 !important;
-}
-@media (orientation:landscape) and (pointer:coarse) {
-  .world-info-panel { width:min(76vw,620px) !important; max-height:min(78dvh,620px) !important; }
+  position:absolute;
+  top:50%;
+  left:50%;
+  right:auto;
+  bottom:auto;
+  width:min(92vw,560px);
+  max-height:min(72dvh,620px);
+  transform:translate(-50%,-50%);
+  z-index:90;
 }
