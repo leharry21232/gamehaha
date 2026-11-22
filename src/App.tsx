@@ -1537,131 +1537,177 @@ export default function App() {
               .world-daypart-card { width: min(31vw, 300px); }
             }
 
-            /* Final touch layout: an explicit 5:3 map frame avoids auto-width collapse and stretching. */
-            @media (max-width: 1100px), (pointer: coarse) {
+
+            /* Final map framing: show the entire 5:3 neighborhood on portrait phones,
+               use the maximum available height on landscape/tablets, and clip traffic to the map. */
+            @media (pointer: coarse), (max-width: 1100px) {
               .world-scene-layer {
-                position: absolute; inset: auto; top: 12dvh; bottom: auto; right: auto;
-                width: 93.3333dvh; height: 56dvh; aspect-ratio: 5 / 3;
-                left: clamp(calc(100vw - 93.3333dvh), var(--world-camera-left), 0px);
-                transform: none;
+                position: absolute !important;
+                inset: auto !important;
+                width: min(100vw, 166.6667dvh) !important;
+                height: min(60vw, 100dvh) !important;
+                max-width: none !important;
+                aspect-ratio: 5 / 3 !important;
+                left: 50% !important;
+                top: 50% !important;
+                right: auto !important;
+                bottom: auto !important;
+                transform: translate(-50%, -50%) !important;
+                overflow: hidden !important;
+                contain: layout paint;
+                isolation: isolate;
               }
-              .world-desktop-controls,
-              .world-controls-panel.world-desktop-controls { display: none !important; }
               .world-mobile-dock {
-                position: absolute; z-index: 35; display: flex; flex-direction: column;
-                left: max(9px, env(safe-area-inset-left)); right: max(9px, env(safe-area-inset-right));
-                bottom: max(9px, env(safe-area-inset-bottom)); width: auto; max-height: 138px;
-                gap: 5px; padding: 6px; border: 2px solid #172126; border-radius: 13px;
-                background: linear-gradient(180deg, rgba(38,59,59,.96), rgba(22,39,40,.97));
-                box-shadow: 0 3px 0 #172126; font-family: var(--font-mono);
+                position: absolute !important;
+                display: flex !important;
+                left: max(8px, env(safe-area-inset-left)) !important;
+                right: max(8px, env(safe-area-inset-right)) !important;
+                bottom: max(8px, env(safe-area-inset-bottom)) !important;
+                width: auto !important;
+                max-height: 126px !important;
+                gap: 5px !important;
+                padding: 6px !important;
+                border: 2px solid #172126 !important;
+                border-radius: 12px !important;
+                background: linear-gradient(180deg, rgba(30,50,49,.94), rgba(19,35,35,.96)) !important;
+                box-shadow: 0 3px 0 #172126 !important;
               }
-              .world-mobile-tabs { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 4px; }
+              .world-desktop-controls { display: none !important; }
+              .world-mobile-tabs {
+                display: grid !important;
+                grid-template-columns: repeat(4, minmax(0,1fr)) !important;
+                gap: 4px !important;
+              }
               .world-mobile-tab {
-                min-width: 0; min-height: 34px; display: flex; flex-direction: row;
-                align-items: center; justify-content: center; gap: 4px; padding: 3px 2px;
-                border: 1px solid #91a28e; border-radius: 7px; background: #405653;
-                color: #fff2d1; box-shadow: 0 1px 0 #111;
+                display: flex !important;
+                min-width: 0 !important;
+                min-height: 32px !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 4px !important;
+                padding: 3px 2px !important;
+                border-width: 1px !important;
+                border-radius: 7px !important;
               }
-              .world-mobile-tab span { font-size: 15px; line-height: 1; }
-              .world-mobile-tab b { font: 900 8px/1 var(--font-display); white-space: nowrap; }
-              .world-mobile-tab.is-active { border-color: #f6cf70; background: #8d633e; color: #fff4ce; }
+              .world-mobile-tab span { font-size: 14px !important; }
+              .world-mobile-tab b { font-size: 8px !important; }
               .world-mobile-controls {
-                display: grid; grid-template-columns: 104px minmax(0,1fr);
-                align-items: center; gap: 7px; min-width: 0;
+                display: grid !important;
+                grid-template-columns: 96px minmax(0,1fr) !important;
+                align-items: center !important;
+                gap: 6px !important;
               }
               .world-mobile-dpad {
-                width: 104px; display: grid; grid-template-columns: repeat(3,32px);
-                grid-template-rows: repeat(2,26px); gap: 3px; justify-self: center;
+                width: 96px !important;
+                display: grid !important;
+                grid-template-columns: repeat(3,30px) !important;
+                grid-template-rows: repeat(2,24px) !important;
+                gap: 3px !important;
               }
               .world-mobile-dpad button {
-                display: grid; place-items: center; border: 1.5px solid #9cae91;
-                border-radius: 7px; background: #526c61; color: #fff4d6;
-                font: 900 18px/1 var(--font-display); box-shadow: 0 2px 0 #111;
-                touch-action: none; user-select: none;
+                display: grid !important;
+                min-width: 0 !important;
+                min-height: 0 !important;
+                place-items: center !important;
+                padding: 0 !important;
+                border-width: 1.5px !important;
+                border-radius: 7px !important;
+                font-size: 18px !important;
               }
-              .world-mobile-dpad button:nth-child(1) { grid-column: 2; grid-row: 1; }
-              .world-mobile-dpad button:nth-child(2) { grid-column: 1; grid-row: 2; }
-              .world-mobile-dpad button:nth-child(3) { grid-column: 2; grid-row: 2; }
-              .world-mobile-dpad button:nth-child(4) { grid-column: 3; grid-row: 2; }
-              .world-mobile-dpad button:active { background: #9b7548; transform: translateY(1px); }
-              .world-mobile-actions { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+              .world-mobile-actions { display: flex !important; min-width: 0 !important; flex-direction: column !important; gap: 3px !important; }
               .world-mobile-interact {
-                min-width: 0; min-height: 43px; display: flex; flex-direction: row;
-                align-items: center; justify-content: center; gap: 5px; padding: 4px 7px;
-                border: 2px solid #543a25; border-radius: 8px;
-                background: linear-gradient(180deg,#ffdc80,#e9ad42);
-                color: #392819; box-shadow: 0 2px 0 #111; text-align: center;
+                display: flex !important;
+                min-width: 0 !important;
+                min-height: 39px !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 5px !important;
+                padding: 4px 6px !important;
+                border-width: 2px !important;
+                border-radius: 8px !important;
+                box-shadow: 0 2px 0 #111 !important;
               }
-              .world-mobile-interact span { font: 900 14px/1 var(--font-display); }
-              .world-mobile-interact b {
-                max-width: 100%; overflow: hidden; font: 900 8px/1.1 var(--font-display);
-                text-overflow: ellipsis; white-space: nowrap;
-              }
-              .world-mobile-visitor {
-                border: 1px solid #6b5430; border-radius: 6px; background: #f6dfa0;
-                color: #392819; padding: 3px; font: 900 7px var(--font-display);
-              }
+              .world-mobile-interact span { font-size: 14px !important; }
+              .world-mobile-interact b { font-size: 8px !important; white-space: nowrap !important; }
               .world-mobile-actions p {
-                min-height: 11px; margin: 0; overflow: hidden; color: #dbe5df;
-                font: 700 7px/1.1 var(--font-display); text-align: center;
-                white-space: nowrap; text-overflow: ellipsis;
+                min-height: 10px !important;
+                margin: 0 !important;
+                overflow: hidden !important;
+                font-size: 7px !important;
+                line-height: 1.1 !important;
+                white-space: nowrap !important;
+                text-overflow: ellipsis !important;
               }
               .world-info-panel {
-                top: max(78px, calc(env(safe-area-inset-top) + 68px));
-                bottom: calc(126px + env(safe-area-inset-bottom));
-                left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right));
-                width: auto; max-height: 42dvh; padding: 9px; transform: none; translate: none;
+                top: max(72px, calc(env(safe-area-inset-top) + 64px)) !important;
+                bottom: calc(116px + env(safe-area-inset-bottom)) !important;
+                left: max(8px, env(safe-area-inset-left)) !important;
+                right: max(8px, env(safe-area-inset-right)) !important;
+                width: auto !important;
+                max-height: 48dvh !important;
+                padding: 9px !important;
+                transform: none !important;
+                translate: none !important;
               }
               .world-status-card {
-                left: max(8px, env(safe-area-inset-left)); top: max(8px, env(safe-area-inset-top));
-                width: calc(50% - 14px); max-width: 240px; padding: 6px 7px;
-                border-width: 2px; box-shadow: 2px 2px 0 #172126;
+                left: max(8px, env(safe-area-inset-left)) !important;
+                top: max(8px, env(safe-area-inset-top)) !important;
+                width: calc(50% - 14px) !important;
+                max-width: 245px !important;
+                padding: 6px 7px !important;
+                border-width: 2px !important;
+                box-shadow: 2px 2px 0 #172126 !important;
               }
-              .world-status-card .world-status-detail { font-size: 8px; line-height: 1.15; }
+              .world-status-card .world-status-detail { font-size: 8px !important; line-height: 1.15 !important; }
               .world-daypart-card {
-                right: max(8px, env(safe-area-inset-right)); top: max(8px, env(safe-area-inset-top));
-                width: calc(50% - 14px); max-width: 240px; padding: 6px 7px;
-                border-width: 2px; box-shadow: 2px 2px 0 #172126;
+                right: max(8px, env(safe-area-inset-right)) !important;
+                top: max(8px, env(safe-area-inset-top)) !important;
+                width: calc(50% - 14px) !important;
+                max-width: 245px !important;
+                padding: 6px 7px !important;
+                border-width: 2px !important;
+                box-shadow: 2px 2px 0 #172126 !important;
               }
               .world-daypart-card .world-event-description,
-              .world-daypart-card .world-event-traffic { display: none; }
-              .world-daypart-card > div { align-items: flex-start; flex-wrap: wrap; gap: 3px; }
-              .world-daypart-card p { font-size: 9px; line-height: 1.15; }
+              .world-daypart-card .world-event-traffic { display: none !important; }
+              .world-daypart-card p { font-size: 9px !important; line-height: 1.15 !important; }
             }
-            @media (max-width: 380px) and (orientation: portrait), (pointer: coarse) and (orientation: portrait) {
-              .world-mobile-dock { gap: 4px; padding: 5px; max-height: 128px; }
-              .world-mobile-tab { min-height: 31px; gap: 2px; }
-              .world-mobile-tab span { font-size: 13px; }
-              .world-mobile-tab b { font-size: 7px; }
-              .world-mobile-controls { grid-template-columns: 94px minmax(0,1fr); gap: 5px; }
-              .world-mobile-dpad { width: 94px; grid-template-columns: repeat(3,29px); grid-template-rows: repeat(2,24px); }
-              .world-mobile-interact { min-height: 39px; }
-              .world-mobile-interact b { font-size: 7px; }
-            }
-            @media (orientation: landscape) and (max-width: 1400px), (orientation: landscape) and (pointer: coarse) {
+            @media (orientation: portrait) and (pointer: coarse) {
               .world-scene-layer {
-                top: 44%; left: 50%; right: auto; bottom: auto;
-                width: min(100vw, 140dvh); height: auto; aspect-ratio: 5 / 3;
-                transform: translate(-50%, -50%);
+                width: 100vw !important;
+                height: 60vw !important;
+                left: 50% !important;
+                top: 49% !important;
+              }
+              .world-mobile-dock { max-height: 122px !important; }
+              .world-info-panel {
+                top: max(72px, calc(env(safe-area-inset-top) + 64px)) !important;
+                bottom: calc(112px + env(safe-area-inset-bottom)) !important;
+                max-height: 44dvh !important;
+              }
+            }
+            @media (orientation: landscape) and (pointer: coarse) {
+              .world-scene-layer {
+                width: min(100vw, 166.6667dvh) !important;
+                height: min(60vw, 100dvh) !important;
+                top: 48% !important;
               }
               .world-mobile-dock {
-                left: auto; right: max(10px, env(safe-area-inset-right));
-                bottom: max(8px, env(safe-area-inset-bottom));
-                width: min(42vw, 360px); max-height: 142px;
+                left: auto !important;
+                right: max(8px, env(safe-area-inset-right)) !important;
+                bottom: max(8px, env(safe-area-inset-bottom)) !important;
+                width: min(38vw, 340px) !important;
               }
-              .world-mobile-tab { min-height: 32px; }
-              .world-mobile-tab span { font-size: 13px; }
-              .world-mobile-tab b { font-size: 7px; }
-              .world-mobile-controls { grid-template-columns: 96px minmax(0,1fr); gap: 5px; }
-              .world-mobile-dpad { width: 96px; grid-template-columns: repeat(3,30px); grid-template-rows: repeat(2,24px); }
-              .world-mobile-interact { min-height: 38px; }
               .world-info-panel {
-                top: max(10px, env(safe-area-inset-top)); bottom: 10px;
-                left: max(10px, env(safe-area-inset-left)); right: auto;
-                width: min(42vw, 420px); max-height: none;
+                top: max(8px, env(safe-area-inset-top)) !important;
+                bottom: 8px !important;
+                left: max(8px, env(safe-area-inset-left)) !important;
+                right: auto !important;
+                width: min(40vw, 390px) !important;
+                max-height: none !important;
               }
-              .world-status-card { width: min(31vw, 300px); }
-              .world-daypart-card { width: min(31vw, 300px); }
             }
           `}</style>
           <div className="world-scene-layer" style={{["--world-camera-left" as string]: `calc(50vw - ${worldPlayer.x * 0.933333}dvh)`}}>
