@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, isWorldPositionWalkable, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_LANDMARKS, PEDESTRIAN_ROUTES, getNeighborhoodEvent, getNeighborhoodDialogue, isNeighborhoodDialogueLocationId, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, NEIGHBORHOOD_PARCEL_QUEST, getWorldMovementDelta, WORLD_PLAYER_SPEED, type WorldInteractable } from './world';
+import { canChangeVendorLocation, canUseWorldActivity, findNearbyWorldActivity, findNearbyWorldLocation, getVendorLocation, isSystemUnlocked, isWorldPositionWalkable, moveWorldPlayer, VENDOR_LOCATIONS, WORLD_ACTIVITIES, WORLD_INTERACTABLES, WORLD_WALKABLE_BOUNDS, WORLD_LANDMARKS, PEDESTRIAN_ROUTES, getNeighborhoodEvent, getNeighborhoodDialogue, isNeighborhoodDialogueLocationId, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, NEIGHBORHOOD_PARCEL_QUEST, getWorldMovementDelta, WORLD_PLAYER_SPEED, type WorldInteractable } from './world';
 
 test('all five vendor locations have distinct grounded costs and valid multipliers', () => {
   assert.equal(VENDOR_LOCATIONS.length, 5);
@@ -317,4 +317,14 @@ test('Cô Năm spawn is spaced away from the player and still interactable', () 
   assert.deepEqual({ x: coNam?.x, y: coNam?.y }, { x: 56, y: 55 });
   assert.equal(findNearbyWorldLocation(48, 45), null);
   assert.equal(findNearbyWorldLocation(56, 55)?.id, 'co_nam');
+});
+
+
+test('all neighborhood NPC interaction anchors stay within the sidewalk walkable band', () => {
+  const npcs = WORLD_INTERACTABLES.filter((location) => location.kind === 'NPC');
+  assert.equal(npcs.length, 5);
+  for (const npc of npcs) {
+    assert.ok(npc.y >= WORLD_WALKABLE_BOUNDS.minY, `${npc.name} is above the sidewalk band`);
+    assert.ok(npc.y <= WORLD_WALKABLE_BOUNDS.maxY, `${npc.name} is below the sidewalk band`);
+  }
 });

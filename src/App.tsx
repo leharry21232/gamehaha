@@ -63,7 +63,7 @@ function WorldNpcSprite({ npc }: { npc: WorldInteractable }) {
           ? { shirt: '#c45f4d', hair: '#563a2f', accent: '#f2c94c', hat: false }
           : { shirt: '#8467a8', hair: '#77706a', accent: '#f0d99b', hat: false };
   return (
-    <div className={`world-map-npc world-map-npc--${npc.id} absolute z-10 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]`}
+    <div className={`world-map-npc world-map-npc--${npc.id} absolute z-10 [image-rendering:pixelated]`}
       style={{ left: npc.x + '%', top: npc.y + '%', ['--portrait-top' as string]: getPortraitWorldTop(npc.y) + '%', ['--logic-top' as string]: npc.y + '%' }} title={npc.name}>
       <svg viewBox="0 0 42 64" className="h-11 w-8 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label={npc.name}>
         {palette.hat && <rect x="6" y="2" width="30" height="7" fill={palette.accent} stroke="#46352b" strokeWidth="2" />}
@@ -1354,7 +1354,7 @@ export default function App() {
             <WorldNpcSprite key={npc.id} npc={npc} />
           ))}
 
-          <div className="world-map-player absolute z-20 -translate-x-1/2 -translate-y-1/2 [image-rendering:pixelated]" ref={worldPlayerElementRef} style={{left:worldPlayer.x+"%",top:worldPlayer.y+"%",["--portrait-top" as string]:getPortraitWorldTop(worldPlayer.y)+"%",["--logic-top" as string]:worldPlayer.y+"%",willChange:"left, top"}}>
+          <div className="world-map-player absolute z-20 [image-rendering:pixelated]" ref={worldPlayerElementRef} style={{left:worldPlayer.x+"%",top:worldPlayer.y+"%",["--portrait-top" as string]:getPortraitWorldTop(worldPlayer.y)+"%",["--logic-top" as string]:worldPlayer.y+"%",willChange:"left, top"}}>
             <svg viewBox="0 0 48 72" className="h-14 w-10 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label="Nhân vật người chơi">
               <rect x="14" y="3" width="20" height="19" fill="#d99b76"/><rect x="11" y="0" width="26" height="9" fill="#292b31"/><rect x="8" y="22" width="32" height="25" fill="#2f83a0"/><rect x="1" y="25" width="8" height="21" fill="#d99b76"/><rect x="39" y="25" width="8" height="21" fill="#d99b76"/><rect x="11" y="47" width="10" height="21" fill="#303947"/><rect x="27" y="47" width="10" height="21" fill="#303947"/><rect x="9" y="66" width="13" height="5" fill="#392c27"/><rect x="26" y="66" width="13" height="5" fill="#392c27"/>
             </svg>
@@ -1363,7 +1363,7 @@ export default function App() {
           </div>
           {worldPanel && <button type="button" className="world-panel-scrim absolute inset-0 z-20" aria-label="Đóng bảng thông tin" onClick={() => setWorldPanel(null)} />}
           {worldPanel && (
-            <div className="world-info-panel absolute top-[14%] bottom-[32%] left-1/2 z-30 w-[min(92%,520px)] -translate-x-1/2 overflow-y-auto overscroll-contain touch-pan-y border-2 border-[#e7c77e] bg-[#18262b]/95 p-4 shadow-[6px_6px_0_#111]">
+            <div className="world-info-panel absolute z-30 w-[min(92%,560px)] overflow-y-auto overscroll-contain touch-pan-y border-2 border-[#e7c77e] bg-[#18262b]/95 p-4 shadow-[6px_6px_0_#111]">
               <div className="flex items-center justify-between gap-3">
                 <p className="font-black text-amber-200">{worldPanel === 'MAP' ? '🗺 BẢN ĐỒ KHU PHỐ' : worldPanel === 'BAG' ? '🎒 TÚI ĐỒ' : worldPanel === 'JOURNAL' ? '📖 NHẬT KÝ' : '📱 ĐIỆN THOẠI'}</p>
                 <button type="button" onClick={() => setWorldPanel(null)} aria-label="Đóng khung thông tin" title="Đóng khung thông tin" className="flex h-9 w-9 shrink-0 items-center justify-center border-[3px] border-[#5b2d25] bg-[#b95343] text-lg font-black text-white shadow-[2px_2px_0_#111] hover:bg-[#d46654]">×</button>
