@@ -1465,9 +1465,80 @@ export default function App() {
               .world-action-row button { min-height: 38px; }
               .world-info-panel { left: 8px; top: max(64px, calc(env(safe-area-inset-top) + 56px)); bottom: 8px; width: min(50vw, 520px); max-height: calc(100dvh - 80px); transform: none; translate: none; }
             }
+
+            /* Responsive neighborhood scene: preserve pixel-art proportions on touch screens. */
+            @media (max-width: 900px) {
+              .world-scene-layer {
+                top: 0; bottom: auto; right: auto;
+                left: clamp(calc(100vw - 166.667dvh), var(--world-camera-left), 0px);
+                width: auto; height: 100dvh; aspect-ratio: 5 / 3;
+              }
+              .world-mobile-dock {
+                position: absolute; z-index: 35; display: flex;
+                left: max(10px, env(safe-area-inset-left));
+                right: max(10px, env(safe-area-inset-right));
+                bottom: max(10px, env(safe-area-inset-bottom));
+                gap: 6px; padding: 7px;
+                border: 2px solid #172126; border-radius: 14px;
+                background: linear-gradient(180deg,rgba(38,59,59,.96),rgba(22,39,40,.97));
+                box-shadow: 0 3px 0 #172126;
+              }
+              .world-mobile-tabs { gap: 5px; }
+              .world-mobile-tab { min-height: 40px; border-radius: 8px; }
+              .world-mobile-tab span { font-size: 16px; }
+              .world-mobile-tab b { font-size: 8px; }
+              .world-mobile-controls { gap: 8px; }
+              .world-mobile-dpad { width: min(100%, 150px); grid-template-rows: repeat(2, 30px); gap: 4px; }
+              .world-mobile-dpad button { border-width: 1.5px; border-radius: 8px; font-size: 19px; }
+              .world-mobile-interact { min-height: 54px; border-width: 2px; box-shadow: 0 3px 0 #111; }
+              .world-mobile-interact span { font-size: 15px; }
+              .world-mobile-interact b { font-size: 8px; }
+              .world-mobile-actions p { min-height: 15px; font-size: 7px; }
+              .world-desktop-controls { display: none !important; }
+              .world-info-panel {
+                top: auto; bottom: calc(150px + env(safe-area-inset-bottom));
+                left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right));
+                width: auto; max-height: 42dvh; padding: 10px;
+                transform: none; translate: none;
+              }
+              .world-status-card { top: max(8px, env(safe-area-inset-top)); }
+              .world-daypart-card { top: max(8px, env(safe-area-inset-top)); }
+            }
+            @media (max-width: 380px) and (orientation: portrait) {
+              .world-mobile-dock { gap: 5px; padding: 6px; }
+              .world-mobile-tab { min-height: 36px; }
+              .world-mobile-tab b { font-size: 7px; }
+              .world-mobile-dpad { grid-template-rows: repeat(2, 27px); }
+              .world-mobile-interact { min-height: 48px; }
+            }
+            @media (orientation: landscape) and (max-height: 900px) {
+              .world-scene-layer {
+                top: 50%; left: 0; right: auto; bottom: auto;
+                width: 100vw; height: auto; aspect-ratio: 5 / 3;
+                transform: translateY(-50%);
+              }
+              .world-mobile-dock {
+                left: auto; right: max(12px, env(safe-area-inset-right));
+                bottom: max(10px, env(safe-area-inset-bottom));
+                width: min(42vw, 350px); gap: 5px; padding: 6px;
+              }
+              .world-mobile-tab { min-height: 36px; }
+              .world-mobile-tab span { font-size: 15px; }
+              .world-mobile-tab b { font-size: 7px; }
+              .world-mobile-dpad { width: min(100%, 132px); grid-template-rows: repeat(2, 26px); }
+              .world-mobile-interact { min-height: 46px; }
+              .world-mobile-actions p { font-size: 7px; }
+              .world-info-panel {
+                top: max(10px, env(safe-area-inset-top)); bottom: 10px;
+                left: max(10px, env(safe-area-inset-left)); right: auto;
+                width: min(42vw, 420px); max-height: none;
+              }
+              .world-status-card { width: min(31vw, 300px); }
+              .world-daypart-card { width: min(31vw, 300px); }
+            }
           `}</style>
           <div className="world-scene-layer" style={{["--world-camera-left" as string]: `calc(50% - ${worldPlayer.x * 1.666667}dvh)`}}>
-          <svg className="absolute inset-0 h-full w-full [image-rendering:pixelated]" viewBox="0 0 1200 720" preserveAspectRatio="none" shapeRendering="crispEdges" role="img" aria-label="Khu phố bán bánh tráng trộn phong cách pixel art">
+          <svg className="absolute inset-0 h-full w-full [image-rendering:pixelated]" viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid meet" shapeRendering="crispEdges" role="img" aria-label="Khu phố bán bánh tráng trộn phong cách pixel art">
             <defs>
               <pattern id="sidewalkTiles" width="32" height="32" patternUnits="userSpaceOnUse">
                 <rect width="32" height="32" fill="#c9b995"/>
