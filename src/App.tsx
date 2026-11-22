@@ -1282,8 +1282,11 @@ export default function App() {
             @keyframes walkWest { from { transform: translateX(34vw); } to { transform: translateX(-26vw); } }
             @keyframes trafficEast { from { transform: translateX(-180px); } to { transform: translateX(calc(100vw + 180px)); } }
             @keyframes trafficWest { from { transform: translateX(calc(100vw + 180px)); } to { transform: translateX(-180px); } }
+            .world-scene-layer { position:absolute; inset:0; }
             .world-mobile-dock { display:none; }
             @media (max-width: 640px) {
+              .world-scene-layer { top:0; bottom:0; right:auto; height:100%; width:auto; aspect-ratio:5 / 3; }
+
               .world-mobile-dock { position:absolute; z-index:35; display:flex; flex-direction:column; gap:9px; left:max(9px,env(safe-area-inset-left)); right:max(9px,env(safe-area-inset-right)); bottom:max(9px,env(safe-area-inset-bottom)); padding:9px; border:2px solid #171f20; border-radius:17px; background:linear-gradient(180deg,rgba(38,59,59,.97),rgba(22,39,40,.98)); box-shadow:0 5px 0 #172126; font-family:var(--font-mono); }
               .world-mobile-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
               .world-mobile-tab { min-width:0; min-height:48px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; border:1.5px solid #91a28e; border-radius:10px; background:#405653; color:#fff2d1; box-shadow:0 2px 0 #111; }
@@ -1463,6 +1466,7 @@ export default function App() {
               .world-info-panel { left: 8px; top: max(64px, calc(env(safe-area-inset-top) + 56px)); bottom: 8px; width: min(50vw, 520px); max-height: calc(100dvh - 80px); transform: none; translate: none; }
             }
           `}</style>
+          <div className="world-scene-layer" style={{left: `clamp(calc(100% - 166.667dvh), calc(50% - ${worldPlayer.x * 1.666667}dvh), 0px)`}}>
           <svg className="absolute inset-0 h-full w-full [image-rendering:pixelated]" viewBox="0 0 1200 720" preserveAspectRatio="none" shapeRendering="crispEdges" role="img" aria-label="Khu phố bán bánh tráng trộn phong cách pixel art">
             <defs>
               <pattern id="sidewalkTiles" width="32" height="32" patternUnits="userSpaceOnUse">
@@ -1641,6 +1645,7 @@ export default function App() {
               <rect x="14" y="3" width="20" height="19" fill="#d99b76"/><rect x="11" y="0" width="26" height="9" fill="#292b31"/><rect x="8" y="22" width="32" height="25" fill="#2f83a0"/><rect x="1" y="25" width="8" height="21" fill="#d99b76"/><rect x="39" y="25" width="8" height="21" fill="#d99b76"/><rect x="11" y="47" width="10" height="21" fill="#303947"/><rect x="27" y="47" width="10" height="21" fill="#303947"/><rect x="9" y="66" width="13" height="5" fill="#392c27"/><rect x="26" y="66" width="13" height="5" fill="#392c27"/>
             </svg>
             <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap border border-[#243d36] bg-[#9ee4a8] px-2 py-0.5 text-[8px] font-black text-[#17251e]">BẠN</span>
+          </div>
           </div>
           {worldPanel && (
             <div className="world-info-panel absolute top-[14%] bottom-[32%] left-1/2 z-30 w-[min(92%,520px)] -translate-x-1/2 overflow-y-auto overscroll-contain touch-pan-y border-2 border-[#e7c77e] bg-[#18262b]/95 p-4 shadow-[6px_6px_0_#111]">
