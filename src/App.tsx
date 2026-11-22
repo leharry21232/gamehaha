@@ -1536,8 +1536,135 @@ export default function App() {
               .world-status-card { width: min(31vw, 300px); }
               .world-daypart-card { width: min(31vw, 300px); }
             }
+
+            /* Final touch layout: an explicit 5:3 map frame avoids auto-width collapse and stretching. */
+            @media (max-width: 1100px), (pointer: coarse) {
+              .world-scene-layer {
+                position: absolute; inset: auto; top: 12dvh; bottom: auto; right: auto;
+                width: 93.3333dvh; height: 56dvh; aspect-ratio: 5 / 3;
+                left: clamp(calc(100vw - 93.3333dvh), var(--world-camera-left), 0px);
+                transform: none;
+              }
+              .world-desktop-controls,
+              .world-controls-panel.world-desktop-controls { display: none !important; }
+              .world-mobile-dock {
+                position: absolute; z-index: 35; display: flex; flex-direction: column;
+                left: max(9px, env(safe-area-inset-left)); right: max(9px, env(safe-area-inset-right));
+                bottom: max(9px, env(safe-area-inset-bottom)); width: auto; max-height: 138px;
+                gap: 5px; padding: 6px; border: 2px solid #172126; border-radius: 13px;
+                background: linear-gradient(180deg, rgba(38,59,59,.96), rgba(22,39,40,.97));
+                box-shadow: 0 3px 0 #172126; font-family: var(--font-mono);
+              }
+              .world-mobile-tabs { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 4px; }
+              .world-mobile-tab {
+                min-width: 0; min-height: 34px; display: flex; flex-direction: row;
+                align-items: center; justify-content: center; gap: 4px; padding: 3px 2px;
+                border: 1px solid #91a28e; border-radius: 7px; background: #405653;
+                color: #fff2d1; box-shadow: 0 1px 0 #111;
+              }
+              .world-mobile-tab span { font-size: 15px; line-height: 1; }
+              .world-mobile-tab b { font: 900 8px/1 var(--font-display); white-space: nowrap; }
+              .world-mobile-tab.is-active { border-color: #f6cf70; background: #8d633e; color: #fff4ce; }
+              .world-mobile-controls {
+                display: grid; grid-template-columns: 104px minmax(0,1fr);
+                align-items: center; gap: 7px; min-width: 0;
+              }
+              .world-mobile-dpad {
+                width: 104px; display: grid; grid-template-columns: repeat(3,32px);
+                grid-template-rows: repeat(2,26px); gap: 3px; justify-self: center;
+              }
+              .world-mobile-dpad button {
+                display: grid; place-items: center; border: 1.5px solid #9cae91;
+                border-radius: 7px; background: #526c61; color: #fff4d6;
+                font: 900 18px/1 var(--font-display); box-shadow: 0 2px 0 #111;
+                touch-action: none; user-select: none;
+              }
+              .world-mobile-dpad button:nth-child(1) { grid-column: 2; grid-row: 1; }
+              .world-mobile-dpad button:nth-child(2) { grid-column: 1; grid-row: 2; }
+              .world-mobile-dpad button:nth-child(3) { grid-column: 2; grid-row: 2; }
+              .world-mobile-dpad button:nth-child(4) { grid-column: 3; grid-row: 2; }
+              .world-mobile-dpad button:active { background: #9b7548; transform: translateY(1px); }
+              .world-mobile-actions { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+              .world-mobile-interact {
+                min-width: 0; min-height: 43px; display: flex; flex-direction: row;
+                align-items: center; justify-content: center; gap: 5px; padding: 4px 7px;
+                border: 2px solid #543a25; border-radius: 8px;
+                background: linear-gradient(180deg,#ffdc80,#e9ad42);
+                color: #392819; box-shadow: 0 2px 0 #111; text-align: center;
+              }
+              .world-mobile-interact span { font: 900 14px/1 var(--font-display); }
+              .world-mobile-interact b {
+                max-width: 100%; overflow: hidden; font: 900 8px/1.1 var(--font-display);
+                text-overflow: ellipsis; white-space: nowrap;
+              }
+              .world-mobile-visitor {
+                border: 1px solid #6b5430; border-radius: 6px; background: #f6dfa0;
+                color: #392819; padding: 3px; font: 900 7px var(--font-display);
+              }
+              .world-mobile-actions p {
+                min-height: 11px; margin: 0; overflow: hidden; color: #dbe5df;
+                font: 700 7px/1.1 var(--font-display); text-align: center;
+                white-space: nowrap; text-overflow: ellipsis;
+              }
+              .world-info-panel {
+                top: max(78px, calc(env(safe-area-inset-top) + 68px));
+                bottom: calc(126px + env(safe-area-inset-bottom));
+                left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right));
+                width: auto; max-height: 42dvh; padding: 9px; transform: none; translate: none;
+              }
+              .world-status-card {
+                left: max(8px, env(safe-area-inset-left)); top: max(8px, env(safe-area-inset-top));
+                width: calc(50% - 14px); max-width: 240px; padding: 6px 7px;
+                border-width: 2px; box-shadow: 2px 2px 0 #172126;
+              }
+              .world-status-card .world-status-detail { font-size: 8px; line-height: 1.15; }
+              .world-daypart-card {
+                right: max(8px, env(safe-area-inset-right)); top: max(8px, env(safe-area-inset-top));
+                width: calc(50% - 14px); max-width: 240px; padding: 6px 7px;
+                border-width: 2px; box-shadow: 2px 2px 0 #172126;
+              }
+              .world-daypart-card .world-event-description,
+              .world-daypart-card .world-event-traffic { display: none; }
+              .world-daypart-card > div { align-items: flex-start; flex-wrap: wrap; gap: 3px; }
+              .world-daypart-card p { font-size: 9px; line-height: 1.15; }
+            }
+            @media (max-width: 380px) and (orientation: portrait), (pointer: coarse) and (orientation: portrait) {
+              .world-mobile-dock { gap: 4px; padding: 5px; max-height: 128px; }
+              .world-mobile-tab { min-height: 31px; gap: 2px; }
+              .world-mobile-tab span { font-size: 13px; }
+              .world-mobile-tab b { font-size: 7px; }
+              .world-mobile-controls { grid-template-columns: 94px minmax(0,1fr); gap: 5px; }
+              .world-mobile-dpad { width: 94px; grid-template-columns: repeat(3,29px); grid-template-rows: repeat(2,24px); }
+              .world-mobile-interact { min-height: 39px; }
+              .world-mobile-interact b { font-size: 7px; }
+            }
+            @media (orientation: landscape) and (max-width: 1400px), (orientation: landscape) and (pointer: coarse) {
+              .world-scene-layer {
+                top: 44%; left: 50%; right: auto; bottom: auto;
+                width: min(100vw, 140dvh); height: auto; aspect-ratio: 5 / 3;
+                transform: translate(-50%, -50%);
+              }
+              .world-mobile-dock {
+                left: auto; right: max(10px, env(safe-area-inset-right));
+                bottom: max(8px, env(safe-area-inset-bottom));
+                width: min(42vw, 360px); max-height: 142px;
+              }
+              .world-mobile-tab { min-height: 32px; }
+              .world-mobile-tab span { font-size: 13px; }
+              .world-mobile-tab b { font-size: 7px; }
+              .world-mobile-controls { grid-template-columns: 96px minmax(0,1fr); gap: 5px; }
+              .world-mobile-dpad { width: 96px; grid-template-columns: repeat(3,30px); grid-template-rows: repeat(2,24px); }
+              .world-mobile-interact { min-height: 38px; }
+              .world-info-panel {
+                top: max(10px, env(safe-area-inset-top)); bottom: 10px;
+                left: max(10px, env(safe-area-inset-left)); right: auto;
+                width: min(42vw, 420px); max-height: none;
+              }
+              .world-status-card { width: min(31vw, 300px); }
+              .world-daypart-card { width: min(31vw, 300px); }
+            }
           `}</style>
-          <div className="world-scene-layer" style={{["--world-camera-left" as string]: `calc(50% - ${worldPlayer.x * 1.666667}dvh)`}}>
+          <div className="world-scene-layer" style={{["--world-camera-left" as string]: `calc(50vw - ${worldPlayer.x * 0.933333}dvh)`}}>
           <svg className="absolute inset-0 h-full w-full [image-rendering:pixelated]" viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid meet" shapeRendering="crispEdges" role="img" aria-label="Khu phố bán bánh tráng trộn phong cách pixel art">
             <defs>
               <pattern id="sidewalkTiles" width="32" height="32" patternUnits="userSpaceOnUse">
