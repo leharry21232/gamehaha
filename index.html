@@ -25,7 +25,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;700&family=Pixelify+Sans:wght@500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
   </head>
@@ -93,16 +93,7 @@
           );
         });
 
-        // Attempt Portrait orientation lock on first interaction when supported
-        var tryLockPortrait = function () {
-          if (window.screen && window.screen.orientation && typeof window.screen.orientation.lock === 'function') {
-            window.screen.orientation.lock('portrait').catch(function () {});
-          }
-          window.removeEventListener('pointerdown', tryLockPortrait);
-          window.removeEventListener('touchstart', tryLockPortrait);
-        };
-        window.addEventListener('pointerdown', tryLockPortrait, { passive: true });
-        window.addEventListener('touchstart', tryLockPortrait, { passive: true });
+        // Keep the layout responsive to the device's actual orientation.
       })();
     </script>
     <script type="module" src="/src/main.tsx"></script>

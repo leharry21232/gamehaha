@@ -17,6 +17,7 @@ import type {
   ToppingDef,
   ToppingId,
 } from './types';
+import { ECONOMY_TUNING } from './economy';
 
 export const TOPPINGS: ToppingDef[] = [
   {
@@ -99,6 +100,7 @@ export interface RawIngredientMeta {
   unit: string;
   basePrice: number;
   color: string;
+  unlockLevel?: number;
 }
 
 export const RAW_INGREDIENTS: RawIngredientMeta[] = [
@@ -108,6 +110,10 @@ export const RAW_INGREDIENTS: RawIngredientMeta[] = [
   { id: 'xoai', name: 'Xoài Xanh Bào', unit: 'trái', basePrice: 2000, color: '#ECFCCB' },
   { id: 'rau_ram', name: 'Rau Răm Tươi', unit: 'bó', basePrice: 1000, color: '#DCFCE7' },
   { id: 'tac', name: 'Tắc & Sa Tế Tỏi', unit: 'bịch', basePrice: 2000, color: '#FFEDD5' },
+  { id: 'pho_mai', name: 'Phô Mai', unit: 'phần', basePrice: 5000, color: '#FEF9C3', unlockLevel: 2 },
+  { id: 'tran_chau', name: 'Trân Châu', unit: 'phần', basePrice: 6000, color: '#E4E4E7', unlockLevel: 3 },
+  { id: 'sau_rieng', name: 'Sầu Riêng', unit: 'phần', basePrice: 12000, color: '#ECFCCB', unlockLevel: 5 },
+  { id: 'nuoc_cot_dua', name: 'Nước Cốt Dừa', unit: 'phần', basePrice: 7000, color: '#F8FAFC', unlockLevel: 6 },
 ];
 
 export const BASE_MARKET_PRICES: MarketPrices = {
@@ -117,6 +123,10 @@ export const BASE_MARKET_PRICES: MarketPrices = {
   xoai: 2000,
   rau_ram: 1000,
   tac: 2000,
+  pho_mai: 5000,
+  tran_chau: 6000,
+  sau_rieng: 12000,
+  nuoc_cot_dua: 7000,
 };
 
 export const NEWSPAPER_EVENTS: NewspaperEvent[] = [
@@ -543,7 +553,7 @@ export function getTarotOptionsForCard(card: TarotCardDef): TarotDialogueOption[
     {
       choiceKey: 'C',
       tone: 'UPSELL',
-      label: 'C. Chốt Tarot Combo (Upsell x3)',
+      label: 'C. Chốt Tarot Combo (Upsell x1.5)',
       speech: card.advice.C,
     },
   ];
@@ -586,10 +596,10 @@ export function resolveTarotInterpretation(
     outcomeKind: 'COMBO_3X',
     customerLeft: false,
     tipAmount: 0,
-    priceMultiplier: 3,
+    priceMultiplier: ECONOMY_TUNING.tarotComboMultiplier,
     upgradedToCombo: true,
     resultMessage:
-      'Khách Gen Z gật đầu lia lịa: "Chốt luôn Tarot Combo 3x giá nha thầy! Miễn sao đổi vận tình duyên là em chơi tới bến!"',
+      'Khách Gen Z gật đầu lia lịa: "Chốt luôn Tarot Combo 1.5x giá nha thầy! Miễn sao đổi vận tình duyên là em chơi tới bến!"',
   };
 }
 
@@ -755,10 +765,10 @@ export function generateCustomerOrder(
     requiredToppings.kho_bo = 5;
     requiredToppings.trung_cut = 5;
     requiredToppings.xoai = 5;
-    dialogue = 'ĐƠN BOSS 500K! Trộn cho anh Thau Bánh Tráng Khổng Lồ ngay trong 10 giây!';
+    dialogue = 'ĐƠN BOSS 120K! Trộn cho anh Thau Bánh Tráng Khổng Lồ ngay trong 10 giây!';
     patienceDrainRate = 0;
     maxPatience = 99;
-    baseReward = 500000;
+    baseReward = ECONOMY_TUNING.bossReward;
     baseXu = 1000;
   } else if (customerType === 'APP_SHIPPER') {
     shipperBrand = forceShipperBrand ?? (Math.random() < 0.5 ? 'GREEN' : 'ORANGE');
@@ -857,8 +867,8 @@ export function generateCustomerOrder(
     chiliTarget = 'VUA';
     dialogue =
       dishType === 'CUON'
-        ? `Cuốn ${targetSlices} khúc thật bén để anh đi chốt căn Penthouse! Nhớ bớt anh 2k lấy lộc nha, chốt xong anh bo 100k!`
-        : `Trộn ${targetSlices} khúc cho anh đi gặp khách VIP! Bớt anh 2k lấy hên lúc thối tiền, có lộc anh bo hẳn 100k!`;
+        ? `Cuốn ${targetSlices} khúc thật bén để anh đi chốt căn Penthouse! Nhớ bớt anh 2k lấy lộc nha, chốt xong anh bo 30k!`
+        : `Trộn ${targetSlices} khúc cho anh đi gặp khách VIP! Bớt anh 2k lấy hên lúc thối tiền, có lộc anh bo hẳn 30k!`;
     patienceDrainRate = 1.05;
     maxPatience = 54;
     baseReward = 52000;

@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Volume2, VolumeX, Pause, Play, RotateCcw, Home, Store, X, Check, Newspaper, TrendingUp, TrendingDown, Truck, Zap, Wrench, Scissors, Clock, LogOut, Map as MapIcon, Swords, Shield, Sparkles, Users, AlertTriangle, Trash2, Megaphone, Smartphone } from 'lucide-react';
 import { GameEngine } from './game/engine';
+import { TesterPanel } from './TesterPanel';
+import { MobileGameHub } from './MobileGameHub';
+import { NeighborhoodMapView } from './game/neighborhood/NeighborhoodMapView';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
-import type { BestRecord, CityDistrictId, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
+import { DECORATIONS, getUnlockedSkills } from './game/progression';
+import { findNearbyWorldLocation, getNeighborhoodEvent, getNeighborhoodDialogue, isNeighborhoodDialogueLocationId, getVendorLocation, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, getNeighborhoodQuestFollowUpDialogue, NEIGHBORHOOD_PARCEL_QUEST, getWorldMovementDelta, moveWorldPlayer, type NeighborhoodHelpQuestStatus, type NeighborhoodParcelQuestStatus, type WorldInteractable } from './game/world';
+import type { BestRecord, CityDistrictId, CustomerType, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
 import heroBgUrl from './assets/images/saigon_sidewalk_hero_1794649926456.jpg';
 
 const STORAGE_KEY = 'banh_trang_tron_sinh_ton_record_v1';
@@ -24,14 +29,14 @@ const VEHICLE_TIERS: VehicleTierMeta[] = [
     perk: 'Sức chứa tối đa 12 đơn vị mỗi nguyên liệu.',
   },
   {
-    level: 2,
+    level: 3,
     name: 'Xe Đẩy Inox',
     capacity: 25,
     upgradeCost: 5000,
     perk: 'Nâng cấp lên 25 đơn vị mỗi nguyên liệu để bán cả ngày.',
   },
   {
-    level: 3,
+    level: 5,
     name: 'Xe Tay Ga Air Blade',
     capacity: 35,
     upgradeCost: 15000,
@@ -46,80 +51,15 @@ function formatClock(sec: number): string {
   return `${m}:${rem.toString().padStart(2, '0')}`;
 }
 
-const DURATION_PRESETS = [
-  { label: '2 phút', seconds: 120 },
-  { label: '3 phút', seconds: 180 },
-  { label: '5 phút', seconds: 300 },
-  { label: '10 phút', seconds: 600 },
-  { label: 'Tự do ∞', seconds: 0 },
-];
-
-function ShiftDurationSelector({
-  dayDuration,
-  onSelect,
-  dark = false,
-}: {
-  dayDuration: number;
-  onSelect: (seconds: number) => void;
-  dark?: boolean;
-}) {
-  const minutes = dayDuration > 0 ? Math.max(1, Math.round(dayDuration / 60)) : 3;
+function BusinessDayInfo({ dark = false }: { dark?: boolean }) {
   return (
-    <div
-      className={`rounded-xl border-2 border-[#111318] px-3 py-2.5 flex flex-wrap items-center justify-between gap-2.5 ${
-        dark ? 'bg-[#181920]/90 text-slate-100' : 'bg-slate-100 text-[#111318]'
-      }`}
-    >
-      <div className="flex items-center gap-1.5 text-xs font-extrabold whitespace-nowrap">
-        <Clock className={`w-4 h-4 ${dark ? 'text-[#FBBF24]' : 'text-amber-600'}`} />
-        <span>Thời lượng mỗi ngày:</span>
+    <div className={`w-full rounded-xl border-2 border-[#111318] px-3 py-3 flex items-center gap-3 ${dark ? 'bg-[#181920]/90 text-slate-100' : 'bg-slate-100 text-[#111318]'}`}>
+      <Clock className={`w-5 h-5 shrink-0 ${dark ? 'text-[#FBBF24]' : 'text-amber-600'}`} />
+      <div>
+        <p className="text-xs font-extrabold">MÔ HÌNH KINH DOANH DÀI HẠN</p>
+        <p className={`text-[11px] ${dark ? 'text-slate-300' : 'text-slate-600'}`}>Mỗi ngày kinh doanh kéo dài 10 phút trong game. Ví tiền, cấp độ và đồ trang trí được lưu lại khi bạn quay lại.</p>
       </div>
-      <div className="flex flex-wrap items-center gap-1.5">
-        {DURATION_PRESETS.map((preset) => {
-          const active = dayDuration === preset.seconds;
-          return (
-            <button
-              key={preset.seconds}
-              type="button"
-              onClick={() => onSelect(preset.seconds)}
-              className={`px-2.5 py-1 rounded-lg border-2 border-[#111318] font-display font-bold text-xs whitespace-nowrap transition-transform active:translate-y-0.5 cursor-pointer ${
-                active
-                  ? 'bg-[#F59E0B] text-[#111318]'
-                  : dark
-                  ? 'bg-[#272A36] hover:bg-[#343848] text-slate-200'
-                  : 'bg-white hover:bg-amber-50 text-[#111318]'
-              }`}
-            >
-              {preset.label}
-            </button>
-          );
-        })}
-        <div className="flex items-center gap-1 ml-1">
-          <button
-            type="button"
-            aria-label="Giảm 1 phút"
-            onClick={() => onSelect(Math.max(60, (dayDuration > 0 ? minutes - 1 : 2) * 60))}
-            className={`w-7 h-7 rounded-lg border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer ${
-              dark ? 'bg-[#272A36] hover:bg-[#343848] text-white' : 'bg-white hover:bg-slate-200 text-[#111318]'
-            }`}
-          >
-            -
-          </button>
-          <span className="font-mono-tabular font-extrabold text-xs px-1.5 min-w-[54px] text-center">
-            {dayDuration === 0 ? 'Tự do ∞' : `${minutes} phút`}
-          </span>
-          <button
-            type="button"
-            aria-label="Tăng 1 phút"
-            onClick={() => onSelect(Math.min(3600, (dayDuration > 0 ? minutes + 1 : 3) * 60))}
-            className={`w-7 h-7 rounded-lg border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer ${
-              dark ? 'bg-[#272A36] hover:bg-[#343848] text-white' : 'bg-white hover:bg-slate-200 text-[#111318]'
-            }`}
-          >
-            +
-          </button>
-        </div>
-      </div>
+      <span className="ml-auto shrink-0 rounded-lg bg-amber-400 px-2.5 py-1 text-xs font-extrabold text-slate-950">10 PHÚT / NGÀY</span>
     </div>
   );
 }
@@ -171,7 +111,7 @@ const SHOP_ITEMS: ShopItemMeta[] = [
     key: 'cursedMenu',
     name: 'Nguyên Liệu Hắc Ám',
     cost: 600,
-    desc: 'Mở khóa Sầu Riêng, Trân Châu & Nước Cốt Dừa. Khách Gen Z trả gấp 3 (126k), nhưng 50% bị ngộ độc (-20% khách ngày hôm sau).',
+    desc: 'Mở khóa khách Gen Z và xu hướng món Hắc Ám. Khách trả gấp 3 (126k), nhưng 50% bị ngộ độc (-20% khách ngày hôm sau).',
     accent: '#F5F3FF',
   },
   {
@@ -203,6 +143,17 @@ const BILL_STYLES: Record<number, { label: string; bg: string; border: string; t
 const REGISTER_BILLS = [1, 2, 5, 10, 20, 50];
 
 const INITIAL_HUD: GameHudSnapshot = {
+  playerLevel: 1,
+  playerXp: 0,
+  playerXpToNext: 100,
+  lifetimeEarnings: 0,
+  completedOrdersLifetime: 0,
+  decorationAttraction: 0,
+  ownedDecorations: [],
+  equippedDecorations: [],
+  difficulty: 'NORMAL',
+  npcEncounter: null,
+  storyMission: { id: 'story_first_customers', chapter: 'Chương 1 · Khởi nghiệp', title: 'Ba vị khách đầu tiên', description: 'Hoàn thành 3 đơn hàng để chứng minh xe bánh tráng của bạn có thể trụ vững.', npcName: 'Cô Sáu', storyText: 'Cứ làm ngon, sạch sẽ, khách quen sẽ tự tìm tới.', progress: 0, target: 3, reward: 15000, completed: false, allCompleted: false },
   screen: 'TITLE_MENU',
   phase: 'COOKING',
   dishType: 'CUON',
@@ -307,6 +258,10 @@ const INITIAL_HUD: GameHudSnapshot = {
     xoai: 0,
     rau_ram: 0,
     tac: 0,
+    pho_mai: 0,
+    tran_chau: 0,
+    sau_rieng: 0,
+    nuoc_cot_dua: 0,
   },
   maxStockPerItem: 12,
   marketPrices: { ...BASE_MARKET_PRICES },
@@ -544,6 +499,36 @@ export default function App() {
   const engineRef = useRef<GameEngine | null>(null);
 
   const [hud, setHud] = useState<GameHudSnapshot>(INITIAL_HUD);
+  const [testerPanelOpen, setTesterPanelOpen] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === '1');
+  const [hasSavedGame, setHasSavedGame] = useState(() => {
+    try { return Boolean(localStorage.getItem('banh_trang_session_save_v1')); } catch { return false; }
+  });
+  const [onboardingStep, setOnboardingStep] = useState<'STORY' | 'MAP' | null>(null);
+  const [onboardingIsNewGame, setOnboardingIsNewGame] = useState(false);
+  const [newGameConfirmTarget, setNewGameConfirmTarget] = useState<'STORY' | 'MAP' | null>(null);
+  const [worldHubOpen, setWorldHubOpen] = useState(false);
+  const [worldPanel, setWorldPanel] = useState<'MAP' | 'BAG' | 'JOURNAL' | 'PHONE' | null>(null);
+  const [worldPlayer, setWorldPlayer] = useState({ x: 48, y: 45 });
+  const worldPlayerRef = useRef(worldPlayer);
+  const worldKeyboardDirectionsRef = useRef(new Set<string>());
+  const worldTouchDirectionsRef = useRef(new Set<string>());
+  const updateWorldPlayerPosition = (position: { x: number; y: number }) => {
+    worldPlayerRef.current = position;
+    setWorldPlayer(position);
+  };
+  const [worldNotice, setWorldNotice] = useState('');
+  const [cartVisitorEventSeen, setCartVisitorEventSeen] = useState(false);
+  const [neighborhoodVisitCounts, setNeighborhoodVisitCounts] = useState<Partial<Record<Exclude<WorldInteractable['id'], 'cart'>, number>>>({});
+  const [neighborhoodHelpQuestStatus, setNeighborhoodHelpQuestStatus] = useState<NeighborhoodHelpQuestStatus>('AVAILABLE');
+  const [neighborhoodHelpQuestOfferOpen, setNeighborhoodHelpQuestOfferOpen] = useState(false);
+  const [neighborhoodParcelQuestStatus, setNeighborhoodParcelQuestStatus] = useState<NeighborhoodParcelQuestStatus>('AVAILABLE');
+  const [neighborhoodParcelQuestOfferOpen, setNeighborhoodParcelQuestOfferOpen] = useState(false);
+  const [tutorialDismissed, setTutorialDismissed] = useState(() => {
+    try { return localStorage.getItem('banhtrang_tutorial_v1') === 'done'; } catch { return false; }
+  });
+  const [selectedVendorSpot, setSelectedVendorSpot] = useState(() => {
+    try { return localStorage.getItem('banhtrang_vendor_spot_v1') || 'CHO_BEN_THANH'; } catch { return 'CHO_BEN_THANH'; }
+  });
   const [bestRecord, setBestRecord] = useState<BestRecord>(() => loadBestRecord());
   const [heroImgFailed, setHeroImgFailed] = useState(false);
   const [draggingSquadId, setDraggingSquadId] = useState<string | null>(null);
@@ -622,6 +607,112 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!worldHubOpen) return;
+    const directionKeys = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright']);
+    const move = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+      const questOfferOpen = neighborhoodHelpQuestOfferOpen || neighborhoodParcelQuestOfferOpen;
+
+      if (questOfferOpen) {
+        if (key === 'escape') {
+          event.preventDefault();
+          setNeighborhoodHelpQuestOfferOpen(false);
+          setNeighborhoodParcelQuestOfferOpen(false);
+        } else if (key === 'e' || directionKeys.has(key)) {
+          event.preventDefault();
+        }
+        return;
+      }
+
+      if (key === 'escape' && worldPanel) {
+        event.preventDefault();
+        setWorldPanel(null);
+        return;
+      }
+
+      if (key === 'e') {
+        event.preventDefault();
+        if (worldPanel) {
+          setWorldPanel(null);
+          return;
+        }
+        const current = worldPlayerRef.current;
+        const nearby = findNearbyWorldLocation(current.x, current.y);
+        if (!nearby) {
+          setWorldNotice('Chưa có địa điểm nào đủ gần. Hãy đi đến gần cửa tiệm, hàng xóm hoặc xe bánh tráng rồi nhấn E.');
+          return;
+        }
+        handleWorldLocationInteraction(nearby);
+        return;
+      }
+
+      if (!directionKeys.has(key)) return;
+      event.preventDefault();
+      worldKeyboardDirectionsRef.current.add(key);
+      setWorldPanel(null);
+      setWorldNotice('');
+    };
+    const stopMove = (event: KeyboardEvent) => worldKeyboardDirectionsRef.current.delete(event.key.toLowerCase());
+    const clearMovement = () => worldKeyboardDirectionsRef.current.clear();
+
+    window.addEventListener('keydown', move);
+    window.addEventListener('keyup', stopMove);
+    window.addEventListener('blur', clearMovement);
+    return () => {
+      window.removeEventListener('keydown', move);
+      window.removeEventListener('keyup', stopMove);
+      window.removeEventListener('blur', clearMovement);
+      worldKeyboardDirectionsRef.current.clear();
+    };
+  }, [worldHubOpen, worldPanel, neighborhoodHelpQuestOfferOpen, neighborhoodParcelQuestOfferOpen, hud.playerLevel, hud.cityTycoon.totalStaff, hud.storyMission, neighborhoodHelpQuestStatus, neighborhoodParcelQuestStatus]);
+
+  useEffect(() => {
+    if (!worldHubOpen) return;
+    let frameId = 0;
+    let lastFrameTime = 0;
+    let lastUiCommit = 0;
+    let hasUncommittedPosition = false;
+
+    const tick = (timestamp: number) => {
+      const elapsedSeconds = lastFrameTime === 0 ? 0 : Math.min((timestamp - lastFrameTime) / 1000, 0.05);
+      lastFrameTime = timestamp;
+      const movementBlocked = Boolean(worldPanel || neighborhoodHelpQuestOfferOpen || neighborhoodParcelQuestOfferOpen);
+
+      if (!movementBlocked && elapsedSeconds > 0) {
+        const keys = worldKeyboardDirectionsRef.current;
+        const touch = worldTouchDirectionsRef.current;
+        const horizontal = Number(keys.has('d') || keys.has('arrowright') || touch.has('right'))
+          - Number(keys.has('a') || keys.has('arrowleft') || touch.has('left'));
+        const vertical = Number(keys.has('s') || keys.has('arrowdown') || touch.has('down'))
+          - Number(keys.has('w') || keys.has('arrowup') || touch.has('up'));
+        const delta = getWorldMovementDelta(horizontal, vertical, elapsedSeconds);
+
+        if (delta.x !== 0 || delta.y !== 0) {
+          const next = moveWorldPlayer(worldPlayerRef.current, delta.x, delta.y);
+          if (next.x !== worldPlayerRef.current.x || next.y !== worldPlayerRef.current.y) {
+            worldPlayerRef.current = next;
+            hasUncommittedPosition = true;
+          }
+        }
+      }
+
+      if (hasUncommittedPosition && (timestamp - lastUiCommit >= 100 || movementBlocked)) {
+        setWorldPlayer(worldPlayerRef.current);
+        lastUiCommit = timestamp;
+        hasUncommittedPosition = false;
+      }
+
+      frameId = window.requestAnimationFrame(tick);
+    };
+
+    frameId = window.requestAnimationFrame(tick);
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      worldTouchDirectionsRef.current.clear();
+    };
+  }, [worldHubOpen, worldPanel, neighborhoodHelpQuestOfferOpen, neighborhoodParcelQuestOfferOpen]);
+
   // Persist high scores cleanly whenever money or ordersServed increases
   useEffect(() => {
     if (hud.money > bestRecord.bestMoney || hud.ordersServed > bestRecord.bestOrders) {
@@ -634,12 +725,24 @@ export default function App() {
     }
   }, [hud.money, hud.ordersServed, bestRecord.bestMoney, bestRecord.bestOrders]);
 
+  // Toggle Tester Panel with F2. Query string ?debug=1 opens it on load.
+  useEffect(() => {
+    const onDebugKey = (event: KeyboardEvent) => {
+      if (event.code !== 'F2') return;
+      event.preventDefault();
+      event.stopPropagation();
+      setTesterPanelOpen((open) => !open);
+    };
+    window.addEventListener('keydown', onDebugKey);
+    return () => window.removeEventListener('keydown', onDebugKey);
+  }, []);
+
   // Enter / Space starts game on Title Screen; Checkout modal keyboard shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (hud.screen === 'TITLE_MENU' && (e.code === 'Enter' || e.code === 'Space')) {
+      if (hud.screen === 'TITLE_MENU' && !onboardingStep && !newGameConfirmTarget && (e.code === 'Enter' || e.code === 'Space')) {
         e.preventDefault();
-        engineRef.current?.startNewGame();
+        handleStart();
         return;
       }
       if (hud.screen === 'PLAYING' && hud.checkout.active && !hud.shopOpen) {
@@ -671,10 +774,119 @@ export default function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [hud.screen, hud.checkout.active, hud.shopOpen]);
+  }, [hud.screen, hud.checkout.active, hud.shopOpen, hasSavedGame, onboardingStep, newGameConfirmTarget]);
+
+  const nearbyWorldLocation = findNearbyWorldLocation(worldPlayer.x, worldPlayer.y);
+  const neighborhoodEvent = getNeighborhoodEvent(hud.day, hud.dayTimeLeft, hud.dayDuration);
+  const worldElapsedRatio = hud.dayDuration > 0 ? Math.min(1, Math.max(0, 1 - hud.dayTimeLeft / hud.dayDuration)) : 0.5;
+  const worldLighting = worldElapsedRatio < 0.25 ? 'morning' : worldElapsedRatio < 0.5 ? 'noon' : worldElapsedRatio < 0.75 ? 'afternoon' : 'evening';
+  const worldLightingLabel = worldLighting === 'morning' ? 'BUỔI SÁNG' : worldLighting === 'noon' ? 'BUỔI TRƯA' : worldLighting === 'afternoon' ? 'BUỔI CHIỀU' : 'BUỔI TỐI';
+  const getWorldDialogue = (location: NonNullable<typeof nearbyWorldLocation>) => {
+    if (!isNeighborhoodDialogueLocationId(location.id)) return location.interactionText;
+    const visitCount = neighborhoodVisitCounts[location.id] ?? 0;
+    const neighborhoodDialogue = getNeighborhoodDialogue(location.id, neighborhoodEvent.dayPart, visitCount);
+    if (location.id !== 'co_nam') return neighborhoodDialogue;
+    const storyDialogue = hud.storyMission.allCompleted
+      ? 'Chương đầu con làm tốt lắm, cả xóm đều biết xe bánh tráng của con rồi!'
+      : `Cứ tập trung nhiệm vụ “${hud.storyMission.title}” nha. ${hud.storyMission.storyText.replace(/[“”]/g, '')} Tiến độ hiện tại ${hud.storyMission.progress}/${hud.storyMission.target}.`;
+    return `${neighborhoodDialogue} Cô Năm: “${storyDialogue}”`;
+  };
+
+  function handleWorldLocationInteraction(location: WorldInteractable) {
+    if (!isNeighborhoodDialogueLocationId(location.id)) {
+      setWorldHubOpen(false);
+      setWorldPanel(null);
+      setWorldNotice('');
+      return;
+    }
+
+    const dialogueLocationId = location.id as Exclude<WorldInteractable['id'], 'cart'>;
+    setNeighborhoodVisitCounts((counts) => ({
+      ...counts,
+      [dialogueLocationId]: (counts[dialogueLocationId] ?? 0) + 1,
+    }));
+
+    const questAction = getNeighborhoodHelpQuestAction(location.id, neighborhoodHelpQuestStatus);
+    if (questAction === 'OFFER') {
+      setWorldNotice(NEIGHBORHOOD_HELP_QUEST.offerDialogue);
+      setNeighborhoodHelpQuestOfferOpen(true);
+    } else if (questAction === 'REMIND') {
+      setWorldNotice(NEIGHBORHOOD_HELP_QUEST.reminderDialogue);
+    } else if (questAction === 'DELIVER') {
+      setNeighborhoodHelpQuestStatus('COMPLETED');
+      setWorldNotice(NEIGHBORHOOD_HELP_QUEST.completedDialogue);
+    } else {
+      const parcelQuestAction = getNeighborhoodParcelQuestAction(location.id, neighborhoodParcelQuestStatus);
+      if (parcelQuestAction === 'OFFER') {
+        setWorldNotice(NEIGHBORHOOD_PARCEL_QUEST.offerDialogue);
+        setNeighborhoodParcelQuestOfferOpen(true);
+      } else if (parcelQuestAction === 'REMIND') {
+        setWorldNotice(NEIGHBORHOOD_PARCEL_QUEST.reminderDialogue);
+      } else if (parcelQuestAction === 'DELIVER') {
+        setNeighborhoodParcelQuestStatus('COMPLETED');
+        setWorldNotice(NEIGHBORHOOD_PARCEL_QUEST.completedDialogue);
+      } else {
+        const followUpDialogue = getNeighborhoodQuestFollowUpDialogue(
+          location.id,
+          neighborhoodHelpQuestStatus,
+          neighborhoodParcelQuestStatus,
+        );
+        setWorldNotice(followUpDialogue ?? getWorldDialogue(location));
+      }
+    }
+    setWorldPanel(null);
+  }
+
+  const handleWorldInteract = () => {
+    const current = worldPlayerRef.current;
+    const nearby = findNearbyWorldLocation(current.x, current.y);
+    if (!nearby) {
+      setWorldNotice('Chưa có địa điểm nào đủ gần. Hãy đi đến gần cửa tiệm, hàng xóm hoặc xe bánh tráng rồi nhấn E.');
+      return;
+    }
+    handleWorldLocationInteraction(nearby);
+  };
+
+  const setWorldTouchDirections = (dirs: Partial<Record<'up' | 'down' | 'left' | 'right', boolean>>) => {
+    if (neighborhoodHelpQuestOfferOpen || neighborhoodParcelQuestOfferOpen) return;
+    let anyActive = false;
+    (['up', 'down', 'left', 'right'] as const).forEach((direction) => {
+      if (dirs[direction] === true) {
+        worldTouchDirectionsRef.current.add(direction);
+        anyActive = true;
+      } else if (dirs[direction] === false) {
+        worldTouchDirectionsRef.current.delete(direction);
+      }
+    });
+    if (anyActive) {
+      setWorldPanel(null);
+      setWorldNotice('');
+    }
+  };
+
+  const beginNewGameOnboarding = (target: 'STORY' | 'MAP') => {
+    setNewGameConfirmTarget(null);
+    setOnboardingIsNewGame(true);
+    setOnboardingStep(target);
+  };
 
   const handleStart = () => {
-    engineRef.current?.startNewGame();
+    if (hasSavedGame) {
+      setNewGameConfirmTarget('STORY');
+      return;
+    }
+    beginNewGameOnboarding('STORY');
+  };
+
+  const handleContinue = () => {
+    const resumed = engineRef.current?.continueGame() ?? false;
+    if (resumed) {
+      setOnboardingStep(null);
+      setWorldHubOpen(false);
+      setHasSavedGame(true);
+    } else {
+      setHasSavedGame(false);
+    }
   };
 
   const handleTogglePause = () => {
@@ -687,6 +899,7 @@ export default function App() {
 
   const handleReturnTitle = () => {
     engineRef.current?.returnToTitle();
+    setHasSavedGame(engineRef.current?.hasSavedGame() ?? false);
   };
 
   const handleOpenShop = () => {
@@ -710,8 +923,16 @@ export default function App() {
 
       {/* Lightweight Top HUD Bar during active play / prep / end-of-day / pause / game over */}
       {hud.screen !== 'TITLE_MENU' && (
-        <div className="pointer-events-none safe-top-bar pb-2 absolute top-0 left-0 right-0 z-10 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 bg-[#181920]/95 border-b-[3px] border-[#111318]">
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs sm:text-sm font-semibold whitespace-nowrap overflow-hidden">
+        <div data-game-hud="true" className="desktop-game-hud game-top-hud pointer-events-none safe-top-bar px-3 pb-2 pt-1 absolute top-0 left-0 right-0 z-10 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 bg-[#181920]/95 border-b-[3px] border-[#111318]">
+          <div className="game-top-hud__progress basis-full flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-xs">
+            <span className="shrink-0 font-display font-black text-amber-300">⭐ CẤP {hud.playerLevel}</span>
+            <div className="h-2 min-w-20 max-w-36 flex-1 overflow-hidden rounded-full border border-slate-500 bg-slate-700">
+              <div className="h-full bg-amber-400 transition-[width]" style={{ width: `${Math.min(100, hud.playerXp / Math.max(1, hud.playerXpToNext) * 100)}%` }} />
+            </div>
+            <span className="shrink-0 font-mono-tabular text-amber-100">{hud.playerXp}/{hud.playerXpToNext} XP</span>
+            <span className="min-w-0 truncate text-slate-200" title={hud.storyMission.title}>📖 {hud.storyMission.title} · {hud.storyMission.progress}/{hud.storyMission.target}</span>
+          </div>
+          <div className="game-top-hud__stats flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs sm:text-sm font-semibold whitespace-nowrap overflow-hidden">
             <span className="font-display font-extrabold text-[#F59E0B] tracking-tight">
               Ngày {hud.day}
             </span>
@@ -834,7 +1055,7 @@ export default function App() {
             )}
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="game-top-hud__controls flex items-center gap-3 shrink-0">
             {/* Police Raid Heat Bar */}
             {hud.screen === 'PLAYING' && (
               <div
@@ -879,7 +1100,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="pointer-events-auto flex items-center gap-2">
+            <div className="game-top-hud__actions pointer-events-auto flex items-center gap-2">
               {hud.screen === 'PLAYING' && hud.phase === 'COOKING' && hud.hasAngryCustomer && !hud.checkout.active && (
                 <button
                   type="button"
@@ -964,6 +1185,162 @@ export default function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {hud.screen !== 'TITLE_MENU' && (
+        <MobileGameHub
+          hud={hud}
+          onFortune={() => engineRef.current?.summonFortuneCustomer()}
+          onFlow={() => engineRef.current?.triggerScissorRhythm()}
+          onLoan={() => engineRef.current?.setLoanModalOpen(true)}
+          onShop={handleOpenShop}
+          onMute={handleToggleMute}
+          onPause={handleTogglePause}
+          onCloseShift={() => engineRef.current?.closeShopNow()}
+          onAppease={() => engineRef.current?.appeaseAngryCustomer()}
+        />
+      )}
+
+      {/* IN-APP NEW GAME OVERWRITE CONFIRMATION (safe inside iframe / mobile webview) */}
+      {newGameConfirmTarget && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-[#080B12]/85 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirm-new-game-title"
+        >
+          <div className="w-full max-w-md rounded-2xl border-[3px] border-amber-400 bg-[#171923] p-6 text-slate-100 shadow-2xl">
+            <p className="text-xs font-extrabold tracking-widest text-amber-300">XÁC NHẬN CHƠI MỚI</p>
+            <h2 id="confirm-new-game-title" className="mt-1 font-display text-2xl font-extrabold text-white">
+              Thay thế hành trình đã lưu?
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-300">
+              Bạn đang có một bản lưu đang dở. Nếu bắt đầu hành trình mới, tiến độ ca bán hàng trước đó sẽ được làm mới.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setNewGameConfirmTarget(null)}
+                className="min-h-[44px] rounded-xl border-2 border-slate-500 px-4 py-2.5 text-sm font-bold text-slate-200 hover:bg-slate-700 cursor-pointer"
+              >
+                Giữ bản lưu
+              </button>
+              <button
+                type="button"
+                onClick={() => beginNewGameOnboarding(newGameConfirmTarget)}
+                className="min-h-[44px] rounded-xl border-[3px] border-[#111318] bg-[#F59E0B] px-5 py-2.5 text-sm font-extrabold text-[#111318] hover:bg-[#FBBF24] cursor-pointer"
+              >
+                Bắt đầu mới →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* STORY INTRO + REAL VENDOR LOCATION SELECTOR */}
+      {onboardingStep && (
+        <div className="absolute inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-[#080B12]/95 p-4 allow-touch-scroll">
+          {onboardingStep === 'STORY' ? (
+            <div className="w-full max-w-2xl rounded-2xl border-[3px] border-amber-400 bg-[#171923] p-6 sm:p-8 shadow-2xl">
+              <p className="text-xs font-extrabold tracking-[0.2em] text-amber-300">MỞ ĐẦU · SÀI GÒN, 6:00 SÁNG</p>
+              <h2 className="mt-2 font-display text-3xl font-extrabold text-white">Một chiếc xe, một cơ hội đổi đời</h2>
+              <div className="mt-5 space-y-3 text-sm leading-relaxed text-slate-200">
+                <p>Ba tháng trước, nhân vật chính vừa nghỉ việc ở xưởng in. Tiền trọ đến hạn, mẹ ở quê lại đang cần tiền thuốc. Những công việc xin được đều trả công bèo bọt, còn khoản tiết kiệm cuối cùng chỉ đủ để bắt đầu một việc nhỏ.</p>
+                <p>Một buổi sáng, người bạn cũ để lại chiếc xe bánh tráng và chỉ cho bạn mối lấy nguyên liệu ở chợ đầu mối. Bạn quyết định thử bán bánh tráng trộn trên vỉa hè: tự tay chuẩn bị từng phần, kiếm những vị khách đầu tiên và gây dựng lại cuộc sống.</p>
+                <p className="rounded-xl border border-amber-400/40 bg-amber-400/10 p-3 text-amber-100 italic">“Không cần giàu ngay hôm nay. Chỉ cần bán được những hộp đầu tiên, rồi ngày mai sẽ có hy vọng.”</p>
+                <p className="text-xs text-slate-400">Bạn bắt đầu với 120.000đ vốn, một chiếc rổ nhựa và quyết tâm tự làm chủ.</p>
+              </div>
+              <div className="mt-6 flex flex-wrap justify-between gap-3">
+                <button type="button" onClick={() => { setOnboardingStep(null); setOnboardingIsNewGame(false); }} className="rounded-xl border-2 border-slate-500 px-5 py-3 font-bold text-slate-200 hover:bg-slate-700 cursor-pointer">← Quay lại màn hình chính</button>
+                <button type="button" onClick={() => setOnboardingStep('MAP')} className="rounded-xl border-[3px] border-[#111318] bg-amber-400 px-6 py-3 font-extrabold text-slate-950 hover:bg-amber-300 cursor-pointer">Chọn nơi bắt đầu →</button>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full max-w-3xl rounded-2xl border-[3px] border-emerald-400 bg-[#171923] p-5 sm:p-7 shadow-2xl">
+              <div className="flex items-start justify-between gap-3">
+                <div><p className="text-xs font-extrabold tracking-widest text-emerald-300">BẢN ĐỒ SÀI GÒN</p><h2 className="mt-1 font-display text-2xl font-extrabold">Chọn chỗ dựng xe bán hàng</h2><p className="mt-1 text-xs text-slate-300">{(onboardingIsNewGame || hud.screen === 'TITLE_MENU') ? 'Chọn khu vực kinh doanh đầu tiên. Sau khi xác nhận, bạn sẽ vào khu phố ngay.' : 'Bạn chỉ có thể đổi địa điểm tại màn hình tổng kết cuối ngày. Xác nhận để áp dụng từ ngày tiếp theo.'}</p></div>
+                <button type="button" onClick={() => { const goStory = onboardingIsNewGame || hud.screen === 'TITLE_MENU'; setOnboardingStep(goStory ? 'STORY' : null); if (!goStory) setOnboardingIsNewGame(false); }} className="rounded-lg border border-slate-500 px-3 py-2 text-sm font-bold cursor-pointer">← Quay lại</button>
+              </div>
+              <div className="relative mt-5 h-56 overflow-hidden rounded-xl border-2 border-slate-500 bg-[linear-gradient(35deg,#1f493d_0%,#284c43_35%,#243b50_36%,#243b50_62%,#344a38_63%,#1f493d_100%)]">
+                <div className="absolute inset-0 opacity-30" style={{backgroundImage:'linear-gradient(90deg,transparent 48%,#cbd5e1 49%,#cbd5e1 51%,transparent 52%),linear-gradient(0deg,transparent 48%,#cbd5e1 49%,#cbd5e1 51%,transparent 52%)',backgroundSize:'90px 90px'}} />
+                <span className="absolute left-[8%] top-[12%] text-[10px] font-bold text-white">KÊNH NHIÊU LỘC</span><span className="absolute right-[8%] bottom-[10%] text-[10px] font-bold text-white">TRUNG TÂM SÀI GÒN</span>
+                {[
+                  {id:'CONG_VIEN',name:'Công viên 23/9',x:'18%',y:'62%',traffic:'Khách ổn định',rent:'15.000đ/ngày',risk:'Ít cạnh tranh'},
+                  {id:'DAI_HOC',name:'Khu đại học',x:'48%',y:'18%',traffic:'Đông sinh viên',rent:'20.000đ/ngày',risk:'Cạnh tranh vừa'},
+                  {id:'CHO_BEN_THANH',name:'Chợ Bến Thành',x:'75%',y:'38%',traffic:'Rất đông khách',rent:'30.000đ/ngày',risk:'Cạnh tranh cao'},
+                  {id:'NGA_TU',name:'Ngã tư Hàng Xanh',x:'80%',y:'75%',traffic:'Nhiều người đi đường',rent:'22.000đ/ngày',risk:'Rủi ro trật tự vừa'},
+                  {id:'PHO_DI_BO',name:'Phố đi bộ Nguyễn Huệ',x:'48%',y:'72%',traffic:'Khách đông buổi tối',rent:'35.000đ/ngày',risk:'Rủi ro cao'},
+                ].map((spot) => (
+                  <button key={spot.id} type="button" onClick={() => setSelectedVendorSpot(spot.id)} style={{left:spot.x,top:spot.y}} className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 px-2.5 py-1.5 text-[10px] font-extrabold shadow-lg cursor-pointer ${selectedVendorSpot===spot.id?'border-amber-300 bg-amber-400 text-slate-950 scale-110':'border-white bg-slate-900/90 text-white'}`} aria-pressed={selectedVendorSpot===spot.id}>📍 {spot.name}</button>
+                ))}
+              </div>
+              {(() => {
+                const spots = [
+                  {id:'CONG_VIEN',name:'Công viên 23/9',traffic:'Khách ổn định',rent:'15.000đ/ngày',risk:'Ít cạnh tranh'},
+                  {id:'DAI_HOC',name:'Khu đại học',traffic:'Đông sinh viên',rent:'20.000đ/ngày',risk:'Cạnh tranh vừa'},
+                  {id:'CHO_BEN_THANH',name:'Chợ Bến Thành',traffic:'Rất đông khách',rent:'30.000đ/ngày',risk:'Cạnh tranh cao'},
+                  {id:'NGA_TU',name:'Ngã tư Hàng Xanh',traffic:'Nhiều người đi đường',rent:'22.000đ/ngày',risk:'Rủi ro trật tự vừa'},
+                  {id:'PHO_DI_BO',name:'Phố đi bộ Nguyễn Huệ',traffic:'Khách đông buổi tối',rent:'35.000đ/ngày',risk:'Rủi ro cao'},
+                ];
+                const chosen = spots.find((spot) => spot.id === selectedVendorSpot) ?? spots[2];
+                return <div className="mt-4 rounded-xl border border-emerald-400/50 bg-emerald-400/10 p-4"><p className="font-extrabold text-emerald-200">{chosen.name}</p><p className="mt-1 text-xs text-slate-200">{chosen.traffic} · {chosen.risk}</p><p className="mt-1 text-sm font-bold text-amber-300">Chi phí chỗ dự kiến: {chosen.rent}</p></div>;
+              })()}
+              <div className="mt-5 flex flex-wrap justify-between gap-3">
+                <button type="button" onClick={() => { const goStory = onboardingIsNewGame || hud.screen === 'TITLE_MENU'; setOnboardingStep(goStory ? 'STORY' : null); if (!goStory) setOnboardingIsNewGame(false); }} className="rounded-xl border-2 border-slate-500 px-5 py-3 font-bold text-slate-200 hover:bg-slate-700 cursor-pointer">← Quay lại</button>
+                <button type="button" onClick={() => { const location = getVendorLocation(selectedVendorSpot); try { localStorage.setItem('banhtrang_vendor_spot_v1', selectedVendorSpot); } catch {} if (onboardingIsNewGame || hud.screen === 'TITLE_MENU') { engineRef.current?.startNewGame(); setHasSavedGame(true); engineRef.current?.setVendorLocationRent(location.rentPerDay); updateWorldPlayerPosition({ x: 48, y: 45 }); setWorldNotice(''); setWorldPanel(null); setWorldHubOpen(true); } else { engineRef.current?.setVendorLocationRent(location.rentPerDay); } setOnboardingIsNewGame(false); setOnboardingStep(null); }} className="rounded-xl border-[3px] border-[#111318] bg-emerald-400 px-6 py-3 font-extrabold text-slate-950 hover:bg-emerald-300 cursor-pointer">{(onboardingIsNewGame || hud.screen === 'TITLE_MENU') ? 'Xác nhận địa điểm & vào chợ →' : 'Lưu địa điểm này'}</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {worldHubOpen && (
+        <NeighborhoodMapView
+          hud={hud}
+          player={worldPlayer}
+          nearbyLocation={nearbyWorldLocation}
+          neighborhoodEvent={neighborhoodEvent}
+          lighting={worldLighting}
+          selectedVendorSpot={selectedVendorSpot}
+          worldPanel={worldPanel}
+          onChangePanel={setWorldPanel}
+          worldNotice={worldNotice}
+          onDismissNotice={() => setWorldNotice('')}
+          cartVisitorEventSeen={cartVisitorEventSeen}
+          onTriggerCuriousVisitor={() => {
+            setCartVisitorEventSeen(true);
+            setWorldNotice(CURIOUS_CART_VISITOR_EVENT.dialogue);
+            setWorldPanel(null);
+          }}
+          onInteract={handleWorldInteract}
+          onClaimStoryMission={() => engineRef.current?.claimCurrentStoryMission()}
+          onSetTouchDirections={setWorldTouchDirections}
+          getLivePlayerPosition={() => worldPlayerRef.current}
+          helpQuestStatus={neighborhoodHelpQuestStatus}
+          helpQuestOfferOpen={neighborhoodHelpQuestOfferOpen}
+          onAcceptHelpQuest={() => {
+            setNeighborhoodHelpQuestStatus('ACCEPTED');
+            setNeighborhoodHelpQuestOfferOpen(false);
+            setWorldNotice(NEIGHBORHOOD_HELP_QUEST.acceptedDialogue);
+          }}
+          onDeferHelpQuest={() => {
+            setNeighborhoodHelpQuestOfferOpen(false);
+            setWorldNotice('Chú Bảy: “Không sao, khi nào tiện thì con ghé giúp chú cũng được!”');
+          }}
+          onCloseHelpQuestOffer={() => setNeighborhoodHelpQuestOfferOpen(false)}
+          parcelQuestStatus={neighborhoodParcelQuestStatus}
+          parcelQuestOfferOpen={neighborhoodParcelQuestOfferOpen}
+          onAcceptParcelQuest={() => {
+            setNeighborhoodParcelQuestStatus('ACCEPTED');
+            setNeighborhoodParcelQuestOfferOpen(false);
+            setWorldNotice(NEIGHBORHOOD_PARCEL_QUEST.acceptedDialogue);
+          }}
+          onDeferParcelQuest={() => {
+            setNeighborhoodParcelQuestOfferOpen(false);
+            setWorldNotice('Tí: “Dạ không sao, khi nào tiện thì anh/chị ghé giúp em nha!”');
+          }}
+          onCloseParcelQuestOffer={() => setNeighborhoodParcelQuestOfferOpen(false)}
+        />
       )}
 
       {/* TITLE SCREEN */}
@@ -1081,38 +1458,96 @@ export default function App() {
               Cắt bánh tráng chuẩn từng khúc, chiều lòng Ninja Lead &amp; Gen Z với combo dị, và đẩy xe chạy hết tốc lực mỗi khi còi Trật Tự vang lên.
             </p>
 
+            <div className="w-full max-w-lg rounded-xl border-2 border-[#F59E0B] bg-[#181920]/95 p-3 text-slate-100">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold text-amber-300">HỒ SƠ NGƯỜI BÁN</p>
+                  <p className="font-display text-xl font-extrabold">Cấp {hud.playerLevel}</p>
+                </div>
+                <div className="text-right text-xs">
+                  <p>{hud.playerXp.toLocaleString('vi-VN')} / {hud.playerXpToNext.toLocaleString('vi-VN')} XP</p>
+                  <p className="text-amber-200">⭐ Thu hút: +{hud.decorationAttraction}</p>
+                </div>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-700">
+                <div className="h-full rounded-full bg-amber-400 transition-all" style={{ width: `${Math.min(100, hud.playerXp / Math.max(1, hud.playerXpToNext) * 100)}%` }} />
+              </div>
+              <div className="mt-2 grid grid-cols-3 gap-2 text-[10px] text-slate-300">
+                <span>Đơn hoàn thành: {hud.completedOrdersLifetime}</span>
+                <span className="text-center">Tổng thu: {hud.lifetimeEarnings.toLocaleString('vi-VN')}đ</span>
+                <span className="text-right font-bold text-emerald-300">Ví: {hud.money.toLocaleString('vi-VN')}đ</span>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold">Độ khó:</span>
+                {(['EASY', 'NORMAL', 'HARD'] as const).map((difficulty) => (
+                  <button key={difficulty} type="button" onClick={() => engineRef.current?.setGameDifficulty(difficulty)}
+                    className={`rounded-lg border border-slate-500 px-2.5 py-1 text-xs font-bold ${hud.difficulty === difficulty ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-200'}`}>
+                    {difficulty === 'EASY' ? 'Thư thả' : difficulty === 'NORMAL' ? 'Vỉa hè Sài Gòn' : 'Căng thẳng'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="w-full max-w-lg rounded-xl border-2 border-[#F59E0B] bg-[#181920]/95 p-3 text-slate-100">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-extrabold tracking-wide text-amber-300">📖 NHẬT KÝ VỈA HÈ · {hud.storyMission.chapter}</p>
+                <span className="rounded-full bg-amber-400/15 px-2 py-1 text-[10px] font-bold text-amber-200">{hud.storyMission.allCompleted ? 'Đã hoàn thành' : hud.storyMission.completed ? 'Hoàn thành' : 'Đang thực hiện'}</span>
+              </div>
+              <p className="mt-2 font-display text-lg font-extrabold">{hud.storyMission.title}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-300">{hud.storyMission.description}</p>
+              <div className="mt-2 rounded-lg border border-slate-700 bg-slate-800/80 p-2">
+                <p className="text-[10px] font-bold text-amber-200">💬 {hud.storyMission.npcName}</p>
+                <p className="mt-1 text-xs italic text-slate-200">“{hud.storyMission.storyText}”</p>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-[11px]">
+                <span className="font-bold text-slate-300">Tiến độ: {hud.storyMission.progress.toLocaleString('vi-VN')} / {hud.storyMission.target.toLocaleString('vi-VN')}</span>
+                <span className="font-bold text-emerald-300">Thưởng: {hud.storyMission.reward.toLocaleString('vi-VN')}đ</span>
+              </div>
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-700">
+                <div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${Math.min(100, hud.storyMission.progress / Math.max(1, hud.storyMission.target) * 100)}%` }} />
+              </div>
+              {hud.storyMission.completed && !hud.storyMission.allCompleted && (
+                <button type="button" onClick={() => engineRef.current?.claimCurrentStoryMission()} className="mt-3 w-full rounded-lg bg-emerald-500 px-3 py-2 text-xs font-extrabold text-slate-950 hover:bg-emerald-400">Nhận thưởng nhiệm vụ</button>
+              )}
+            </div>
+
             {/* Customizable Play Duration Selector */}
             <div className="w-full max-w-lg">
-              <ShiftDurationSelector
-                dayDuration={hud.dayDuration}
-                onSelect={(secs) => engineRef.current?.setDayDuration(secs)}
-                dark
-              />
+              <BusinessDayInfo dark />
             </div>
 
             {/* Primary CTA */}
             <div className="flex flex-wrap items-center gap-3">
+              {hasSavedGame && (
+                <button
+                  type="button"
+                  onClick={handleContinue}
+                  className="px-6 py-3.5 rounded-xl bg-[#10B981] hover:bg-[#34D399] text-white font-display font-extrabold text-lg border-[3px] border-[#111318] comic-shadow transition-transform hover:-translate-y-0.5 active:translate-y-0.5 whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  Tiếp Tục Hành Trình
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handleStart}
                 className="px-7 py-3.5 rounded-xl bg-[#F59E0B] hover:bg-[#FBBF24] text-[#111318] font-display font-extrabold text-lg border-[3px] border-[#111318] comic-shadow transition-transform hover:-translate-y-0.5 active:translate-y-0.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
-                Bắt Đầu Bán (Enter)
+                Chơi Mới (Enter)
               </button>
               <button
                 type="button"
-                onClick={() => engineRef.current?.openCityTycoon()}
+                onClick={() => {
+                  if (hasSavedGame) {
+                    setNewGameConfirmTarget('MAP');
+                    return;
+                  }
+                  beginNewGameOnboarding('MAP');
+                }}
                 className="flex items-center gap-2 px-5 py-3.5 rounded-xl bg-[#10B981] hover:bg-[#34D399] text-white font-display font-extrabold text-base border-[3px] border-[#111318] comic-shadow transition-transform hover:-translate-y-0.5 active:translate-y-0.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <MapIcon className="w-5 h-5" />
-                <span>Bản Đồ Đội Nhóm (16 NV)</span>
+                <span>Bản Đồ Điểm Bán</span>
               </button>
-              <a
-                href="/banh-trang-master.html"
-                className="flex items-center gap-2 px-5 py-3.5 rounded-xl bg-[#38BDF8] hover:bg-[#7DD3FC] text-[#111318] font-display font-extrabold text-base border-[3px] border-[#111318] comic-shadow transition-transform hover:-translate-y-0.5 active:translate-y-0.5 whitespace-nowrap shrink-0 cursor-pointer"
-              >
-                <span>Bánh Tráng Master (2D Lab)</span>
-              </a>
             </div>
 
             {/* Single flat control-hint line + personal best */}
@@ -1130,6 +1565,19 @@ export default function App() {
         </div>
       )}
 
+      {!tutorialDismissed && hud.screen === 'PLAYING' && hud.day === 1 && hud.ordersServed < 3 && (
+        <div className="pointer-events-auto absolute left-1/2 top-20 z-20 w-[min(92%,680px)] -translate-x-1/2 rounded-xl border-2 border-sky-300 bg-[#102b3c]/95 px-4 py-3 text-white shadow-[3px_3px_0_#111318]">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black tracking-widest text-sky-200">HƯỚNG DẪN NGƯỜI MỚI · BƯỚC 3/3</p>
+              <p className="mt-1 text-sm font-extrabold">{hud.ordersServed === 0 ? 'Phục vụ vị khách đầu tiên' : 'Bạn đang làm rất tốt!'}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-200">{hud.ordersServed === 0 ? 'Quan sát bong bóng yêu cầu của khách, chuẩn bị đúng bánh tráng và topping, sau đó hoàn tất thanh toán. Không cần vội — sự kiện ngẫu nhiên đang được tạm hoãn trong 3 đơn đầu.' : 'Đã hoàn thành ' + hud.ordersServed + '/3 đơn đầu tiên. Cứ tập trung làm đúng yêu cầu và thanh toán; các sự kiện sẽ mở lại sau đơn thứ ba.'}</p>
+            </div>
+            <button type="button" onClick={() => { setTutorialDismissed(true); engineRef.current?.dismissTutorial(); try { localStorage.setItem('banhtrang_tutorial_v1','done'); } catch {} }} className="shrink-0 rounded-lg border border-slate-400 px-2 py-1 text-[10px] font-bold">Ẩn</button>
+          </div>
+        </div>
+      )}
+
       {/* MORNING PREP: DAILY NEWSPAPER & WHOLESALE INVENTORY MARKET */}
       {hud.screen === 'MORNING_PREP' && (() => {
         const totalToppings =
@@ -1142,11 +1590,24 @@ export default function App() {
           <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#111318]/85 p-4 pt-16 overflow-y-auto allow-touch-scroll safe-inset-container">
             <div className="w-full max-w-3xl rounded-2xl bg-[#FFFDF5] text-[#111318] border-[3px] border-[#111318] comic-shadow p-6 flex flex-col gap-4 my-auto">
               {/* Header */}
+              {!tutorialDismissed && hud.day === 1 && (
+                <div className="rounded-xl border-2 border-sky-400 bg-sky-50 p-4 text-slate-900">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-black tracking-widest text-sky-700">HƯỚNG DẪN NGƯỜI MỚI · {canOpenShop ? 'BƯỚC 2/3' : 'BƯỚC 1/3'}</p>
+                      <p className="mt-1 font-extrabold">{canOpenShop ? 'Nguyên liệu đã sẵn sàng — chuẩn bị mở quán' : 'Nhập nguyên liệu cho mẻ bánh đầu tiên'}</p>
+                      <p className="mt-1 text-xs leading-relaxed">{canOpenShop ? 'Bạn đã có đủ bánh tráng, tắc và topping. Nhấn “Mở Quán” để gặp vị khách đầu tiên. Ba đơn hàng đầu sẽ không bị các sự kiện ngẫu nhiên làm gián đoạn.' : 'Mua bánh tráng, tắc và ít nhất 2 phần topping. Có thể mua từng phần hoặc dùng nút mua nhanh; tiền còn lại luôn hiển thị phía trên.'}</p>
+                    </div>
+                    <button type="button" onClick={() => { setTutorialDismissed(true); engineRef.current?.dismissTutorial(); try { localStorage.setItem('banhtrang_tutorial_v1','done'); } catch {} }} className="rounded-lg border border-slate-400 px-2 py-1 text-xs font-bold">Ẩn hướng dẫn</button>
+                  </div>
+                </div>
+              )}
               <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-slate-200 pb-3">
                 <div>
                   <h2 className="font-display font-extrabold text-2xl text-[#111318]">
                     Chợ Sớm Ngày {hud.day} · Nhập Nguyên Liệu
                   </h2>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-600"><span>📍 Điểm bán: <strong className="text-emerald-800">{getVendorLocation(selectedVendorSpot).name}</strong></span><button type="button" onClick={() => { updateWorldPlayerPosition({ x: 48, y: 45 }); setWorldHubOpen(true); }} className="rounded-md border border-emerald-700 bg-emerald-50 px-2 py-1 font-bold text-emerald-800">🚶 Đi dạo khu phố</button><button type="button" onClick={() => engineRef.current?.returnToTitle()} className="rounded-md border border-slate-500 px-2 py-1 font-bold text-slate-700">← Quay lại menu</button></div>
                   <p className="text-xs text-slate-600 mt-0.5">
                     Phương tiện: <strong className="text-[#111318]">{vehicleMeta.name}</strong> (Tối đa{' '}
                     <span className="font-mono-tabular font-bold">{hud.maxStockPerItem}</span> phần/món) ·{' '}
@@ -1164,10 +1625,7 @@ export default function App() {
               </div>
 
               {/* Customizable Shift Duration before opening */}
-              <ShiftDurationSelector
-                dayDuration={hud.dayDuration}
-                onSelect={(secs) => engineRef.current?.setDayDuration(secs)}
-              />
+              <BusinessDayInfo />
 
               {/* Daily Newspaper Event & Daily Hexagram */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1251,9 +1709,11 @@ export default function App() {
                   const price = hud.marketPrices[id];
                   const mult = hud.newspaper.multipliers[id] ?? 1;
                   const stock = hud.inventory[id];
+                  const unlockLevel = item.unlockLevel ?? 1;
+                  const levelLocked = hud.playerLevel < unlockLevel;
                   const isFull = stock >= hud.maxStockPerItem;
-                  const canBuy1 = !isFull && hud.money >= price;
-                  const canBuy5 = !isFull && hud.money >= price;
+                  const canBuy1 = !levelLocked && !isFull && hud.money >= price;
+                  const canBuy5 = !levelLocked && !isFull && hud.money >= price;
 
                   return (
                     <div
@@ -1266,6 +1726,7 @@ export default function App() {
                           <span className="font-display font-extrabold text-sm text-[#111318] leading-tight">
                             {item.name}
                           </span>
+                          {levelLocked && <span className="shrink-0 rounded border border-[#111318] bg-slate-800 px-1.5 py-0.5 text-[9px] font-black text-white">🔒 CẤP {unlockLevel}</span>}
                           {mult !== 1 && (
                             <span
                               className={`inline-flex items-center gap-0.5 font-mono-tabular font-extrabold text-[11px] px-1.5 py-0.5 rounded border border-[#111318] shrink-0 ${
@@ -1295,12 +1756,28 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="grid grid-cols-4 gap-1.5">
+                        <button
+                          type="button"
+                          disabled={stock < 1}
+                          onClick={() => engineRef.current?.removeIngredient(id, 1)}
+                          className="py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
+                        >
+                          −1
+                        </button>
+                        <button
+                          type="button"
+                          disabled={stock < 5}
+                          onClick={() => engineRef.current?.removeIngredient(id, 5)}
+                          className="py-1.5 rounded-lg bg-rose-200 hover:bg-rose-300 disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
+                        >
+                          −5
+                        </button>
                         <button
                           type="button"
                           disabled={!canBuy1}
                           onClick={() => engineRef.current?.buyIngredient(id, 1)}
-                          className="flex-1 py-1.5 rounded-lg bg-white hover:bg-amber-100 disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
+                          className="py-1.5 rounded-lg bg-white hover:bg-amber-100 disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
                         >
                           +1
                         </button>
@@ -1308,7 +1785,7 @@ export default function App() {
                           type="button"
                           disabled={!canBuy5}
                           onClick={() => engineRef.current?.buyIngredient(id, 5)}
-                          className="flex-1 py-1.5 rounded-lg bg-[#F59E0B] hover:bg-[#FBBF24] disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
+                          className="py-1.5 rounded-lg bg-[#F59E0B] hover:bg-[#FBBF24] disabled:opacity-40 border-2 border-[#111318] font-mono-tabular font-extrabold text-xs cursor-pointer disabled:cursor-not-allowed"
                         >
                           +5
                         </button>
@@ -1476,6 +1953,86 @@ export default function App() {
                 )}
               </div>
 
+              <div className="rounded-xl border-2 border-[#111318] bg-slate-100 p-4 flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-display font-extrabold text-base text-[#111318]">🎨 Trang trí xe bánh tráng</h3>
+                  <span className="text-xs font-bold text-emerald-700">+{hud.decorationAttraction} điểm thu hút</span>
+                </div>
+                <p className="text-xs text-slate-600">Mua vật phẩm bằng tiền hiện có. Mỗi vị trí chỉ trang bị một món; đồ đã mua được giữ lại lâu dài.</p>
+                <div className="overflow-hidden rounded-xl border-2 border-[#111318] bg-gradient-to-br from-amber-100 via-orange-50 to-sky-100 p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-extrabold text-slate-800">XE BÁNH TRÁNG CỦA BẠN</span>
+                    <span className="rounded-full bg-white/80 px-2 py-1 text-[10px] font-bold text-emerald-800">Độ thu hút +{hud.decorationAttraction}</span>
+                  </div>
+                  <div className="relative mx-auto mt-3 flex max-w-sm items-center justify-center">
+                    <div className="absolute bottom-1 h-3 w-64 rounded-full bg-slate-900/15 blur-sm" />
+                    <div className="relative flex h-24 w-64 items-end justify-center">
+                      <div className="absolute top-1 h-3 w-48 rounded-t-lg border-2 border-slate-900 bg-rose-500" />
+                      <div className="absolute top-4 h-12 w-52 rounded-lg border-[3px] border-slate-900 bg-amber-300 shadow-[inset_0_-8px_0_rgba(120,53,15,0.12)]">
+                        <div className="mt-2 text-center text-[11px] font-black tracking-widest text-slate-900">BÁNH TRÁNG TRỘN</div>
+                        <div className="mt-1 text-center text-lg">🥬 🥚 🌶️</div>
+                      </div>
+                      <div className="absolute bottom-0 left-10 h-5 w-5 rounded-full border-[3px] border-slate-900 bg-slate-500" />
+                      <div className="absolute bottom-0 right-10 h-5 w-5 rounded-full border-[3px] border-slate-900 bg-slate-500" />
+                      {hud.equippedDecorations.includes('neon_sign') && <span className="absolute -top-5 rounded border border-fuchsia-500 bg-fuchsia-100 px-2 py-0.5 text-[9px] font-black text-fuchsia-800 shadow-[0_0_12px_rgba(217,70,239,0.5)]">✦ NEON ✦</span>}
+                      {hud.equippedDecorations.includes('string_lights') && <span className="absolute top-0 text-xs tracking-[0.3em] text-amber-500">● ● ● ● ●</span>}
+                      {hud.equippedDecorations.includes('colorful_awning') && <span className="absolute -top-1 text-xs font-black text-emerald-700">☂ MÁI CHE</span>}
+                    </div>
+                  </div>
+                  <p className="mt-2 text-center text-[10px] font-semibold text-slate-600">
+                    {hud.equippedDecorations.length ? 'Đang trang bị: ' + hud.equippedDecorations.map((id) => DECORATIONS.find((item) => item.id === id)?.name).filter(Boolean).join(' · ') : 'Chưa có đồ trang trí — hãy mua vật phẩm đầu tiên ở bên dưới.'}
+                  </p>
+                </div>
+                <div className="rounded-lg border-2 border-[#111318] bg-white p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <p className="text-xs font-extrabold text-slate-900">🌟 KỸ NĂNG THEO CẤP ĐỘ</p>
+                    <span className="text-[10px] font-bold text-emerald-700">{getUnlockedSkills(hud.playerLevel).length}/3 đã mở</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {[
+                      { id: 'FAST_LEARNER', level: 3, name: 'Học việc nhanh', desc: '+10% XP mỗi đơn' },
+                      { id: 'CUSTOMER_CARE', level: 5, name: 'Giữ chân khách', desc: '+5% thời gian chờ' },
+                      { id: 'STREET_REPUTATION', level: 8, name: 'Danh tiếng vỉa hè', desc: '+5% tiền thưởng' },
+                    ].map((skill) => {
+                      const unlocked = hud.playerLevel >= skill.level;
+                      return <div key={skill.id} className={unlocked ? 'rounded-lg border border-emerald-500 bg-emerald-50 p-2' : 'rounded-lg border border-slate-300 bg-slate-50 p-2'}>
+                        <p className="text-[10px] font-extrabold text-slate-900">{unlocked ? '✓' : '🔒'} {skill.name}</p>
+                        <p className="mt-1 text-[10px] text-slate-600">{skill.desc}</p>
+                        <p className="mt-1 text-[9px] font-bold text-slate-500">Mở ở cấp {skill.level}</p>
+                      </div>;
+                    })}
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {DECORATIONS.map((item) => {
+                    const owned = hud.ownedDecorations.includes(item.id);
+                    const equipped = hud.equippedDecorations.includes(item.id);
+                    const locked = hud.playerLevel < item.unlockLevel;
+                    return (
+                      <div key={item.id} className="rounded-lg border-2 border-[#111318] bg-white p-3 flex flex-col gap-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-xs font-extrabold text-slate-900">{item.name}</p>
+                            <p className="mt-1 text-[11px] text-slate-600">{item.description}</p>
+                          </div>
+                          <span className="shrink-0 rounded bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-900">+{item.attraction}</span>
+                        </div>
+                        <p className="text-[10px] font-semibold text-slate-500">Mở ở cấp {item.unlockLevel} · {item.price.toLocaleString('vi-VN')}đ</p>
+                        {equipped ? (
+                          <span className="text-xs font-bold text-emerald-700">✓ Đang trang bị</span>
+                        ) : owned ? (
+                          <button type="button" onClick={() => engineRef.current?.equipGarageDecoration(item.id)} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white">Trang bị</button>
+                        ) : (
+                          <button type="button" disabled={locked || hud.money < item.price} onClick={() => engineRef.current?.buyGarageDecoration(item.id)} className="rounded-lg bg-amber-400 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-300">
+                            {locked ? `Cần cấp ${item.unlockLevel}` : hud.money < item.price ? 'Không đủ tiền' : 'Mua vật phẩm'}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Mechanic 9: Garage Vehicle Upgrades */}
               <div className="rounded-xl bg-slate-100 border-2 border-[#111318] p-4 flex flex-col gap-3">
                 <div className="flex items-center gap-2">
@@ -1534,13 +2091,22 @@ export default function App() {
                 )}
               </div>
 
-              <button
-                type="button"
-                onClick={() => engineRef.current?.startNextDay()}
-                className="w-full py-3.5 rounded-xl bg-[#10B981] hover:bg-[#34D399] text-white font-display font-extrabold text-base border-[3px] border-[#111318] comic-shadow-sm active:translate-y-0.5 cursor-pointer"
-              >
-                Sang Ngày {hud.day + 1} · Đi Chợ Sớm →
-              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setOnboardingStep('MAP')}
+                  className="w-full py-3 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-display font-extrabold text-sm border-[3px] border-[#111318] comic-shadow-sm"
+                >
+                  📍 Đổi địa điểm bán
+                </button>
+                <button
+                  type="button"
+                  onClick={() => engineRef.current?.startNextDay()}
+                  className="w-full py-3.5 rounded-xl bg-[#10B981] hover:bg-[#34D399] text-white font-display font-extrabold text-base border-[3px] border-[#111318] comic-shadow-sm active:translate-y-0.5 cursor-pointer"
+                >
+                  Giữ địa điểm · Sang Ngày {hud.day + 1} →
+                </button>
+              </div>
             </div>
           </div>
         );
@@ -2027,6 +2593,25 @@ export default function App() {
           </div>
         );
       })()}
+
+      {hud.screen === 'PLAYING' && hud.phase === 'COOKING' && hud.npcEncounter && !hud.checkout.active && !hud.shopOpen && (
+        <div className="pointer-events-auto absolute left-3 top-20 z-20 w-[min(92vw,340px)] rounded-2xl border-[3px] border-[#111318] bg-[#FFFDF5]/95 p-3 text-[#111318] comic-shadow">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] font-extrabold tracking-wide text-amber-700">🤝 GẶP GỠ NHÂN VẬT</span>
+            <span className="rounded-full bg-amber-100 px-2 py-1 text-[9px] font-extrabold">{hud.npcEncounter.role}</span>
+          </div>
+          <p className="mt-1 font-display text-base font-extrabold">{hud.npcEncounter.name}</p>
+          <p className="mt-1 text-xs font-semibold text-slate-700">“{hud.npcEncounter.dialogue}”</p>
+          {!hud.npcEncounter.interacted ? (
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => engineRef.current?.interactWithCurrentNpc('FRIENDLY')} className="rounded-lg border-2 border-[#111318] bg-amber-300 px-2 py-2 text-[10px] font-extrabold hover:bg-amber-200">💛 Trò chuyện (+10% tiền)</button>
+              <button type="button" onClick={() => engineRef.current?.interactWithCurrentNpc('QUICK')} className="rounded-lg border-2 border-[#111318] bg-sky-200 px-2 py-2 text-[10px] font-extrabold hover:bg-sky-100">⏳ Xin thêm thời gian</button>
+            </div>
+          ) : (
+            <p className="mt-2 rounded-lg bg-emerald-100 px-2 py-1.5 text-center text-[10px] font-extrabold text-emerald-800">Đã tương tác · Lựa chọn đã có hiệu lực cho đơn này</p>
+          )}
+        </div>
+      )}
 
       {/* DAY START ACCELERATION FLASH BANNER ("Day [X] - Tốc độ tăng cường!") */}
       {hud.screen === 'PLAYING' && hud.dayBannerTimer > 0 && hud.dayBannerText && (
@@ -3166,10 +3751,7 @@ export default function App() {
               </div>
             </div>
 
-            <ShiftDurationSelector
-              dayDuration={hud.dayDuration}
-              onSelect={(secs) => engineRef.current?.setDayDuration(secs)}
-            />
+            <BusinessDayInfo />
 
             <div className="flex flex-wrap items-center gap-2.5">
               <button
@@ -3273,6 +3855,19 @@ export default function App() {
           </div>
         </div>
       )}
+      {testerPanelOpen && <TesterPanel
+        hud={hud}
+        onClose={() => setTesterPanelOpen(false)}
+        onSetMoney={(value) => engineRef.current?.debugSetMoney(value)}
+        onSetProgress={(level, xp) => engineRef.current?.debugSetProgress(level, xp)}
+        onSetStoryStats={(orders, earnings) => engineRef.current?.debugSetStoryStats(orders, earnings)}
+        onSetDayTime={(seconds) => engineRef.current?.debugSetDayTime(seconds)}
+        onQueueCustomer={(type: CustomerType) => engineRef.current?.debugQueueCustomer(type) ?? false}
+        onTriggerRain={() => engineRef.current?.debugTriggerRain() ?? false}
+        worldPosition={worldPlayer}
+        onOpenWorld={() => { setTesterPanelOpen(false); setWorldHubOpen(true); setWorldPanel(null); }}
+        onTeleportWorld={(x, y) => updateWorldPlayerPosition({ x, y })}
+      />}
     </div>
   );
 }

@@ -1,5 +1,8 @@
 import { GameAudio } from './audio';
+import { ECONOMY_TUNING } from './economy';
+import { addProgress, getDecorationAttraction, getUnlockedSkills, getIngredientUnlockLevel, INITIAL_PLAYER_PROGRESS, resetWalletForNewGame, loadPlayerProgress, savePlayerProgress, xpRequiredForLevel, type PlayerProgress, type DecorationId, buyDecoration as purchaseDecoration, equipDecoration as applyDecoration, DIFFICULTY_SETTINGS, type GameDifficulty } from './progression';
 import { DayManager } from './dayManager';
+import { claimStoryMissionReward, getStoryMissionSnapshot, loadCompletedMissionIds, saveCompletedMissionIds } from './missions';
 import { createInitialRicePaper, createInitialRollPolygon, splitPolygonBySegment } from './geometry';
 import { Haptics } from './haptics';
 import {
@@ -12,6 +15,8 @@ import {
   getFlowLaneRects,
   getLandladyRect,
   getLotterySellerRect,
+  getToppingRemoveRect,
+  getToppingUndoRect,
   getQteArrowRects,
   getWaitingCustomerRects,
   pointInRect,
@@ -57,6 +62,7 @@ import type {
   FlyingCashItem,
   FlyingTopping,
   GameHudSnapshot,
+  NpcEncounterSnapshot,
   GameScreenState,
   GuardGrabState,
   InventoryState,
@@ -115,6 +121,10 @@ function emptyInventory(): InventoryState {
     xoai: 0,
     rau_ram: 0,
     tac: 0,
+    pho_mai: 0,
+    tran_chau: 0,
+    sau_rieng: 0,
+    nuoc_cot_dua: 0,
   };
 }
 
@@ -422,6 +432,38 @@ const SHOP_COSTS: Record<ShopItemId, number> = {
   led_rgb: 1500,
 };
 
+const SESSION_SAVE_KEY = 'banh_trang_session_save_v1';
+
+interface SessionSaveSnapshot {
+  version: 1;
+  savedAt: number;
+  screen: 'MORNING_PREP' | 'PLAYING' | 'PAUSED' | 'END_OF_DAY';
+  resumeDayShift: boolean;
+  tutorialMode: boolean;
+  money: number;
+  xu: number;
+  score: number;
+  ordersServed: number;
+  perfectOrders: number;
+  raidsSurvived: number;
+  redChairs: number;
+  maxRedChairs: number;
+  day: number;
+  dayDuration: number;
+  dayTimeLeft: number;
+  dayElapsedTime: number;
+  inventory: InventoryState;
+  vehicleLevel: VehicleLevel;
+  upgrades: ShopUpgrades;
+  dayRevenue: number;
+  dayIngredientSpend: number;
+  dayFinesCost: number;
+  dayOrdersCompleted: number;
+  dayRentCost: number;
+  loanDebt: number;
+  dayPnl: DayPnlSummary;
+}
+
 export class GameEngine {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -445,7 +487,10 @@ export class GameEngine {
   private shopOpen = false;
 
   // Economy & Stats
-  private money = 120000;
+  private money = INITIAL_PLAYER_PROGRESS.wallet;
+  private playerProgress: PlayerProgress = INITIAL_PLAYER_PROGRESS;
+  private completedMissionIds: string[] = [];
+  private npcInteracted = false;
   private xu = 0;
   private score = 0;
   private ordersServed = 0;
@@ -459,9 +504,11 @@ export class GameEngine {
 
   // Mechanic 7, 8, 9: Day/Night Tycoon, Inventory, VIPs & Garage
   private day = 1;
-  private dayDuration = 180; // Default 3 minutes (customizable; 0 = Endless)
-  private dayTimeLeft = 180;
+  private dayDuration = 600; // Fixed 10-minute business day; long-term wallet persists between sessions.
+  private dayTimeLeft = 600;
   private dayElapsedTime = 0;
+  private resumeDayShift = false;
+  private tutorialMode = false;
   private inventory: InventoryState = emptyInventory();
   private newspaper: NewspaperEvent = rollNewspaperEvent(1);
   private marketPrices: MarketPrices = computeMarketPrices(this.newspaper);
@@ -513,6 +560,7 @@ export class GameEngine {
   private rollSoundCooldown = 0;
 
   private addedToppings: Record<ToppingId, number> = emptyToppings();
+  private toppingHistory: ToppingId[] = [];
   private bowlIngredients: BowlIngredient[] = [];
   private flyingToppings: FlyingTopping[] = [];
   private flyingCash: FlyingCashItem[] = [];
@@ -631,6 +679,8 @@ export class GameEngine {
     }
     this.ctx = context;
     this.onHudChange = onHudChange;
+    this.playerProgress = loadPlayerProgress(typeof window !== 'undefined' ? window.localStorage : undefined);
+    this.money = this.playerProgress.wallet;
 
     const img = new Image();
     img.src = cookingBackdropUrl;
@@ -642,6 +692,249 @@ export class GameEngine {
     this.startLoop();
   }
 
+  private persistSession(): void {
+    if (typeof window === 'undefined' || !window.localStorage) return;
+    if (this.screen === 'TITLE_MENU' || this.screen === 'CITY_TYCOON') return;
+    if (this.screen === 'GAME_OVER') {
+      this.clearSavedGame();
+      return;
+    }
+    const snapshot: SessionSaveSnapshot = {
+      version: 1,
+      savedAt: Date.now(),
+      screen: this.screen === 'END_OF_DAY' ? 'END_OF_DAY' : this.screen === 'MORNING_PREP' ? 'MORNING_PREP' : this.screen,
+      resumeDayShift: this.resumeDayShift || this.screen === 'PLAYING' || this.screen === 'PAUSED',
+      tutorialMode: this.tutorialMode,
+      money: this.money,
+      xu: this.xu,
+      score: this.score,
+      ordersServed: this.ordersServed,
+      perfectOrders: this.perfectOrders,
+      raidsSurvived: this.raidsSurvived,
+      redChairs: this.redChairs,
+      maxRedChairs: this.maxRedChairs,
+      day: this.day,
+      dayDuration: this.dayDuration,
+      dayTimeLeft: this.dayTimeLeft,
+      dayElapsedTime: this.dayElapsedTime,
+      inventory: { ...this.inventory },
+      vehicleLevel: this.vehicleLevel,
+      upgrades: { ...this.upgrades },
+      dayRevenue: this.dayRevenue,
+      dayIngredientSpend: this.dayIngredientSpend,
+      dayFinesCost: this.dayFinesCost,
+      dayOrdersCompleted: this.dayOrdersCompleted,
+      dayRentCost: this.dayRentCost,
+      loanDebt: this.loanDebt,
+      dayPnl: { ...this.dayPnl },
+    };
+    try {
+      window.localStorage.setItem(SESSION_SAVE_KEY, JSON.stringify(snapshot));
+    } catch {
+      // Keep playing if browser storage is unavailable or full.
+    }
+  }
+
+  public hasSavedGame(): boolean {
+    try {
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem(SESSION_SAVE_KEY) : null;
+      if (!raw) return false;
+      const save = JSON.parse(raw) as Partial<SessionSaveSnapshot>;
+      return save.version === 1 && Number.isFinite(save.day) && Number.isFinite(save.money) && !!save.inventory;
+    } catch {
+      return false;
+    }
+  }
+
+  public dismissTutorial(): void {
+    this.tutorialMode = false;
+    this.emitHud(true);
+  }
+
+  /** Debug-only controls called by the Tester Panel; all values are clamped. */
+  /** Queue a selected customer into the waiting line for controlled gameplay tests. */
+  public debugQueueCustomer(type: CustomerType): boolean {
+    if (
+      this.screen !== 'PLAYING' ||
+      this.phase !== 'COOKING' ||
+      this.shopOpen ||
+      this.checkout.active ||
+      this.rainEvent.active ||
+      this.bossFight.active ||
+      this.wuxiaCombat.active ||
+      this.tiktokQte.active ||
+      this.flowRhythm.active ||
+      this.diyMalfunction.active ||
+      this.baziReading.active ||
+      this.tarot.active ||
+      this.roomHunters.active ||
+      this.landlady.sweeping ||
+      this.lotterySeller.active ||
+      this.rippedBag.active ||
+      this.bocPhotTimer > 0 ||
+      this.sauceSplatterWipes > 0 ||
+      this.waitingCustomers.length === 0
+    ) return false;
+
+    const basicTypes: CustomerType[] = ['STUDENT', 'NINJA_LEAD', 'OFFICE', 'APP_SHIPPER'];
+    if (!basicTypes.includes(type) && !(type === 'GEN_Z' && this.playerProgress.level >= 3 && (this.upgrades.ledRgb || this.upgrades.cursedMenu))) {
+      return false;
+    }
+
+    // Replace the last queued customer rather than growing the queue or bypassing spawn pacing.
+    this.waitingCustomers[this.waitingCustomers.length - 1] = this.createWaitingCustomer(type);
+    this.emitHud(true);
+    return true;
+  }
+
+  /** Trigger the existing short Saigon-rain event only during an uninterrupted cooking phase. */
+  public debugTriggerRain(): boolean {
+    if (
+      this.screen !== 'PLAYING' ||
+      this.phase !== 'COOKING' ||
+      this.shopOpen ||
+      this.checkout.active ||
+      this.rainEvent.active ||
+      this.bossFight.active ||
+      this.wuxiaCombat.active ||
+      this.tiktokQte.active ||
+      this.flowRhythm.active ||
+      this.diyMalfunction.active ||
+      this.baziReading.active ||
+      this.tarot.active ||
+      this.roomHunters.active ||
+      this.landlady.sweeping ||
+      this.lotterySeller.active ||
+      this.rippedBag.active ||
+      this.bocPhotTimer > 0 ||
+      this.sauceSplatterWipes > 0 ||
+      !this.order
+    ) return false;
+
+    this.startSaigonRain();
+    this.emitHud(true);
+    return true;
+  }
+
+  public debugSetMoney(value: number): void {
+    if (!Number.isFinite(value)) return;
+    this.money = Math.max(0, Math.min(999999999, Math.floor(value)));
+    this.playerProgress = { ...this.playerProgress, wallet: this.money };
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    this.persistSession();
+    this.emitHud(true);
+  }
+
+  public debugSetProgress(levelValue: number, xpValue: number): void {
+    if (!Number.isFinite(levelValue) || !Number.isFinite(xpValue)) return;
+    const level = Math.max(1, Math.min(100, Math.floor(levelValue)));
+    const xp = Math.max(0, Math.min(xpRequiredForLevel(level) - 1, Math.floor(xpValue)));
+    this.playerProgress = { ...this.playerProgress, level, xp };
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    this.emitHud(true);
+  }
+
+  /** Set lifetime counters for deterministic story-mission testing in the Tester Panel. */
+  public debugSetStoryStats(completedOrdersValue: number, lifetimeEarningsValue: number): void {
+    if (!Number.isFinite(completedOrdersValue) || !Number.isFinite(lifetimeEarningsValue)) return;
+    this.playerProgress = {
+      ...this.playerProgress,
+      completedOrders: Math.max(0, Math.min(999999999, Math.floor(completedOrdersValue))),
+      lifetimeEarnings: Math.max(0, Math.min(999999999999, Math.floor(lifetimeEarningsValue))),
+    };
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    this.emitHud(true);
+  }
+
+  public debugSetDayTime(secondsLeft: number): void {
+    if (!Number.isFinite(secondsLeft)) return;
+    this.dayTimeLeft = Math.max(0, Math.min(this.dayDuration, Math.floor(secondsLeft)));
+    this.dayElapsedTime = this.dayDuration - this.dayTimeLeft;
+    this.persistSession();
+    this.emitHud(true);
+  }
+
+  public clearSavedGame(): void {
+    try {
+      if (typeof window !== 'undefined') window.localStorage.removeItem(SESSION_SAVE_KEY);
+    } catch {
+      // Storage may be unavailable.
+    }
+  }
+
+  public continueGame(): boolean {
+    try {
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem(SESSION_SAVE_KEY) : null;
+      if (!raw) return false;
+      const save = JSON.parse(raw) as Partial<SessionSaveSnapshot>;
+      if (save.version !== 1 || !Number.isFinite(save.day) || !Number.isFinite(save.money) || !save.inventory) return false;
+      const inventory = save.inventory as InventoryState;
+      const requiredIngredientIds: RawIngredientId[] = ['banh_trang', 'kho_bo', 'trung_cut', 'xoai', 'rau_ram', 'tac'];
+      if (!requiredIngredientIds.every((id) => Number.isFinite(inventory[id]) && inventory[id] >= 0)) return false;
+
+      this.audio.unlock();
+      this.money = Math.max(0, Math.floor(save.money!));
+      this.playerProgress = { ...this.playerProgress, wallet: this.money };
+      this.xu = Math.max(0, Math.floor(save.xu ?? 0));
+      this.score = Math.max(0, Math.floor(save.score ?? 0));
+      this.ordersServed = Math.max(0, Math.floor(save.ordersServed ?? 0));
+      this.perfectOrders = Math.max(0, Math.floor(save.perfectOrders ?? 0));
+      this.raidsSurvived = Math.max(0, Math.floor(save.raidsSurvived ?? 0));
+      this.redChairs = Math.max(0, Math.floor(save.redChairs ?? 3));
+      this.maxRedChairs = Math.max(1, Math.floor(save.maxRedChairs ?? 4));
+      this.day = Math.max(1, Math.floor(save.day!));
+      this.dayDuration = Math.max(0, Math.floor(save.dayDuration ?? 600));
+      this.dayTimeLeft = Math.max(0, Math.floor(save.dayTimeLeft ?? this.dayDuration));
+      this.dayElapsedTime = Math.max(0, Number(save.dayElapsedTime ?? 0));
+      this.inventory = {
+        ...emptyInventory(),
+        ...inventory,
+        pho_mai: Number.isFinite(inventory.pho_mai) && inventory.pho_mai >= 0 ? inventory.pho_mai : 0,
+        tran_chau: Number.isFinite(inventory.tran_chau) && inventory.tran_chau >= 0 ? inventory.tran_chau : 0,
+        sau_rieng: Number.isFinite(inventory.sau_rieng) && inventory.sau_rieng >= 0 ? inventory.sau_rieng : 0,
+        nuoc_cot_dua: Number.isFinite(inventory.nuoc_cot_dua) && inventory.nuoc_cot_dua >= 0 ? inventory.nuoc_cot_dua : 0,
+      };
+      this.vehicleLevel = save.vehicleLevel === 2 || save.vehicleLevel === 3 ? save.vehicleLevel : 1;
+      this.upgrades = { ...freshUpgrades(), ...(save.upgrades ?? {}) };
+      this.dayRevenue = Math.max(0, Math.floor(save.dayRevenue ?? 0));
+      this.dayIngredientSpend = Math.max(0, Math.floor(save.dayIngredientSpend ?? 0));
+      this.dayFinesCost = Math.max(0, Math.floor(save.dayFinesCost ?? 0));
+      this.dayOrdersCompleted = Math.max(0, Math.floor(save.dayOrdersCompleted ?? 0));
+      this.dayRentCost = Math.max(0, Math.floor(save.dayRentCost ?? 25000));
+      this.loanDebt = Math.max(0, Math.floor(save.loanDebt ?? 0));
+      if (save.dayPnl && typeof save.dayPnl === 'object') this.dayPnl = { ...freshDayPnl(this.day), ...save.dayPnl };
+      this.dayManager.recalculate(this.day);
+      this.resumeDayShift = save.resumeDayShift === true;
+      this.tutorialMode = save.tutorialMode === true;
+      this.screen = save.screen === 'END_OF_DAY' ? 'END_OF_DAY' : 'MORNING_PREP';
+      this.phase = 'COOKING';
+      this.shopOpen = false;
+      this.loanModalOpen = false;
+      this.order = null;
+      this.waitingCustomers = [];
+      this.checkout = freshCheckout();
+      this.tiktokQte = freshQte();
+      this.flowRhythm = freshFlowRhythm();
+      this.rippedBag = freshRippedBag();
+      this.bossFight = freshBossFight();
+      this.rainEvent = freshRain();
+      this.baziReading = freshBaziReading();
+      this.tarot = freshTarot();
+      this.diyMalfunction = freshDiyMalfunction();
+      this.heldKeys.clear();
+      this.lastTimestamp = performance.now();
+      savePlayerProgress(this.playerProgress, window.localStorage);
+      this.emitHud(true);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private handlePageHide = (): void => {
+    this.persistSession();
+  };
+
   private nextId = (): number => {
     this.idSeq += 1;
     return this.idSeq;
@@ -652,6 +945,7 @@ export class GameEngine {
     window.addEventListener('orientationchange', this.handleResize);
     window.visualViewport?.addEventListener('resize', this.handleResize);
     window.addEventListener('blur', this.handleWindowBlur);
+    window.addEventListener('pagehide', this.handlePageHide);
     window.addEventListener('keydown', this.handleKeyDown);
     window.addEventListener('keyup', this.handleKeyUp);
 
@@ -684,6 +978,7 @@ export class GameEngine {
     window.removeEventListener('orientationchange', this.handleResize);
     window.visualViewport?.removeEventListener('resize', this.handleResize);
     window.removeEventListener('blur', this.handleWindowBlur);
+    window.removeEventListener('pagehide', this.handlePageHide);
     window.removeEventListener('keydown', this.handleKeyDown);
     window.removeEventListener('keyup', this.handleKeyUp);
 
@@ -706,8 +1001,8 @@ export class GameEngine {
     const rect = parent
       ? parent.getBoundingClientRect()
       : { width: window.innerWidth, height: window.innerHeight };
-    const nextW = Math.max(320, Math.floor(rect.width || window.innerWidth));
-    const nextH = Math.max(320, Math.floor(rect.height || window.innerHeight));
+    const nextW = Math.max(1, Math.floor(rect.width || window.innerWidth));
+    const nextH = Math.max(1, Math.floor(rect.height || window.innerHeight));
     const prevW = this.width || nextW;
     const prevH = this.height || nextH;
 
@@ -755,11 +1050,22 @@ export class GameEngine {
   };
 
   public startNewGame(): void {
+    this.clearSavedGame();
+    this.resumeDayShift = false;
+    try {
+      this.tutorialMode = typeof window === 'undefined' || window.localStorage.getItem('banhtrang_tutorial_v1') !== 'done';
+    } catch {
+      this.tutorialMode = true;
+    }
     this.audio.unlock();
     this.screen = 'MORNING_PREP';
     this.phase = 'COOKING';
     this.shopOpen = false;
-    this.money = 120000; // Vốn khởi nghiệp ngày đầu
+    // A deliberate New Game starts a fresh run with the configured starter cash.
+    // Long-term progression (level, XP, lifetime earnings, decorations) remains intact.
+    this.playerProgress = resetWalletForNewGame(this.playerProgress);
+    this.money = this.playerProgress.wallet;
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
     this.xu = 0;
     this.score = 0;
     this.ordersServed = 0;
@@ -860,6 +1166,7 @@ export class GameEngine {
   public buyIngredient(id: RawIngredientId, qty = 1): boolean {
     if (this.screen !== 'MORNING_PREP') return false;
     this.audio.unlock();
+    if (this.playerProgress.level < getIngredientUnlockLevel(id)) return false;
     const maxCap = this.getMaxStockPerItem();
     const room = Math.max(0, maxCap - this.inventory[id]);
     const price = this.marketPrices[id];
@@ -876,12 +1183,27 @@ export class GameEngine {
     return true;
   }
 
+  public removeIngredient(id: RawIngredientId, qty = 1): boolean {
+    if (this.screen !== 'MORNING_PREP') return false;
+    const actualQty = Math.min(Math.max(1, Math.floor(qty)), this.inventory[id]);
+    if (actualQty <= 0) return false;
+
+    const refund = actualQty * this.marketPrices[id];
+    this.inventory[id] -= actualQty;
+    this.money += refund;
+    this.dayIngredientSpend = Math.max(0, this.dayIngredientSpend - refund);
+    this.audio.playPickup();
+    this.emitHud(true);
+    return true;
+  }
+
   public buyRecommendedStock(): void {
     if (this.screen !== 'MORNING_PREP') return;
     this.audio.unlock();
     const maxCap = this.getMaxStockPerItem();
     const targetPerItem = Math.min(maxCap, 8);
-    const orderIds: RawIngredientId[] = ['banh_trang', 'tac', 'kho_bo', 'trung_cut', 'xoai', 'rau_ram'];
+    const orderIds = (['banh_trang', 'tac', 'kho_bo', 'trung_cut', 'xoai', 'rau_ram', 'pho_mai', 'tran_chau', 'sau_rieng', 'nuoc_cot_dua'] as RawIngredientId[])
+      .filter((id) => this.playerProgress.level >= getIngredientUnlockLevel(id));
 
     let boughtAny = false;
     for (let round = 0; round < targetPerItem; round++) {
@@ -917,6 +1239,14 @@ export class GameEngine {
     this.emitHud(true);
   }
 
+  public setVendorLocationRent(rentPerDay: number): boolean {
+    if (this.screen !== 'MORNING_PREP' && this.screen !== 'END_OF_DAY') return false;
+    if (!Number.isFinite(rentPerDay) || rentPerDay < 0) return false;
+    this.dayRentCost = Math.floor(rentPerDay);
+    this.emitHud(true);
+    return true;
+  }
+
   public startDayShift(): boolean {
     if (this.screen !== 'MORNING_PREP') return false;
     if (!this.hasEnoughIngredientsToOperate()) return false;
@@ -928,8 +1258,12 @@ export class GameEngine {
     this.dayBannerTimer = 2.8;
     this.dayBannerText = this.dayManager.getDayFlashText();
     this.perMinuteRaidCheckTimer = 15;
-    this.dayTimeLeft = this.dayDuration;
-    this.dayElapsedTime = 0;
+    if (this.resumeDayShift) {
+      this.resumeDayShift = false;
+    } else {
+      this.dayTimeLeft = this.dayDuration;
+      this.dayElapsedTime = 0;
+    }
     this.endOfDayPending = false;
     this.dailyBuffs = freshDailyBuffs();
     this.freeDodgesLeft = this.vehicleLevel >= 3 ? 1 : 0;
@@ -1039,11 +1373,11 @@ export class GameEngine {
   private endCurrentDay(closedEarlyReason: string): void {
     if (this.screen === 'END_OF_DAY' || this.screen === 'GAME_OVER') return;
 
-    // Mechanic 3: Draw Lottery Tickets (2% chance per ticket to win 500,000 VND!)
+    // Mechanic 3: Draw Lottery Tickets (2% chance per ticket to win 100,000 VND!)
     let lotteryWin = 0;
     for (let i = 0; i < this.lotteryTicketsToday; i++) {
-      if (Math.random() < 0.02) {
-        lotteryWin += 500000;
+      if (Math.random() < ECONOMY_TUNING.lotteryWinChance) {
+        lotteryWin += ECONOMY_TUNING.lotteryPayout;
       }
     }
     if (lotteryWin > 0) {
@@ -1152,6 +1486,7 @@ export class GameEngine {
   }
 
   public returnToTitle(): void {
+    this.persistSession();
     this.screen = 'TITLE_MENU';
     this.shopOpen = false;
     this.loanModalOpen = false;
@@ -1661,7 +1996,7 @@ export class GameEngine {
       }
       this.spawnCallout(
         'Mở Khóa Hắc Ám Menu!',
-        'Sầu Riêng + Trân Châu + Cốt Dừa · Gen Z trả x3 (50% ngộ độc)!',
+        'Mở khách Gen Z · trả x3 (50% ngộ độc)!',
         this.width * 0.5,
         this.height * 0.36,
         '#A855F7'
@@ -1686,12 +2021,14 @@ export class GameEngine {
   }
 
   private createWaitingCustomer(forceType?: CustomerType): WaitingCustomer {
-    const pool: CustomerType[] = this.upgrades.ledRgb
+    const canSpawnGenZ = this.playerProgress.level >= 3;
+    const pool: CustomerType[] = canSpawnGenZ && this.upgrades.ledRgb
       ? ['STUDENT', 'NINJA_LEAD', 'GEN_Z', 'GEN_Z', 'OFFICE', 'APP_SHIPPER']
-      : this.upgrades.cursedMenu
+      : canSpawnGenZ && this.upgrades.cursedMenu
       ? ['STUDENT', 'NINJA_LEAD', 'GEN_Z', 'OFFICE', 'APP_SHIPPER']
       : ['STUDENT', 'NINJA_LEAD', 'OFFICE', 'APP_SHIPPER'];
-    const type = forceType ?? pool[Math.floor(Math.random() * pool.length)];
+    const requestedType = forceType ?? pool[Math.floor(Math.random() * pool.length)];
+    const type = requestedType === 'GEN_Z' && !canSpawnGenZ ? 'STUDENT' : requestedType;
     const shipperBrand = type === 'APP_SHIPPER' ? (Math.random() < 0.5 ? 'GREEN' : 'ORANGE') : undefined;
     const labelMap: Record<CustomerType, string> = {
       STUDENT: 'Sinh Viên Đói Bụng',
@@ -1768,11 +2105,12 @@ export class GameEngine {
     this.baziReading = freshBaziReading();
     this.tarot = freshTarot();
 
-    const vipType = forceFortuneType ? undefined : this.shouldSpawnVipType();
+    const vipType = this.tutorialMode || forceFortuneType ? undefined : this.shouldSpawnVipType();
     const isFlowOrder = !forceFortuneType && this.flowPerfectCount >= 5;
     const rollFortuneType: 'BUSINESS_BAZI' | 'HEARTBROKEN_GENZ' | undefined =
       forceFortuneType ??
-      (!vipType &&
+      (!this.tutorialMode &&
+      !vipType &&
       !isFlowOrder &&
       this.ordersServed >= 1 &&
       !this.rainEvent.active &&
@@ -1787,6 +2125,7 @@ export class GameEngine {
     }
 
     const rollRoomHunters =
+      !this.tutorialMode &&
       !vipType &&
       !isFlowOrder &&
       !rollFortuneType &&
@@ -1799,6 +2138,7 @@ export class GameEngine {
       vipType || rollRoomHunters || rollFortuneType ? undefined : this.waitingCustomers.shift();
     this.fillWaitingQueue();
 
+    this.npcInteracted = false;
     this.order = generateCustomerOrder(
       this.ordersServed,
       this.nextId,
@@ -1818,7 +2158,7 @@ export class GameEngine {
     if (this.order.patienceDrainRate > 0) {
       this.order.maxPatience = Math.max(
         6,
-        Number((this.order.maxPatience * this.dayManager.pacing.patienceRatio).toFixed(1))
+        Number((this.order.maxPatience * this.dayManager.pacing.patienceRatio * DIFFICULTY_SETTINGS[this.playerProgress.difficulty].customerPatienceMultiplier * (getUnlockedSkills(this.playerProgress.level).some((skill) => skill.id === 'CUSTOMER_CARE') ? 1.05 : 1)).toFixed(1))
       );
       if (this.badRepOrdersLeft > 0) {
         this.badRepOrdersLeft -= 1;
@@ -1907,6 +2247,7 @@ export class GameEngine {
     // Event 1: 10% chance when a regular customer spawns -> Chiến thần Tóp Tóp QTE
     if (
       allowQte &&
+      !this.tutorialMode &&
       this.ordersServed >= 1 &&
       !this.rainEvent.active &&
       !this.tiktokQte.active &&
@@ -1921,6 +2262,7 @@ export class GameEngine {
 
   public summonFortuneCustomer(kind?: 'BAZI' | 'TAROT'): boolean {
     if (
+      this.tutorialMode ||
       this.screen !== 'PLAYING' ||
       this.phase !== 'COOKING' ||
       this.flowRhythm.active ||
@@ -2005,7 +2347,7 @@ export class GameEngine {
       this.order.hasTraTacCombo = true;
       this.order.baseReward *= outcome.priceMultiplier;
       this.order.baseXu *= outcome.priceMultiplier;
-      this.order.dialogue = `Đã chốt Tarot Combo (x3 Giá)! Trộn liền cho em đổi vận nha thầy!`;
+      this.order.dialogue = `Đã chốt Tarot Combo (x1.5 Giá)! Trộn liền cho em đổi vận nha thầy!`;
       this.score += 350;
       this.audio.playRaidWin();
     }
@@ -2038,7 +2380,7 @@ export class GameEngine {
       );
     } else if (outcomeKind === 'COMBO_3X') {
       this.spawnCallout(
-        '🔮 CHỐT TAROT COMBO (x3 GIÁ)!',
+        '🔮 CHỐT TAROT COMBO (x1.5 GIÁ)!',
         'Trộn chuẩn để hốt trọn doanh thu gấp 3 lần!',
         this.width * 0.5,
         this.height * 0.32,
@@ -2112,7 +2454,7 @@ export class GameEngine {
     this.audio.playRaidWin();
     this.spawnCallout(
       '✂️ FLOW STATE ĐÃ KÍCH HOẠT!',
-      'Bắt nhịp Kéo Cắt tạo Tuyệt Tác x5 Giá Bán!',
+      'Bắt nhịp Kéo Cắt tạo Tuyệt Tác x2 Giá Bán!',
       this.width * 0.5,
       this.height * 0.34,
       '#FACC15'
@@ -2177,7 +2519,7 @@ export class GameEngine {
     if (!fr.active || fr.finishingTimer > 0) return;
     fr.finishingTimer = 0.55;
     const isMasterpiece = fr.hitsPerfect >= 5 && fr.missed <= 1;
-    fr.lastJudgmentText = isMasterpiece ? '🌟 TUYỆT TÁC x5!' : '✂️ HOÀN TẤT NHỊP KÉO!';
+    fr.lastJudgmentText = isMasterpiece ? '🌟 TUYỆT TÁC x2!' : '✂️ HOÀN TẤT NHỊP KÉO!';
     fr.lastJudgmentColor = isMasterpiece ? '#FACC15' : '#38BDF8';
     fr.lastJudgmentTimer = 0.65;
     if (isMasterpiece) {
@@ -2195,20 +2537,20 @@ export class GameEngine {
 
     const isMasterpiece = fr.hitsPerfect >= 5 && fr.missed <= 1;
     const order = this.order;
-    const viralMult = this.viralOrdersLeft > 0 ? 3 : 1;
+    const viralMult = this.viralOrdersLeft > 0 ? ECONOMY_TUNING.viralMultiplier : 1;
     const tipMult = this.dailyBuffs.luckyCharm ? 1.1 : 1.0;
 
     if (isMasterpiece) {
       order.isMasterpiece = true;
-      const earned = Math.round((order.baseReward * 5 * tipMult * viralMult) / 1000) * 1000;
-      const earnedXu = Math.round(order.baseXu * 3 * viralMult);
+      const earned = Math.round((order.baseReward * ECONOMY_TUNING.flowMasterpieceMultiplier * tipMult * viralMult) / 1000) * 1000;
+      const earnedXu = Math.round(order.baseXu * ECONOMY_TUNING.flowMasterpieceMultiplier * viralMult);
       const pts = 2500 * viralMult;
       this.combo += 1;
       this.perfectOrders += 1;
       this.audio.playRaidWin();
       this.spawnParticles(this.width * 0.5, this.height * 0.5, 32, '#FACC15', 'rect');
       this.spawnCallout(
-        '🌟 TUYỆT TÁC BÁNH TRÁNG (x5 GIÁ)!',
+        '🌟 TUYỆT TÁC BÁNH TRÁNG (x2 GIÁ)!',
         `${fr.hitsPerfect}/8 Perfect · Giá trị ${earned.toLocaleString('vi-VN')}đ!`,
         this.width * 0.5,
         this.height * 0.34,
@@ -2530,7 +2872,7 @@ export class GameEngine {
         this.spawnParticles(this.width * 0.5, this.height * 0.45, 22, '#FACC15', 'rect');
         this.spawnCallout(
           '🔥 VIRAL TÓP TÓP!',
-          'Hoàn hảo! x3 tiền & xu trong 5 đơn tới!',
+          'Hoàn hảo! x1.5 tiền & xu trong 5 đơn tới!',
           this.width * 0.5,
           this.height * 0.36,
           '#10B981'
@@ -2604,6 +2946,7 @@ export class GameEngine {
     this.rollProgress = 0;
     this.isRollingDrag = false;
     this.addedToppings = emptyToppings();
+    this.toppingHistory = [];
     this.bowlIngredients = [];
     this.flyingToppings = [];
     this.limeMeter = freshMeter();
@@ -2749,7 +3092,7 @@ export class GameEngine {
     this.audio.playRaidWin();
     this.shakeIntensity = Math.max(this.shakeIntensity, 8);
     this.spawnCallout(
-      '🔥 BOSS CUỐI NGÀY: THAU KHỔNG LỒ 500K!',
+      '🔥 BOSS CUỐI NGÀY: THAU KHỔNG LỒ 120K!',
       'Bấm 50 lần đổ mồi + Xoay tròn trộn trong 10s!',
       this.width * 0.5,
       this.height * 0.32,
@@ -2761,8 +3104,8 @@ export class GameEngine {
   private completeBossFight(won: boolean): void {
     this.bossFight.active = false;
     if (won) {
-      this.money += 500000;
-      this.dayRevenue += 500000;
+      this.money += ECONOMY_TUNING.bossReward;
+      this.dayRevenue += ECONOMY_TUNING.bossReward;
       this.xu += 1000;
       this.score += 2500;
       this.ordersServed += 1;
@@ -2773,8 +3116,8 @@ export class GameEngine {
       const layout = computePrepLayout(this.width, this.height);
       this.spawnParticles(layout.bowlCenterX, layout.bowlCenterY, 35, '#FACC15', 'bill');
       this.spawnCallout(
-        '🏆 PHÁ ĐẢO THAU 500K!',
-        '+500.000đ · +1.000 Xu · Thánh Mukbang mãn nhãn!',
+        '🏆 PHÁ ĐẢO THAU 120K!',
+        '+120.000đ · +1.000 Xu · Thánh Mukbang mãn nhãn!',
         this.width * 0.5,
         this.height * 0.34,
         '#10B981'
@@ -2840,6 +3183,17 @@ export class GameEngine {
       (this.baziReading.active && !this.baziReading.acknowledged)
     )
       return;
+
+    if (
+      this.phase === 'COOKING' &&
+      this.prepStep === 'TOPPINGS' &&
+      !e.repeat &&
+      (e.code === 'Backspace' || (e.ctrlKey && e.code === 'KeyZ'))
+    ) {
+      e.preventDefault();
+      this.undoLastTopping();
+      return;
+    }
 
     this.heldKeys.add(e.code);
 
@@ -3202,7 +3556,7 @@ export class GameEngine {
         this.spawnParticles(this.lotterySeller.x, this.lotterySeller.y - 50, 12, '#22C55E', 'circle');
         this.spawnCallout(
           '🎟️ +1 Tờ Vé Số (-10.000đ)!',
-          'Chờ xổ số 500.000đ cuối ngày!',
+          'Chờ xổ số 100.000đ cuối ngày!',
           this.lotterySeller.x,
           this.lotterySeller.y - 90,
           '#22C55E'
@@ -3309,7 +3663,19 @@ export class GameEngine {
       this.lastSwipePoint = pt;
       this.swipeTrail = [pt];
     } else if (this.prepStep === 'TOPPINGS') {
-      const primRect = { ...layout.primaryBtn, x: this.width * 0.5 - layout.primaryBtn.w * 0.5 };
+      for (const topping of TOPPINGS) {
+        if ((this.addedToppings[topping.id] || 0) > 0 && pointInRect(pt.x, pt.y, getToppingRemoveRect(layout, topping.id))) {
+          this.removeTopping(topping.id);
+          return;
+        }
+      }
+      if (pointInRect(pt.x, pt.y, getToppingUndoRect(layout))) {
+        this.undoLastTopping();
+        return;
+      }
+      const primRect = layout.isCompact
+        ? layout.primaryBtn
+        : { ...layout.primaryBtn, x: this.width * 0.5 - layout.primaryBtn.w * 0.5 };
       if (pointInRect(pt.x, pt.y, primRect)) {
         this.prepStep = 'SEASONING';
         this.audio.playDropTopping();
@@ -3324,7 +3690,9 @@ export class GameEngine {
         }
       }
     } else if (this.prepStep === 'SEASONING') {
-      const primRect = { ...layout.primaryBtn, x: this.width * 0.5 - layout.primaryBtn.w * 0.5 };
+      const primRect = layout.isCompact
+        ? layout.primaryBtn
+        : { ...layout.primaryBtn, x: this.width * 0.5 - layout.primaryBtn.w * 0.5 };
       if (pointInRect(pt.x, pt.y, primRect) && this.limeMeter.locked && this.chiliMeter.locked) {
         if (this.dishType === 'CUON') {
           this.prepStep = 'ROLLING';
@@ -3360,7 +3728,9 @@ export class GameEngine {
         this.addShakeProgress(20, pt.x, pt.y);
       }
     } else if (this.prepStep === 'READY') {
-      const primRect = { ...layout.primaryBtn, x: this.width * 0.5 - layout.primaryBtn.w * 0.5 };
+      const primRect = layout.isCompact
+        ? layout.primaryBtn
+        : { ...layout.primaryBtn, x: this.width * 0.5 - layout.primaryBtn.w * 0.5 };
       if (pointInRect(pt.x, pt.y, primRect)) {
         this.serveCurrentOrder();
       }
@@ -3635,23 +4005,22 @@ export class GameEngine {
     const startY = r.y + r.h * 0.5;
     const def = TOPPING_MAP[id];
 
-    if (!this.upgrades.cursedMenu && (id === 'sau_rieng' || id === 'nuoc_cot_dua')) {
+    const unlockLevel = getIngredientUnlockLevel(id);
+    if (this.playerProgress.level < unlockLevel) {
       this.audio.playServeFail();
-      this.spawnCallout('Chưa Mở Khóa!', 'Mua "Nguyên Liệu Hắc Ám" trong Cửa Hàng!', startX, startY - 14, '#7C3AED');
+      this.spawnCallout('Chưa Mở Khóa!', `Đạt cấp ${unlockLevel} để mở ${def.shortName}!`, startX, startY - 14, '#7C3AED');
       return;
     }
-
-    if (id === 'kho_bo' || id === 'trung_cut' || id === 'xoai' || id === 'rau_ram') {
-      if (this.inventory[id] <= 0) {
-        this.audio.playServeFail();
-        this.spawnCallout(`Hết ${def.shortName}!`, 'Hết hàng trong kho hôm nay!', startX, startY - 14, '#E11D48');
-        this.emitHud(true);
-        return;
-      }
-      this.inventory[id] -= 1;
+    if (this.inventory[id] <= 0) {
+      this.audio.playServeFail();
+      this.spawnCallout(`Hết ${def.shortName}!`, 'Hết hàng trong kho hôm nay!', startX, startY - 14, '#E11D48');
+      this.emitHud(true);
+      return;
     }
+    this.inventory[id] -= 1;
 
     this.addedToppings[id] = (this.addedToppings[id] || 0) + 1;
+    this.toppingHistory.push(id);
     const targetX =
       this.dishType === 'CUON'
         ? layout.matRect.x + layout.matRect.w * (0.25 + Math.random() * 0.5)
@@ -3673,6 +4042,51 @@ export class GameEngine {
     this.audio.playDropTopping();
     Haptics.addIngredient();
     this.spawnCallout(`+${def.shortName}`, undefined, startX, startY - 10, def.accentColor);
+    this.emitHud(true);
+  }
+
+  private removeTopping(id: ToppingId): void {
+    if (this.prepStep !== 'TOPPINGS' || (this.addedToppings[id] || 0) <= 0) return;
+
+    const historyIndex = this.toppingHistory.lastIndexOf(id);
+    if (historyIndex < 0) return;
+    this.toppingHistory.splice(historyIndex, 1);
+    this.addedToppings[id] -= 1;
+
+    this.inventory[id] += 1;
+
+    const flyingIndex = this.flyingToppings.map((item) => item.id).lastIndexOf(id);
+    if (flyingIndex >= 0) {
+      this.flyingToppings.splice(flyingIndex, 1);
+    } else {
+      const ingredientIndex = this.bowlIngredients.map((item) => item.id).lastIndexOf(id);
+      if (ingredientIndex >= 0) this.bowlIngredients.splice(ingredientIndex, 1);
+    }
+
+    this.audio.playPickup();
+    this.spawnCallout(`− Đã bỏ ${TOPPING_MAP[id].shortName}`, 'Nguyên liệu đã được trả về kho.', this.width * 0.5, this.height * 0.34, '#0D9488');
+    this.emitHud(true);
+  }
+
+  private undoLastTopping(): void {
+    if (this.prepStep !== 'TOPPINGS' || this.toppingHistory.length === 0) return;
+
+    const id = this.toppingHistory.pop();
+    if (!id) return;
+
+    this.addedToppings[id] = Math.max(0, (this.addedToppings[id] || 0) - 1);
+    this.inventory[id] += 1;
+
+    const flyingIndex = this.flyingToppings.map((item) => item.id).lastIndexOf(id);
+    if (flyingIndex >= 0) {
+      this.flyingToppings.splice(flyingIndex, 1);
+    } else {
+      const ingredientIndex = this.bowlIngredients.map((item) => item.id).lastIndexOf(id);
+      if (ingredientIndex >= 0) this.bowlIngredients.splice(ingredientIndex, 1);
+    }
+
+    this.audio.playPickup();
+    this.spawnCallout(`↶ Đã rút ${TOPPING_MAP[id].shortName}`, 'Nguyên liệu đã được trả về kho.', this.width * 0.5, this.height * 0.34, '#0D9488');
     this.emitHud(true);
   }
 
@@ -3725,9 +4139,10 @@ export class GameEngine {
     const maxOrders = this.upgrades.loaKeoKeo ? 3 : 4;
     if (this.ordersSinceRaid >= maxOrders) return true;
     const basePerMin = this.dayManager.pacing.policeRaidChancePerMin;
+    const difficulty = DIFFICULTY_SETTINGS[this.playerProgress.difficulty];
     const raidChance = Math.min(
       0.95,
-      basePerMin * 1.4 + (this.upgrades.loaKeoKeo ? 0.2 : 0) + this.raidChanceBonus
+      (basePerMin * 1.4 + (this.upgrades.loaKeoKeo ? 0.2 : 0) + this.raidChanceBonus) * difficulty.policeChanceMultiplier
     );
     return Math.random() < raidChance;
   }
@@ -3738,9 +4153,11 @@ export class GameEngine {
     const loaMult = this.upgrades.loaKeoKeo ? 0.8 : 1.0;
     const penaltyFactor = 1 / Math.max(0.4, 1 - this.spawnPenaltyPercentToday / 100);
     const thugFactor = this.thugsActive ? 1.5 : 1.0;
+    const difficulty = DIFFICULTY_SETTINGS[this.playerProgress.difficulty];
+    const attractionFactor = 1 - Math.min(0.2, getDecorationAttraction(this.playerProgress) * 0.01);
     this.customerSpawnDelay = Math.max(
       2.5,
-      this.dayManager.pacing.customerSpawnTimer * loaMult * penaltyFactor * thugFactor
+      this.dayManager.pacing.customerSpawnTimer * loaMult * penaltyFactor * thugFactor / difficulty.customerSpawnMultiplier * attractionFactor
     );
   }
 
@@ -3763,6 +4180,8 @@ export class GameEngine {
     pendingScore: number,
     viralMult: number
   ): void {
+    const rewardMultiplier = DIFFICULTY_SETTINGS[this.playerProgress.difficulty].rewardMultiplier;
+    pendingMoney = Math.round((pendingMoney * rewardMultiplier) / 1000) * 1000;
     const trickyBills = [16, 17, 18, 22, 23, 24, 26, 27, 28, 32, 33, 34, 36, 37, 38, 42, 43];
     const standardBills = [15, 18, 20, 22, 25, 27, 30, 32, 35, 37, 40, 42, 45];
     const useTricky = Math.random() < 0.55;
@@ -3965,6 +4384,63 @@ export class GameEngine {
     }
   }
 
+  private recordPlayerProgress(score: number, earnings: number): void {
+    if (earnings <= 0) return;
+    const previousLevel = this.playerProgress.level;
+    const skillMultiplier = getUnlockedSkills(this.playerProgress.level).some((skill) => skill.id === 'FAST_LEARNER') ? 1.1 : 1;
+    const earnedXp = Math.round((10 + Math.max(0, Math.floor(score / 100))) * skillMultiplier);
+    this.playerProgress = addProgress(this.playerProgress, earnedXp, earnings, 1);
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    if (this.playerProgress.level > previousLevel) {
+      this.spawnCallout(
+        `⭐ LÊN CẤP ${this.playerProgress.level}!`,
+        'Bạn đã mở khóa thêm lựa chọn trang trí Garage!',
+        this.width * 0.5,
+        this.height * 0.24,
+        '#FACC15',
+      );
+    }
+  }
+
+  public buyGarageDecoration(id: DecorationId): boolean {
+    const result = purchaseDecoration(this.playerProgress, id, this.money);
+    if (!result) return false;
+    this.playerProgress = result.progress;
+    this.money = result.remainingMoney;
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    this.audio.playCashChing();
+    this.emitHud(true);
+    return true;
+  }
+
+  public equipGarageDecoration(id: DecorationId): void {
+    this.playerProgress = applyDecoration(this.playerProgress, id);
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    this.emitHud(true);
+  }
+
+  public claimCurrentStoryMission(): boolean {
+    const result = claimStoryMissionReward(this.playerProgress, this.completedMissionIds);
+    if (!result) return false;
+    this.completedMissionIds = result.completedIds;
+    this.money += result.reward;
+    this.playerProgress = { ...this.playerProgress, wallet: this.money };
+    saveCompletedMissionIds(this.completedMissionIds, typeof window !== 'undefined' ? window.localStorage : undefined);
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    this.persistSession();
+    this.audio.playCashChing();
+    this.spawnCallout(`🎉 +${result.reward.toLocaleString('vi-VN')}đ`, 'Hoàn thành nhiệm vụ cốt truyện!', this.width * 0.5, this.height * 0.25, '#10B981');
+    this.emitHud(true);
+    return true;
+  }
+
+  public setGameDifficulty(difficulty: GameDifficulty): void {
+    if (this.screen !== 'TITLE_MENU' && this.screen !== 'MORNING_PREP') return;
+    this.playerProgress = { ...this.playerProgress, difficulty };
+    savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    this.emitHud(true);
+  }
+
   private resolveCheckout(timedOut: boolean): void {
     if (!this.checkout.active) return;
     const c = this.checkout;
@@ -3977,32 +4453,35 @@ export class GameEngine {
 
     if (!timedOut && c.givenChangeK === c.expectedChangeK) {
       const speedBonus = Math.round(Math.max(0, c.timeLeft) * 140);
-      this.money += c.pendingMoney;
-      this.dayRevenue += c.pendingMoney;
+      const reputationBonus = getUnlockedSkills(this.playerProgress.level).some((skill) => skill.id === 'STREET_REPUTATION') ? 1.05 : 1;
+      const finalPayout = Math.round(c.pendingMoney * reputationBonus);
+      this.money += finalPayout;
+      this.dayRevenue += finalPayout;
+      this.recordPlayerProgress(c.pendingScore, finalPayout);
       this.xu += c.pendingXu;
       this.score += c.pendingScore + speedBonus;
       this.playMoneyAnimation(registerX, registerY, c.givenChangeK * 1000, c.selectedBills);
       this.spawnParticles(layout.customerX + 24, layout.customerY - 40, 22, '#FACC15', 'rect');
       this.spawnCallout(
-        `+${c.pendingMoney.toLocaleString('vi-VN')}đ · +${c.pendingXu} Xu`,
+        `+${finalPayout.toLocaleString('vi-VN')}đ · +${c.pendingXu} Xu`,
         c.viralMult > 1
-          ? `CHING! Thối chuẩn! VIRAL x3 (+${speedBonus}đ tốc độ)`
+          ? `CHING! Thối chuẩn! VIRAL x1.5 (+${speedBonus}đ tốc độ)`
           : `CHING! Thối chuẩn từng đồng! (+${speedBonus}đ tốc độ)`,
         layout.customerX + 120,
         layout.customerY - 60,
         '#10B981'
       );
 
-      // Mechanic 8: Real Estate Agent 20% chance to close a deal and tip 100k if 2k discount accepted!
+      // Mechanic 8: Real Estate Agent 20% chance to close a deal and tip 30k if 2k discount accepted!
       if (c.customerType === 'REAL_ESTATE' && c.discountAccepted) {
         if (Math.random() < 0.2) {
-          this.money += 100000;
-          this.dayRevenue += 100000;
+          this.money += ECONOMY_TUNING.realEstateTip;
+          this.dayRevenue += ECONOMY_TUNING.realEstateTip;
           this.score += 1000;
           this.audio.playCashChing();
           this.spawnParticles(layout.customerX + 24, layout.customerY - 40, 32, '#22C55E', 'bill');
           this.spawnCallout(
-            '🏠 CHỐT DEAL BĐS! +100.000đ TIP!',
+            '🏠 CHỐT DEAL BĐS! +30.000đ TIP!',
             'Khách Sale BĐS chốt căn Penthouse, bo cực đậm!',
             this.width * 0.5,
             this.height * 0.3,
@@ -4025,6 +4504,7 @@ export class GameEngine {
       const scorePenalty = overpaidK * 120;
       this.money += netMoney;
       this.dayRevenue += netMoney;
+      this.recordPlayerProgress(Math.round(c.pendingScore * 0.5), netMoney);
       this.xu += c.pendingXu;
       this.score = Math.max(0, this.score + Math.round(c.pendingScore * 0.5) - scorePenalty);
       this.playMoneyAnimation(registerX, registerY, c.givenChangeK * 1000, c.selectedBills);
@@ -4053,6 +4533,14 @@ export class GameEngine {
     this.ordersServed += 1;
     this.dayOrdersCompleted += 1;
     this.ordersSinceRaid += 1;
+    if (this.tutorialMode && this.ordersServed >= 3) {
+      this.tutorialMode = false;
+      try {
+        if (typeof window !== 'undefined') window.localStorage.setItem('banhtrang_tutorial_v1', 'done');
+      } catch {
+        // Tutorial completion should never block order service.
+      }
+    }
 
     // Mechanic 5: Cursed Menu 50% Food Poisoning Risk -> Green Sick Face + 1-Star Review (-20% spawn next day!)
     let poisoned = false;
@@ -4103,7 +4591,7 @@ export class GameEngine {
     const toppingScore = reqTotal > 0 ? Math.max(0, 1 - penalty / (reqTotal + 1)) : 1;
     const seasonScore = (this.limeMeter.accuracy + this.chiliMeter.accuracy) * 0.5;
     const totalAccuracy = sliceScore * 0.35 + toppingScore * 0.35 + seasonScore * 0.3;
-    const viralMult = this.viralOrdersLeft > 0 ? 3 : 1;
+    const viralMult = this.viralOrdersLeft > 0 ? ECONOMY_TUNING.viralMultiplier : 1;
 
     const tipMult =
       (this.dailyBuffs.luckyCharm ? 1.1 : 1.0) *
@@ -4124,7 +4612,7 @@ export class GameEngine {
         this.dailyBuffs.karmaBuff = true;
         this.combo += 1;
         this.perfectOrders += 1;
-        const massiveTip = 95000;
+        const massiveTip = ECONOMY_TUNING.baziPerfectTip;
         const earned = Math.round(((order.baseReward + massiveTip) * tipMult * viralMult) / 1000) * 1000;
         const earnedXu = (order.baseXu + 320) * viralMult;
         const pts = 1400 * viralMult;
@@ -4132,7 +4620,7 @@ export class GameEngine {
         this.spawnParticles(this.width * 0.5, this.height * 0.45, 28, '#FACC15', 'bill');
         this.spawnCallout(
           '☯️ CẢI VẬN ĐẠI CÁT! +HỒNG PHÚC (+15% BO)!',
-          `Chuẩn Bát Tự ${order.baziProfile.dayMaster}! Tip cực khủng +95.000đ!`,
+          `Chuẩn Bát Tự ${order.baziProfile.dayMaster}! Tip cực khủng +50.000đ!`,
           this.width * 0.5,
           this.height * 0.28,
           '#10B981'
@@ -4215,7 +4703,7 @@ export class GameEngine {
       const earnedXu = Math.round((order.baseXu + this.combo * 40) * viralMult);
       const pts = (Math.round(totalAccuracy * 1000) + this.combo * 150) * viralMult;
       if (this.flowPerfectCount >= 5) {
-        this.spawnCallout('⚡ ĐẠT 5 ĐƠN HOÀN HẢO!', 'Khách kế tiếp kích hoạt FLOW STATE (x5 Giá)!', this.width * 0.5, this.height * 0.26, '#FACC15');
+        this.spawnCallout('⚡ ĐẠT 5 ĐƠN HOÀN HẢO!', 'Khách kế tiếp kích hoạt FLOW STATE (x2 Giá)!', this.width * 0.5, this.height * 0.26, '#FACC15');
       }
       this.openCheckoutModal(order, earned, earnedXu, pts, viralMult);
     } else if (totalAccuracy >= 0.5) {
@@ -4520,7 +5008,7 @@ export class GameEngine {
       height = 34;
     } else {
       type = 'PICKUP_CASH';
-      label = '+20.000đ';
+      label = '+5.000đ';
       width = 40;
       height = 26;
     }
@@ -4934,6 +5422,7 @@ export class GameEngine {
 
     // Periodic Police Raid Frequency check scaled by DayManager (<= 40% per minute)
     if (
+      !this.tutorialMode &&
       this.ordersServed >= 2 &&
       !this.checkout.active &&
       !this.bossFight.active &&
@@ -4992,8 +5481,12 @@ export class GameEngine {
         if (this.shouldTriggerRaidAfterOrder()) {
           this.triggerRaidWarning();
         } else if (
+          !this.tutorialMode &&
           this.ordersServed >= 1 &&
           !this.endOfDayPending &&
+          !this.landlady.active &&
+          !this.lotterySeller.active &&
+          !this.rainEvent.active &&
           this.money >= 25000 &&
           Math.random() < 0.14
         ) {
@@ -5119,9 +5612,12 @@ export class GameEngine {
         : this.dayOrdersCompleted >= 6;
     if (
       !this.bossFight.active &&
+      !this.tutorialMode &&
       !this.bossFightRolledToday &&
       bossTimeWindow &&
       !this.rainEvent.active &&
+      !this.landlady.active &&
+      !this.lotterySeller.active &&
       this.order
     ) {
       this.bossFightRolledToday = true;
@@ -5150,7 +5646,7 @@ export class GameEngine {
         this.landlady.active = false;
         this.landlady.sweeping = false;
       }
-    } else if (!this.landlady.bribed && this.order && this.ordersServed >= 1) {
+    } else if (!this.tutorialMode && !this.landlady.bribed && this.order && this.ordersServed >= 1 && !this.lotterySeller.active && !this.rainEvent.active) {
       this.landladyCooldown -= dt;
       if (this.landladyCooldown <= 0) {
         this.landladyCooldown = 22 + Math.random() * 14;
@@ -5174,7 +5670,7 @@ export class GameEngine {
       ) {
         this.lotterySeller.active = false;
       }
-    } else if (this.order) {
+    } else if (!this.tutorialMode && this.order && !this.landlady.active && !this.rainEvent.active) {
       this.lotteryCooldown -= dt;
       if (this.lotteryCooldown <= 0) {
         this.lotteryCooldown = 16 + Math.random() * 14;
@@ -5229,7 +5725,7 @@ export class GameEngine {
         }
         this.emitHud(true);
       }
-    } else if (this.order && this.ordersServed >= 1) {
+    } else if (!this.tutorialMode && this.order && this.ordersServed >= 1 && !this.landlady.active && !this.lotterySeller.active) {
       this.rainCooldownTimer -= dt;
       if (this.rainCooldownTimer <= 0) {
         this.rainCooldownTimer = 18 + Math.random() * 14;
@@ -5511,12 +6007,12 @@ export class GameEngine {
             this.obstacles.splice(i, 1);
             continue;
           } else if (obs.type === 'PICKUP_CASH') {
-            this.money += 20000;
-            this.dayRevenue += 20000;
+            this.money += ECONOMY_TUNING.cashPickupReward;
+            this.dayRevenue += ECONOMY_TUNING.cashPickupReward;
             this.xu += 150;
             this.score += 200;
             this.audio.playPickup();
-            this.spawnCallout('+20.000đ · +150 Xu', 'Lượm được tiền rơi!', obs.x, obs.y - 20, '#22C55E');
+            this.spawnCallout('+5.000đ · +150 Xu', 'Lượm được tiền rơi!', obs.x, obs.y - 20, '#22C55E');
             this.obstacles.splice(i, 1);
             continue;
           } else if (obs.type === 'PICKUP_SHIELD') {
@@ -5591,8 +6087,8 @@ export class GameEngine {
 
     if (this.raidTimeLeft <= 0) {
       this.raidsSurvived += 1;
-      this.money += 50000;
-      this.dayRevenue += 50000;
+      this.money += ECONOMY_TUNING.raidSurvivalReward;
+      this.dayRevenue += ECONOMY_TUNING.raidSurvivalReward;
       this.xu += 250;
       this.score += 500;
       this.ordersSinceRaid = 0;
@@ -5603,7 +6099,7 @@ export class GameEngine {
       } else {
         this.spawnNextOrder(true);
         this.spawnCallout(
-          '+50.000đ · +250 Xu Cắt Đuôi!',
+          '+15.000đ · +250 Xu Cắt Đuôi!',
           'Trật tự bỏ cuộc rồi, bán tiếp thôi!',
           this.width * 0.5,
           this.height * 0.5,
@@ -5703,6 +6199,37 @@ export class GameEngine {
     });
   }
 
+  public interactWithCurrentNpc(choice: 'FRIENDLY' | 'QUICK'): boolean {
+    if (!this.order || this.npcInteracted || this.screen !== 'PLAYING' || this.phase !== 'COOKING') return false;
+    const encounter = this.getNpcEncounterSnapshot();
+    if (!encounter) return false;
+    this.npcInteracted = true;
+    if (choice === 'FRIENDLY') {
+      this.order.baseReward = Math.round(this.order.baseReward * 1.1);
+      this.spawnCallout('💛 +10% tiền công', `Bạn đã trò chuyện thân thiện với ${encounter.name}!`, this.width * 0.5, this.height * 0.22, '#F59E0B');
+    } else {
+      const extraPatience = Math.max(2, this.order.maxPatience * 0.2);
+      this.order.patience = Math.min(this.order.maxPatience, this.order.patience + extraPatience);
+      this.spawnCallout('⏳ Khách kiên nhẫn hơn', `${encounter.name} cho bạn thêm thời gian!`, this.width * 0.5, this.height * 0.22, '#38BDF8');
+    }
+    this.audio.playPickup();
+    this.emitHud(true);
+    return true;
+  }
+
+  private getNpcEncounterSnapshot(): NpcEncounterSnapshot | null {
+    if (!this.order) return null;
+    const npcByType: Partial<Record<CustomerType, { name: string; role: string; dialogue: string }>> = {
+      STUDENT: { name: 'Cô Sáu', role: 'Khách quen đầu hẻm', dialogue: '“Con làm cho cô phần ngon nha, cô hay ghé ủng hộ lắm!”' },
+      OFFICE: { name: 'Chị Hạnh', role: 'Nhân viên văn phòng', dialogue: '“Chị đang vội đi làm, quán mình đông mà phục vụ dễ thương ghê.”' },
+      NINJA_LEAD: { name: 'Chú Bảy', role: 'Tài xế công nghệ', dialogue: '“Bán buôn phải có trước có sau, chú thấy con chịu khó đó!”' },
+      GEN_Z: { name: 'Tí Reviewer', role: 'Nhà sáng tạo nội dung', dialogue: '“Món này lên clip mà ngon là mình nổi liền nha!”' },
+      APP_SHIPPER: { name: 'Anh Tài', role: 'Shipper thân thiện', dialogue: '“Có đơn gấp nhưng anh vẫn chờ được, mình phối hợp nha!”' },
+    };
+    const npc = npcByType[this.order.customerType];
+    return npc ? { ...npc, customerLabel: this.order.customerLabel, interacted: this.npcInteracted } : null;
+  }
+
   private emitHud(force: boolean): void {
     const raidSec = Math.ceil(this.raidTimeLeft);
     const daySec = Math.ceil(this.dayTimeLeft);
@@ -5723,14 +6250,33 @@ export class GameEngine {
       : '0';
     const dayBannerTenths = Math.ceil(this.dayBannerTimer * 10);
     const penaltyHash = `${this.policeHeat}-${this.ruinedBagBlocking}-${this.badRepOrdersLeft}-${Math.ceil(this.recordingPhoneTimer * 5)}-${Math.ceil(this.yellingTimer * 5)}-${this.sauceSplatterWipes}`;
-    const hash = `${this.screen}|${this.phase}|${this.dishType}|${this.prepStep}|${this.money}|${this.xu}|${this.score}|${this.ordersServed}|${this.redChairs}|${this.maxRedChairs}|${this.combo}|${raidSec}|${this.day}-${daySec}-${this.dayDuration}-${dayBannerTenths}|${this.audio.isMuted()}|${this.shopOpen}|${upHash}|${invHash}|${buffHash}|${advHash}|${featHash}|${tycoonHash}|${wuxiaHash}|${this.dailyHexagram.element}|${this.viralOrdersLeft}|${bpSec}|${this.rainEvent.active}|${this.tiktokQte.active}|${this.checkout.active}-${this.checkout.givenChangeK}-${chkTenths}-${this.checkout.selectedBills.length}-${this.checkout.discountAccepted}|${this.raidChanceBonus}|${penaltyHash}`;
+    const npcHash = this.order ? `${this.order.id}-${this.npcInteracted}` : 'none';
+    const hash = `${npcHash}-${this.playerProgress.level}-${this.playerProgress.xp}-${this.playerProgress.ownedDecorations.length}-${this.playerProgress.equippedDecorations.join(',')}-${this.playerProgress.difficulty}|${this.screen}|${this.phase}|${this.dishType}|${this.prepStep}|${this.money}|${this.xu}|${this.score}|${this.ordersServed}|${this.redChairs}|${this.maxRedChairs}|${this.combo}|${raidSec}|${this.day}-${daySec}-${this.dayDuration}-${dayBannerTenths}|${this.audio.isMuted()}|${this.shopOpen}|${upHash}|${invHash}|${buffHash}|${advHash}|${featHash}|${tycoonHash}|${wuxiaHash}|${this.dailyHexagram.element}|${this.viralOrdersLeft}|${bpSec}|${this.rainEvent.active}|${this.tiktokQte.active}|${this.checkout.active}-${this.checkout.givenChangeK}-${chkTenths}-${this.checkout.selectedBills.length}-${this.checkout.discountAccepted}|${this.raidChanceBonus}|${penaltyHash}`;
     if (!force && hash === this.lastHudHash) return;
     this.lastHudHash = hash;
+
+    if (this.playerProgress.wallet !== this.money) {
+      this.playerProgress = { ...this.playerProgress, wallet: Math.max(0, Math.floor(this.money)) };
+      savePlayerProgress(this.playerProgress, typeof window !== 'undefined' ? window.localStorage : undefined);
+    }
+
+    this.persistSession();
 
     const loanDailyInterest =
       this.loanDebt > 0 ? Math.max(5000, Math.round((this.loanDebt * 0.25) / 1000) * 1000) : 0;
 
     this.onHudChange({
+      playerLevel: this.playerProgress.level,
+      playerXp: this.playerProgress.xp,
+      playerXpToNext: xpRequiredForLevel(this.playerProgress.level),
+      lifetimeEarnings: this.playerProgress.lifetimeEarnings,
+      completedOrdersLifetime: this.playerProgress.completedOrders,
+      decorationAttraction: getDecorationAttraction(this.playerProgress),
+      ownedDecorations: [...this.playerProgress.ownedDecorations],
+      equippedDecorations: [...this.playerProgress.equippedDecorations],
+      difficulty: this.playerProgress.difficulty,
+      storyMission: getStoryMissionSnapshot(this.playerProgress, this.completedMissionIds),
+      npcEncounter: this.getNpcEncounterSnapshot(),
       screen: this.screen,
       phase: this.phase,
       dishType: this.dishType,
@@ -5837,10 +6383,12 @@ export class GameEngine {
       }
     }
 
-    const centeredPrimary = {
-      ...layout.primaryBtn,
-      x: this.width * 0.5 - layout.primaryBtn.w * 0.5,
-    };
+    const centeredPrimary = layout.isCompact
+      ? layout.primaryBtn
+      : {
+          ...layout.primaryBtn,
+          x: this.width * 0.5 - layout.primaryBtn.w * 0.5,
+        };
     const activePrimary = this.prepStep === 'CUTTING' ? layout.primaryBtn : centeredPrimary;
     const dayProgress =
       this.dayDuration > 0
@@ -5876,6 +6424,7 @@ export class GameEngine {
       swipeTrail: this.swipeTrail,
       addedToppings: this.addedToppings,
       inventory: this.inventory,
+      playerLevel: this.playerProgress.level,
       bowlIngredients: this.bowlIngredients,
       flyingToppings: this.flyingToppings,
       flyingCash: this.flyingCash,
@@ -5909,7 +6458,7 @@ export class GameEngine {
       hoverTrayId,
       hoverPrimary: Boolean(this.order) && pointInRect(this.hoverPos.x, this.hoverPos.y, activePrimary),
       hoverSecondary:
-        Boolean(this.order) && this.prepStep === 'CUTTING' && pointInRect(this.hoverPos.x, this.hoverPos.y, layout.secondaryBtn),
+        Boolean(this.order) && (this.prepStep === 'CUTTING' || (this.prepStep === 'TOPPINGS' && this.toppingHistory.length > 0)) && pointInRect(this.hoverPos.x, this.hoverPos.y, this.prepStep === 'TOPPINGS' ? getToppingUndoRect(layout) : layout.secondaryBtn),
       hoverShake:
         Boolean(this.order) && this.prepStep === 'SHAKING' && pointInRect(this.hoverPos.x, this.hoverPos.y, layout.shakeBtn),
       hoverRoll:
