@@ -276,8 +276,8 @@ export const WORLD_INTERACTABLES: readonly WorldInteractable[] = [
   {
     id: 'co_sau',
     name: 'Cô Sáu bán hoa',
-    x: 10,
-    y: 52,
+    x: 7,
+    y: 54,
     radius: 7,
     kind: 'NPC',
     description: 'Cô Sáu bán hoa ở góc vỉa hè, lúc nào cũng vui vẻ và hay để ý chuyện trong xóm.',
@@ -286,8 +286,8 @@ export const WORLD_INTERACTABLES: readonly WorldInteractable[] = [
   {
     id: 'shipper_ti',
     name: 'Tí giao hàng',
-    x: 52,
-    y: 34,
+    x: 51,
+    y: 35,
     radius: 7,
     kind: 'NPC',
     description: 'Tí là shipper trẻ thường dừng lại đầu phố để xem đơn giao trong ngày.',
@@ -296,8 +296,8 @@ export const WORLD_INTERACTABLES: readonly WorldInteractable[] = [
   {
     id: 'chu_bay',
     name: 'Chú Bảy sửa xe',
-    x: 77,
-    y: 53,
+    x: 80,
+    y: 54,
     radius: 7,
     kind: 'NPC',
     description: 'Chú Bảy sửa xe lâu năm, thường ngồi trước tiệm nhìn dòng người qua lại.',
@@ -306,8 +306,8 @@ export const WORLD_INTERACTABLES: readonly WorldInteractable[] = [
   {
     id: 'ba_tu',
     name: 'Bà Tư hàng xóm',
-    x: 94,
-    y: 52,
+    x: 93,
+    y: 53,
     radius: 7,
     kind: 'NPC',
     description: 'Bà Tư sống ở cuối dãy phố, thích trò chuyện và cập nhật tin tức khu xóm.',

@@ -491,3 +491,5 @@
   transform:translate(-50%,-50%);
   z-index:90;
 }
+
+.font-pixel { font-family: "Pixelify Sans", "JetBrains Mono", monospace; }

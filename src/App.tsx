@@ -3,11 +3,10 @@ import { Volume2, VolumeX, Pause, Play, RotateCcw, Home, Store, X, Check, Newspa
 import { GameEngine } from './game/engine';
 import { TesterPanel } from './TesterPanel';
 import { MobileGameHub } from './MobileGameHub';
-import { NeighborhoodMapArt } from './game/NeighborhoodMapArt';
-import { getPortraitWorldTop } from './game/neighborhoodLayout';
+import { NeighborhoodMapView } from './game/neighborhood/NeighborhoodMapView';
 import { BASE_MARKET_PRICES, ELEMENT_META, RAW_INGREDIENTS } from './game/orders';
 import { DECORATIONS, getUnlockedSkills } from './game/progression';
-import { findNearbyWorldLocation, getNeighborhoodEvent, getNeighborhoodDialogue, isNeighborhoodDialogueLocationId, getVendorLocation, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, getNeighborhoodQuestFollowUpDialogue, NEIGHBORHOOD_PARCEL_QUEST, getWorldMovementDelta, moveWorldPlayer, WORLD_INTERACTABLES, type NeighborhoodHelpQuestStatus, type NeighborhoodParcelQuestStatus, type WorldInteractable } from './game/world';
+import { findNearbyWorldLocation, getNeighborhoodEvent, getNeighborhoodDialogue, isNeighborhoodDialogueLocationId, getVendorLocation, CURIOUS_CART_VISITOR_EVENT, getNeighborhoodHelpQuestAction, NEIGHBORHOOD_HELP_QUEST, getNeighborhoodParcelQuestAction, getNeighborhoodQuestFollowUpDialogue, NEIGHBORHOOD_PARCEL_QUEST, getWorldMovementDelta, moveWorldPlayer, type NeighborhoodHelpQuestStatus, type NeighborhoodParcelQuestStatus, type WorldInteractable } from './game/world';
 import type { BestRecord, CityDistrictId, CustomerType, GameHudSnapshot, RawIngredientId, ShopItemId, TarotCardId, TycoonPolicyId, VehicleLevel, WireColorId } from './game/types';
 import heroBgUrl from './assets/images/saigon_sidewalk_hero_1794649926456.jpg';
 
@@ -30,14 +29,14 @@ const VEHICLE_TIERS: VehicleTierMeta[] = [
     perk: 'Sức chứa tối đa 12 đơn vị mỗi nguyên liệu.',
   },
   {
-    level: 2,
+    level: 3,
     name: 'Xe Đẩy Inox',
     capacity: 25,
     upgradeCost: 5000,
     perk: 'Nâng cấp lên 25 đơn vị mỗi nguyên liệu để bán cả ngày.',
   },
   {
-    level: 3,
+    level: 5,
     name: 'Xe Tay Ga Air Blade',
     capacity: 35,
     upgradeCost: 15000,
@@ -50,63 +49,6 @@ function formatClock(sec: number): string {
   const m = Math.floor(s / 60);
   const rem = s % 60;
   return `${m}:${rem.toString().padStart(2, '0')}`;
-}
-
-function WorldNpcSprite({ npc }: { npc: WorldInteractable }) {
-  const palette = npc.id === 'co_sau'
-    ? { shirt: '#b86b91', hair: '#5b392e', accent: '#f4c6d8', hat: false }
-    : npc.id === 'shipper_ti'
-      ? { shirt: '#2d8d9c', hair: '#292b31', accent: '#f2c94c', hat: true }
-      : npc.id === 'chu_bay'
-        ? { shirt: '#63865a', hair: '#554235', accent: '#d6b47a', hat: true }
-        : npc.id === 'co_nam'
-          ? { shirt: '#c45f4d', hair: '#563a2f', accent: '#f2c94c', hat: false }
-          : { shirt: '#8467a8', hair: '#77706a', accent: '#f0d99b', hat: false };
-  return (
-    <div className={`world-map-npc world-map-npc--${npc.id} absolute z-10 [image-rendering:pixelated]`}
-      style={{ left: npc.x + '%', top: npc.y + '%', ['--portrait-top' as string]: getPortraitWorldTop(npc.y) + '%', ['--logic-top' as string]: npc.y + '%' }} title={npc.name}>
-      <svg viewBox="0 0 42 64" className="h-11 w-8 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label={npc.name}>
-        {palette.hat && <rect x="6" y="2" width="30" height="7" fill={palette.accent} stroke="#46352b" strokeWidth="2" />}
-        <rect x="12" y="5" width="18" height="17" fill="#d39a78" />
-        <path d="M8 15Q8 0 21 0Q34 0 34 15L29 18H13Z" fill={palette.hair} />
-        <rect x="8" y="22" width="26" height="22" fill={palette.shirt} stroke="#49382d" strokeWidth="2" />
-        <rect x="10" y="44" width="9" height="16" fill="#344052" /><rect x="23" y="44" width="9" height="16" fill="#344052" />
-        <rect x="8" y="59" width="13" height="5" fill="#49352b" /><rect x="21" y="59" width="13" height="5" fill="#49352b" />
-        {npc.id === 'co_sau' && <><rect x="2" y="28" width="5" height="13" fill="#6f9b53" /><rect x="1" y="23" width="7" height="6" fill="#f2b8c7" /><path d="M2 22Q-3 13 5 13Q11 14 7 22" fill="#f3c5d1" stroke="#6f9b53" strokeWidth="1.5" /></>}
-        {npc.id === 'shipper_ti' && <><rect x="31" y="25" width="9" height="13" fill="#f2c94c" stroke="#49382d" strokeWidth="2" /><path d="M31 25L39 21" stroke="#49382d" strokeWidth="2"/></>}
-        {npc.id === 'chu_bay' && <><rect x="2" y="28" width="6" height="12" fill="#b6b1a2" /><path d="M4 26L10 18L13 20L8 29" fill="none" stroke="#d8d0bd" strokeWidth="2.5"/></>}
-        {npc.id === 'co_nam' && <><rect x="31" y="27" width="8" height="10" fill="#d3a35a" stroke="#49382d" strokeWidth="1.5"/><path d="M31 26H39" stroke="#f5e5c2" strokeWidth="2"/></>}
-        {npc.id === 'ba_tu' && <><rect x="7" y="19" width="28" height="5" fill="#e7d8b7"/><path d="M32 30L39 37" stroke="#e8d8b7" strokeWidth="3"/></>}
-      </svg>
-      <span className={`world-npc-nameplate world-npc-nameplate--${npc.id}`}>{npc.name}</span>
-    </div>
-  );
-}
-
-function WorldDialoguePanel({ npc, message, onContinue }: { npc: WorldInteractable; message: string; onContinue: () => void }) {
-  const [visibleText, setVisibleText] = useState('');
-  useEffect(() => {
-    setVisibleText('');
-    let index = 0;
-    const timer = window.setInterval(() => {
-      index = Math.min(message.length, index + 2);
-      setVisibleText(message.slice(0, index));
-      if (index >= message.length) window.clearInterval(timer);
-    }, 18);
-    return () => window.clearInterval(timer);
-  }, [message]);
-  return (
-    <section className="world-dialogue-card" role="dialog" aria-label={`Lời thoại của ${npc.name}`}>
-      <div className="world-dialogue-avatar" aria-hidden="true">
-        <svg viewBox="0 0 42 64" shapeRendering="crispEdges"><rect x="12" y="5" width="18" height="17" fill="#d39a78"/><path d="M8 15Q8 0 21 0Q34 0 34 15L29 18H13Z" fill="#563b30"/><rect x="8" y="22" width="26" height="22" fill={npc.id === 'co_sau' ? '#b86b91' : npc.id === 'shipper_ti' ? '#2d8d9c' : npc.id === 'chu_bay' ? '#63865a' : npc.id === 'co_nam' ? '#c45f4d' : '#8467a8'}/><rect x="10" y="44" width="9" height="16" fill="#344052"/><rect x="23" y="44" width="9" height="16" fill="#344052"/></svg>
-      </div>
-      <div className="world-dialogue-copy">
-        <div className="world-dialogue-heading"><strong>{npc.name}</strong><span>ĐANG TRÒ CHUYỆN</span></div>
-        <p>{visibleText}<i aria-hidden="true" /></p>
-        <button type="button" onClick={onContinue}>TIẾP TỤC <span>›</span></button>
-      </div>
-    </section>
-  );
 }
 
 function BusinessDayInfo({ dark = false }: { dark?: boolean }) {
@@ -562,12 +504,12 @@ export default function App() {
     try { return Boolean(localStorage.getItem('banh_trang_session_save_v1')); } catch { return false; }
   });
   const [onboardingStep, setOnboardingStep] = useState<'STORY' | 'MAP' | null>(null);
+  const [onboardingIsNewGame, setOnboardingIsNewGame] = useState(false);
+  const [newGameConfirmTarget, setNewGameConfirmTarget] = useState<'STORY' | 'MAP' | null>(null);
   const [worldHubOpen, setWorldHubOpen] = useState(false);
-  const [worldHudOpen, setWorldHudOpen] = useState(true);
   const [worldPanel, setWorldPanel] = useState<'MAP' | 'BAG' | 'JOURNAL' | 'PHONE' | null>(null);
   const [worldPlayer, setWorldPlayer] = useState({ x: 48, y: 45 });
   const worldPlayerRef = useRef(worldPlayer);
-  const worldPlayerElementRef = useRef<HTMLDivElement | null>(null);
   const worldKeyboardDirectionsRef = useRef(new Set<string>());
   const worldTouchDirectionsRef = useRef(new Set<string>());
   const updateWorldPlayerPosition = (position: { x: number; y: number }) => {
@@ -750,13 +692,6 @@ export default function App() {
           const next = moveWorldPlayer(worldPlayerRef.current, delta.x, delta.y);
           if (next.x !== worldPlayerRef.current.x || next.y !== worldPlayerRef.current.y) {
             worldPlayerRef.current = next;
-            const playerElement = worldPlayerElementRef.current;
-            if (playerElement) {
-              playerElement.style.left = next.x + '%';
-              playerElement.style.top = next.y + '%';
-              playerElement.style.setProperty('--portrait-top', getPortraitWorldTop(next.y) + '%');
-              playerElement.style.setProperty('--logic-top', next.y + '%');
-            }
             hasUncommittedPosition = true;
           }
         }
@@ -805,7 +740,7 @@ export default function App() {
   // Enter / Space starts game on Title Screen; Checkout modal keyboard shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (hud.screen === 'TITLE_MENU' && (e.code === 'Enter' || e.code === 'Space')) {
+      if (hud.screen === 'TITLE_MENU' && !onboardingStep && !newGameConfirmTarget && (e.code === 'Enter' || e.code === 'Space')) {
         e.preventDefault();
         handleStart();
         return;
@@ -839,7 +774,7 @@ export default function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [hud.screen, hud.checkout.active, hud.shopOpen]);
+  }, [hud.screen, hud.checkout.active, hud.shopOpen, hasSavedGame, onboardingStep, newGameConfirmTarget]);
 
   const nearbyWorldLocation = findNearbyWorldLocation(worldPlayer.x, worldPlayer.y);
   const neighborhoodEvent = getNeighborhoodEvent(hud.day, hud.dayTimeLeft, hud.dayDuration);
@@ -912,20 +847,35 @@ export default function App() {
     handleWorldLocationInteraction(nearby);
   };
 
-  const startWorldTouchMove = (direction: 'up' | 'down' | 'left' | 'right') => {
+  const setWorldTouchDirections = (dirs: Partial<Record<'up' | 'down' | 'left' | 'right', boolean>>) => {
     if (neighborhoodHelpQuestOfferOpen || neighborhoodParcelQuestOfferOpen) return;
-    worldTouchDirectionsRef.current.add(direction);
-    setWorldPanel(null);
-    setWorldNotice('');
+    let anyActive = false;
+    (['up', 'down', 'left', 'right'] as const).forEach((direction) => {
+      if (dirs[direction] === true) {
+        worldTouchDirectionsRef.current.add(direction);
+        anyActive = true;
+      } else if (dirs[direction] === false) {
+        worldTouchDirectionsRef.current.delete(direction);
+      }
+    });
+    if (anyActive) {
+      setWorldPanel(null);
+      setWorldNotice('');
+    }
   };
 
-  const stopWorldTouchMove = (direction: 'up' | 'down' | 'left' | 'right') => {
-    worldTouchDirectionsRef.current.delete(direction);
+  const beginNewGameOnboarding = (target: 'STORY' | 'MAP') => {
+    setNewGameConfirmTarget(null);
+    setOnboardingIsNewGame(true);
+    setOnboardingStep(target);
   };
 
   const handleStart = () => {
-    if (hasSavedGame && !window.confirm('Bạn đang có một hành trình đã lưu. Bắt đầu trò chơi mới sẽ thay thế bản lưu này. Bạn có chắc chắn muốn tiếp tục?')) return;
-    setOnboardingStep('STORY');
+    if (hasSavedGame) {
+      setNewGameConfirmTarget('STORY');
+      return;
+    }
+    beginNewGameOnboarding('STORY');
   };
 
   const handleContinue = () => {
@@ -1251,6 +1201,42 @@ export default function App() {
         />
       )}
 
+      {/* IN-APP NEW GAME OVERWRITE CONFIRMATION (safe inside iframe / mobile webview) */}
+      {newGameConfirmTarget && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-[#080B12]/85 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirm-new-game-title"
+        >
+          <div className="w-full max-w-md rounded-2xl border-[3px] border-amber-400 bg-[#171923] p-6 text-slate-100 shadow-2xl">
+            <p className="text-xs font-extrabold tracking-widest text-amber-300">XÁC NHẬN CHƠI MỚI</p>
+            <h2 id="confirm-new-game-title" className="mt-1 font-display text-2xl font-extrabold text-white">
+              Thay thế hành trình đã lưu?
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-300">
+              Bạn đang có một bản lưu đang dở. Nếu bắt đầu hành trình mới, tiến độ ca bán hàng trước đó sẽ được làm mới.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setNewGameConfirmTarget(null)}
+                className="min-h-[44px] rounded-xl border-2 border-slate-500 px-4 py-2.5 text-sm font-bold text-slate-200 hover:bg-slate-700 cursor-pointer"
+              >
+                Giữ bản lưu
+              </button>
+              <button
+                type="button"
+                onClick={() => beginNewGameOnboarding(newGameConfirmTarget)}
+                className="min-h-[44px] rounded-xl border-[3px] border-[#111318] bg-[#F59E0B] px-5 py-2.5 text-sm font-extrabold text-[#111318] hover:bg-[#FBBF24] cursor-pointer"
+              >
+                Bắt đầu mới →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* STORY INTRO + REAL VENDOR LOCATION SELECTOR */}
       {onboardingStep && (
         <div className="absolute inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-[#080B12]/95 p-4 allow-touch-scroll">
@@ -1265,15 +1251,15 @@ export default function App() {
                 <p className="text-xs text-slate-400">Bạn bắt đầu với 120.000đ vốn, một chiếc rổ nhựa và quyết tâm tự làm chủ.</p>
               </div>
               <div className="mt-6 flex flex-wrap justify-between gap-3">
-                <button type="button" onClick={() => setOnboardingStep(null)} className="rounded-xl border-2 border-slate-500 px-5 py-3 font-bold text-slate-200 hover:bg-slate-700">← Quay lại màn hình chính</button>
-                <button type="button" onClick={() => setOnboardingStep('MAP')} className="rounded-xl border-[3px] border-[#111318] bg-amber-400 px-6 py-3 font-extrabold text-slate-950 hover:bg-amber-300">Chọn nơi bắt đầu →</button>
+                <button type="button" onClick={() => { setOnboardingStep(null); setOnboardingIsNewGame(false); }} className="rounded-xl border-2 border-slate-500 px-5 py-3 font-bold text-slate-200 hover:bg-slate-700 cursor-pointer">← Quay lại màn hình chính</button>
+                <button type="button" onClick={() => setOnboardingStep('MAP')} className="rounded-xl border-[3px] border-[#111318] bg-amber-400 px-6 py-3 font-extrabold text-slate-950 hover:bg-amber-300 cursor-pointer">Chọn nơi bắt đầu →</button>
               </div>
             </div>
           ) : (
             <div className="w-full max-w-3xl rounded-2xl border-[3px] border-emerald-400 bg-[#171923] p-5 sm:p-7 shadow-2xl">
               <div className="flex items-start justify-between gap-3">
-                <div><p className="text-xs font-extrabold tracking-widest text-emerald-300">BẢN ĐỒ SÀI GÒN</p><h2 className="mt-1 font-display text-2xl font-extrabold">Chọn chỗ dựng xe bán hàng</h2><p className="mt-1 text-xs text-slate-300">{hud.screen === 'TITLE_MENU' ? 'Chọn khu vực kinh doanh đầu tiên. Sau khi xác nhận, bạn sẽ vào khu phố ngay.' : 'Bạn chỉ có thể đổi địa điểm tại màn hình tổng kết cuối ngày. Xác nhận để áp dụng từ ngày tiếp theo.'}</p></div>
-                <button type="button" onClick={() => setOnboardingStep(hud.screen === 'TITLE_MENU' ? 'STORY' : null)} className="rounded-lg border border-slate-500 px-3 py-2 text-sm font-bold">← Quay lại</button>
+                <div><p className="text-xs font-extrabold tracking-widest text-emerald-300">BẢN ĐỒ SÀI GÒN</p><h2 className="mt-1 font-display text-2xl font-extrabold">Chọn chỗ dựng xe bán hàng</h2><p className="mt-1 text-xs text-slate-300">{(onboardingIsNewGame || hud.screen === 'TITLE_MENU') ? 'Chọn khu vực kinh doanh đầu tiên. Sau khi xác nhận, bạn sẽ vào khu phố ngay.' : 'Bạn chỉ có thể đổi địa điểm tại màn hình tổng kết cuối ngày. Xác nhận để áp dụng từ ngày tiếp theo.'}</p></div>
+                <button type="button" onClick={() => { const goStory = onboardingIsNewGame || hud.screen === 'TITLE_MENU'; setOnboardingStep(goStory ? 'STORY' : null); if (!goStory) setOnboardingIsNewGame(false); }} className="rounded-lg border border-slate-500 px-3 py-2 text-sm font-bold cursor-pointer">← Quay lại</button>
               </div>
               <div className="relative mt-5 h-56 overflow-hidden rounded-xl border-2 border-slate-500 bg-[linear-gradient(35deg,#1f493d_0%,#284c43_35%,#243b50_36%,#243b50_62%,#344a38_63%,#1f493d_100%)]">
                 <div className="absolute inset-0 opacity-30" style={{backgroundImage:'linear-gradient(90deg,transparent 48%,#cbd5e1 49%,#cbd5e1 51%,transparent 52%),linear-gradient(0deg,transparent 48%,#cbd5e1 49%,#cbd5e1 51%,transparent 52%)',backgroundSize:'90px 90px'}} />
@@ -1285,7 +1271,7 @@ export default function App() {
                   {id:'NGA_TU',name:'Ngã tư Hàng Xanh',x:'80%',y:'75%',traffic:'Nhiều người đi đường',rent:'22.000đ/ngày',risk:'Rủi ro trật tự vừa'},
                   {id:'PHO_DI_BO',name:'Phố đi bộ Nguyễn Huệ',x:'48%',y:'72%',traffic:'Khách đông buổi tối',rent:'35.000đ/ngày',risk:'Rủi ro cao'},
                 ].map((spot) => (
-                  <button key={spot.id} type="button" onClick={() => setSelectedVendorSpot(spot.id)} style={{left:spot.x,top:spot.y}} className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 px-2.5 py-1.5 text-[10px] font-extrabold shadow-lg ${selectedVendorSpot===spot.id?'border-amber-300 bg-amber-400 text-slate-950 scale-110':'border-white bg-slate-900/90 text-white'}`} aria-pressed={selectedVendorSpot===spot.id}>📍 {spot.name}</button>
+                  <button key={spot.id} type="button" onClick={() => setSelectedVendorSpot(spot.id)} style={{left:spot.x,top:spot.y}} className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 px-2.5 py-1.5 text-[10px] font-extrabold shadow-lg cursor-pointer ${selectedVendorSpot===spot.id?'border-amber-300 bg-amber-400 text-slate-950 scale-110':'border-white bg-slate-900/90 text-white'}`} aria-pressed={selectedVendorSpot===spot.id}>📍 {spot.name}</button>
                 ))}
               </div>
               {(() => {
@@ -1300,8 +1286,8 @@ export default function App() {
                 return <div className="mt-4 rounded-xl border border-emerald-400/50 bg-emerald-400/10 p-4"><p className="font-extrabold text-emerald-200">{chosen.name}</p><p className="mt-1 text-xs text-slate-200">{chosen.traffic} · {chosen.risk}</p><p className="mt-1 text-sm font-bold text-amber-300">Chi phí chỗ dự kiến: {chosen.rent}</p></div>;
               })()}
               <div className="mt-5 flex flex-wrap justify-between gap-3">
-                <button type="button" onClick={() => setOnboardingStep(hud.screen === 'TITLE_MENU' ? 'STORY' : null)} className="rounded-xl border-2 border-slate-500 px-5 py-3 font-bold text-slate-200 hover:bg-slate-700">← Quay lại</button>
-                <button type="button" onClick={() => { const location = getVendorLocation(selectedVendorSpot); try { localStorage.setItem('banhtrang_vendor_spot_v1', selectedVendorSpot); } catch {} if (hud.screen === 'TITLE_MENU') { engineRef.current?.startNewGame(); setHasSavedGame(true); engineRef.current?.setVendorLocationRent(location.rentPerDay); updateWorldPlayerPosition({ x: 48, y: 45 }); setWorldHubOpen(true); } else { engineRef.current?.setVendorLocationRent(location.rentPerDay); } setOnboardingStep(null); }} className="rounded-xl border-[3px] border-[#111318] bg-emerald-400 px-6 py-3 font-extrabold text-slate-950 hover:bg-emerald-300">{hud.screen === 'TITLE_MENU' ? 'Xác nhận địa điểm & vào chợ →' : 'Lưu địa điểm này'}</button>
+                <button type="button" onClick={() => { const goStory = onboardingIsNewGame || hud.screen === 'TITLE_MENU'; setOnboardingStep(goStory ? 'STORY' : null); if (!goStory) setOnboardingIsNewGame(false); }} className="rounded-xl border-2 border-slate-500 px-5 py-3 font-bold text-slate-200 hover:bg-slate-700 cursor-pointer">← Quay lại</button>
+                <button type="button" onClick={() => { const location = getVendorLocation(selectedVendorSpot); try { localStorage.setItem('banhtrang_vendor_spot_v1', selectedVendorSpot); } catch {} if (onboardingIsNewGame || hud.screen === 'TITLE_MENU') { engineRef.current?.startNewGame(); setHasSavedGame(true); engineRef.current?.setVendorLocationRent(location.rentPerDay); updateWorldPlayerPosition({ x: 48, y: 45 }); setWorldNotice(''); setWorldPanel(null); setWorldHubOpen(true); } else { engineRef.current?.setVendorLocationRent(location.rentPerDay); } setOnboardingIsNewGame(false); setOnboardingStep(null); }} className="rounded-xl border-[3px] border-[#111318] bg-emerald-400 px-6 py-3 font-extrabold text-slate-950 hover:bg-emerald-300 cursor-pointer">{(onboardingIsNewGame || hud.screen === 'TITLE_MENU') ? 'Xác nhận địa điểm & vào chợ →' : 'Lưu địa điểm này'}</button>
               </div>
             </div>
           )}
@@ -1309,234 +1295,52 @@ export default function App() {
       )}
 
       {worldHubOpen && (
-        <div className="absolute inset-0 z-[80] overflow-hidden bg-[#26343a] text-white">
-          <style>{`
-            @keyframes npcBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-            @keyframes walkEast { from { transform: translateX(-24vw); } to { transform: translateX(42vw); } }
-            @keyframes walkWest { from { transform: translateX(34vw); } to { transform: translateX(-26vw); } }
-            @keyframes trafficEast { from { transform: translateX(-180px); } to { transform: translateX(calc(100vw + 180px)); } }
-            @keyframes trafficWest { from { transform: translateX(calc(100vw + 180px)); } to { transform: translateX(-180px); } }
-          `}</style>
-          <div className="world-scene-layer world-map-redesign" data-time={worldLighting}>
-          <NeighborhoodMapArt />
-                    <div className={`world-light-overlay world-light-overlay--${worldLighting}`} aria-hidden="true" />
-          <div className="world-status-card absolute left-2 top-2 z-20 w-[min(46%,250px)] border-[3px] border-[#35291f] bg-[#263b3b] px-2 py-2 font-mono shadow-[4px_4px_0_#172126] [image-rendering:pixelated] sm:left-[2%] sm:top-[2%] sm:w-auto sm:px-4 sm:py-3">
-            <p className="text-[9px] font-black tracking-[.1em] text-amber-300 sm:text-[10px] sm:tracking-[.16em]">GÓC PHỐ BÁNH TRÁNG</p>
-            <p className="text-[11px] font-extrabold sm:text-sm">Ngày {hud.day} · {hud.money.toLocaleString('vi-VN')}đ</p>
-            <p className="world-status-detail text-[8px] leading-relaxed text-slate-200 sm:text-[10px]">Cấp {hud.playerLevel} · Đi bộ đến xe để bán hàng</p>
-          </div>
-          <div className="world-daypart-card absolute right-2 top-16 z-20 w-[min(48%,270px)] border-[3px] border-[#35291f] bg-[#263b3b]/95 p-2 font-mono shadow-[4px_4px_0_#172126] sm:right-5 sm:top-16 sm:w-[270px] sm:p-2.5">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[9px] font-black tracking-[.12em] text-amber-300">NHỊP SỐNG KHU PHỐ</p>
-              <span className="shrink-0 border border-amber-200/40 bg-amber-100/10 px-1.5 py-0.5 text-[8px] font-bold text-amber-100">{worldLightingLabel}</span>
-            </div>
-            <p className="mt-1 text-[11px] font-extrabold text-white">{neighborhoodEvent.title}</p>
-            <p className="world-event-description mt-1 text-[9px] leading-relaxed text-slate-200">{neighborhoodEvent.description}</p>
-            <p className="world-event-traffic mt-1 text-[8px] font-bold text-emerald-200">● {neighborhoodEvent.trafficLabel}</p>
-          </div>
-          <div className="world-pedestrian world-pedestrian--one absolute left-[18%] top-[38%] z-10 flex items-end gap-2" style={{animation:"walkEast 24s linear infinite"}}>
-            <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#d99b70"/><rect x="10" y="0" width="22" height="8" fill="#292b31"/><rect x="8" y="20" width="26" height="22" fill="#3d78a0"/><rect x="10" y="42" width="9" height="18" fill="#343d4c"/><rect x="23" y="42" width="9" height="18" fill="#343d4c"/></svg>
-            <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#bd805d"/><rect x="9" y="0" width="24" height="8" fill="#4d332b"/><rect x="8" y="20" width="26" height="22" fill="#d16c4e"/><rect x="10" y="42" width="9" height="18" fill="#384b42"/><rect x="23" y="42" width="9" height="18" fill="#384b42"/></svg>
-          </div>
-          <div className="world-pedestrian world-pedestrian--two absolute left-[57%] top-[38%] z-10" style={{animation:"walkWest 29s linear infinite"}}>
-            <svg viewBox="0 0 42 64" className="h-12 w-8" shapeRendering="crispEdges"><rect x="12" y="2" width="18" height="18" fill="#e0aa82"/><rect x="8" y="0" width="26" height="8" fill="#47382c"/><rect x="8" y="20" width="26" height="22" fill="#e2b44e"/><rect x="10" y="42" width="9" height="18" fill="#34475a"/><rect x="23" y="42" width="9" height="18" fill="#34475a"/></svg>
-          </div>
-          <div className="world-traffic world-traffic--one pointer-events-none absolute left-0 top-[66%] z-[5]" style={{animation:"trafficEast 20s linear infinite"} } aria-hidden="true">
-            <svg viewBox="0 0 124 72" className="h-12 w-28 sm:h-14 sm:w-36" shapeRendering="crispEdges"><circle cx="27" cy="53" r="13" fill="#252b2b" stroke="#bcae8c" strokeWidth="4"/><circle cx="91" cy="53" r="13" fill="#252b2b" stroke="#bcae8c" strokeWidth="4"/><path d="M27 53L48 35L73 53H27L44 53L58 29L91 53" fill="none" stroke="#315d70" strokeWidth="5"/><path d="M48 35L42 25H61L73 53" fill="none" stroke="#e0a34f" strokeWidth="5"/><rect x="51" y="35" width="27" height="13" fill="#267aa5" stroke="#234658" strokeWidth="3"/><rect x="59" y="19" width="13" height="18" fill="#d46d4d" stroke="#593b31" strokeWidth="2"/><circle cx="66" cy="15" r="9" fill="#d59b78" stroke="#513c32" strokeWidth="2"/><path d="M56 14Q58 3 69 6Q77 8 76 16H58Z" fill="#e9c86f" stroke="#3f413b" strokeWidth="3"/><rect x="73" y="38" width="9" height="8" fill="#f6d884"/><path d="M43 25L35 20H29" stroke="#353e3d" strokeWidth="3"/></svg>
-          </div>
-          <div className="world-traffic world-traffic--two pointer-events-none absolute right-0 top-[81%] z-[5]" style={{animation:"trafficWest 16s linear infinite",animationDelay:"-7s"}} aria-hidden="true">
-            <svg viewBox="0 0 112 62" className="h-10 w-20 sm:h-12 sm:w-24" shapeRendering="crispEdges"><circle cx="22" cy="48" r="9" fill="#292e31" stroke="#bcae8c" strokeWidth="3"/><circle cx="78" cy="48" r="9" fill="#292e31" stroke="#bcae8c" strokeWidth="3"/><circle cx="98" cy="48" r="7" fill="#292e31" stroke="#bcae8c" strokeWidth="3"/><path d="M13 40L34 34L62 40L82 45" fill="none" stroke="#414b42" strokeWidth="4"/><rect x="33" y="12" width="45" height="26" fill="#c98d45" stroke="#60462f" strokeWidth="4"/><rect x="39" y="17" width="32" height="15" fill="#e4bb72"/><path d="M13 39L21 24H40L47 39" fill="#b95343" stroke="#573c2b" strokeWidth="4"/><circle cx="29" cy="15" r="8" fill="#d59b78" stroke="#503a30" strokeWidth="2"/><path d="M20 14Q23 3 33 7L38 14Z" fill="#4d6c68" stroke="#2c3937" strokeWidth="3"/><path d="M50 9V2M57 9V2M64 9V2" stroke="#e7d5a9" strokeWidth="2"/></svg>
-          </div>
-          <div className="world-traffic world-traffic--three pointer-events-none absolute left-0 top-[73%] z-[5]" style={{animation:"trafficEast 13s linear infinite",animationDelay:"-4s"}} aria-hidden="true">
-            <svg viewBox="0 0 110 64" className="h-9 w-16 sm:h-10 sm:w-20" shapeRendering="crispEdges"><circle cx="22" cy="48" r="10" fill="none" stroke="#252b2b" strokeWidth="5"/><circle cx="84" cy="48" r="10" fill="none" stroke="#252b2b" strokeWidth="5"/><path d="M22 48L44 25L59 48H22L54 48L84 48L65 22" fill="none" stroke="#4b7f66" strokeWidth="4"/><circle cx="48" cy="12" r="8" fill="#d59b78" stroke="#513c32" strokeWidth="2"/><path d="M40 12Q41 2 51 4Q59 6 57 13H42Z" fill="#e2bf69" stroke="#3f413b" strokeWidth="3"/><path d="M45 21L56 29L64 43" fill="none" stroke="#c65f4d" strokeWidth="6"/><path d="M56 29L42 40L22 48" fill="none" stroke="#c65f4d" strokeWidth="4"/><path d="M62 22L70 22" stroke="#3c403a" strokeWidth="3"/></svg>
-          </div>
-          {WORLD_INTERACTABLES.filter((location) => location.kind === 'NPC').map((npc) => (
-            <WorldNpcSprite key={npc.id} npc={npc} />
-          ))}
-
-          <div className="world-map-player absolute z-20 [image-rendering:pixelated]" ref={worldPlayerElementRef} style={{left:worldPlayer.x+"%",top:worldPlayer.y+"%",["--portrait-top" as string]:getPortraitWorldTop(worldPlayer.y)+"%",["--logic-top" as string]:worldPlayer.y+"%",willChange:"left, top"}}>
-            <svg viewBox="0 0 48 72" className="h-14 w-10 drop-shadow-[2px_3px_0_#263238]" shapeRendering="crispEdges" aria-label="Nhân vật người chơi">
-              <rect x="14" y="3" width="20" height="19" fill="#d99b76"/><rect x="11" y="0" width="26" height="9" fill="#292b31"/><rect x="8" y="22" width="32" height="25" fill="#2f83a0"/><rect x="1" y="25" width="8" height="21" fill="#d99b76"/><rect x="39" y="25" width="8" height="21" fill="#d99b76"/><rect x="11" y="47" width="10" height="21" fill="#303947"/><rect x="27" y="47" width="10" height="21" fill="#303947"/><rect x="9" y="66" width="13" height="5" fill="#392c27"/><rect x="26" y="66" width="13" height="5" fill="#392c27"/>
-            </svg>
-            <span className="world-player-nameplate">BẠN</span>
-          </div>
-          </div>
-          {worldPanel && <button type="button" className="world-panel-scrim absolute inset-0 z-20" aria-label="Đóng bảng thông tin" onClick={() => setWorldPanel(null)} />}
-          {worldPanel && (
-            <div className="world-info-panel absolute z-30 w-[min(92%,560px)] overflow-y-auto overscroll-contain touch-pan-y border-2 border-[#e7c77e] bg-[#18262b]/95 p-4 shadow-[6px_6px_0_#111]">
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-black text-amber-200">{worldPanel === 'MAP' ? '🗺 BẢN ĐỒ KHU PHỐ' : worldPanel === 'BAG' ? '🎒 TÚI ĐỒ' : worldPanel === 'JOURNAL' ? '📖 NHẬT KÝ' : '📱 ĐIỆN THOẠI'}</p>
-                <button type="button" onClick={() => setWorldPanel(null)} aria-label="Đóng khung thông tin" title="Đóng khung thông tin" className="flex h-9 w-9 shrink-0 items-center justify-center border-[3px] border-[#5b2d25] bg-[#b95343] text-lg font-black text-white shadow-[2px_2px_0_#111] hover:bg-[#d46654]">×</button>
-              </div>
-              {worldPanel === 'JOURNAL' ? (
-                <div className="mt-2 space-y-2 text-xs text-slate-100">
-                  <div className="flex items-center justify-between gap-2"><span className="font-bold text-amber-200">{hud.storyMission.chapter}</span><span className="border border-emerald-300/40 bg-emerald-900/40 px-2 py-1 text-[10px] font-bold text-emerald-200">{hud.storyMission.allCompleted ? 'Đã hoàn thành' : hud.storyMission.completed ? 'Chờ nhận thưởng' : 'Đang thực hiện'}</span></div>
-                  <p className="text-base font-black text-white">{hud.storyMission.title}</p>
-                  <p className="leading-relaxed text-slate-200">{hud.storyMission.description}</p>
-                  <div className="rounded border border-white/15 bg-black/20 p-2"><p className="font-bold text-amber-200">💬 {hud.storyMission.npcName}</p><p className="mt-1 italic text-slate-200">{hud.storyMission.storyText}</p></div>
-                  <div className="flex justify-between gap-2 text-[11px]"><span>Tiến độ: {hud.storyMission.progress.toLocaleString('vi-VN')} / {hud.storyMission.target.toLocaleString('vi-VN')}</span><span className="font-bold text-emerald-300">{hud.storyMission.reward.toLocaleString('vi-VN')}đ</span></div>
-                  <div className="h-2 overflow-hidden rounded bg-slate-700"><div className="h-full bg-emerald-400 transition-all" style={{width: `${Math.min(100, hud.storyMission.progress / Math.max(1, hud.storyMission.target) * 100)}%`}} /></div>
-                  {hud.storyMission.completed && !hud.storyMission.allCompleted && <button type="button" onClick={() => engineRef.current?.claimCurrentStoryMission()} className="w-full border-2 border-[#31543c] bg-[#65c985] px-3 py-2 font-black text-[#14251a] shadow-[3px_3px_0_#111] hover:bg-[#83e0a0]">NHẬN THƯỞNG · {hud.storyMission.reward.toLocaleString('vi-VN')}đ</button>}
-                  {hud.storyMission.allCompleted && <p className="font-bold text-emerald-300">Bạn đã hoàn thành toàn bộ Chương 1. Những câu chuyện tiếp theo sẽ được mở trong bản cập nhật sau.</p>}
-                  <div className="mt-3 border-t-2 border-white/15 pt-3">
-                    <div className="mb-2 flex items-center justify-between gap-2">
-                      <p className="font-black text-amber-200">📌 CÂU CHUYỆN KHU PHỐ</p>
-                      <span className="text-[10px] text-slate-300">Nhiệm vụ phụ</span>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="rounded border border-white/15 bg-black/20 p-2">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <p className="font-bold text-white">{NEIGHBORHOOD_HELP_QUEST.title}</p>
-                          <span className={"border px-2 py-0.5 text-[10px] font-bold " + (neighborhoodHelpQuestStatus === 'COMPLETED' ? "border-emerald-300/40 bg-emerald-900/40 text-emerald-200" : neighborhoodHelpQuestStatus === 'ACCEPTED' ? "border-amber-300/40 bg-amber-900/40 text-amber-200" : "border-slate-400/30 bg-slate-800/60 text-slate-300")}>{neighborhoodHelpQuestStatus === 'COMPLETED' ? 'Đã hoàn thành' : neighborhoodHelpQuestStatus === 'ACCEPTED' ? 'Đang thực hiện' : 'Chưa nhận'}</span>
-                        </div>
-                        <p className="mt-1 text-[11px] leading-relaxed text-slate-300">{neighborhoodHelpQuestStatus === 'COMPLETED' ? 'Bạn đã chuyển lời nhắn của Chú Bảy đến Cô Sáu.' : neighborhoodHelpQuestStatus === 'ACCEPTED' ? NEIGHBORHOOD_HELP_QUEST.objective : 'Gặp Chú Bảy ở tiệm sửa xe để nghe lời nhờ.'}</p>
-                      </div>
-                      <div className="rounded border border-white/15 bg-black/20 p-2">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <p className="font-bold text-white">{NEIGHBORHOOD_PARCEL_QUEST.title}</p>
-                          <span className={"border px-2 py-0.5 text-[10px] font-bold " + (neighborhoodParcelQuestStatus === 'COMPLETED' ? "border-emerald-300/40 bg-emerald-900/40 text-emerald-200" : neighborhoodParcelQuestStatus === 'ACCEPTED' ? "border-amber-300/40 bg-amber-900/40 text-amber-200" : "border-slate-400/30 bg-slate-800/60 text-slate-300")}>{neighborhoodParcelQuestStatus === 'COMPLETED' ? 'Đã hoàn thành' : neighborhoodParcelQuestStatus === 'ACCEPTED' ? 'Đang thực hiện' : 'Chưa nhận'}</span>
-                        </div>
-                        <p className="mt-1 text-[11px] leading-relaxed text-slate-300">{neighborhoodParcelQuestStatus === 'COMPLETED' ? 'Bạn đã báo tin cho Bà Tư về gói hàng của Tí.' : neighborhoodParcelQuestStatus === 'ACCEPTED' ? NEIGHBORHOOD_PARCEL_QUEST.objective : 'Gặp Tí giao hàng trên phố để nghe lời nhờ.'}</p>
-                      </div>
-                    </div>
-                    <p className="mt-2 text-[10px] italic text-slate-400">Các câu chuyện khu phố là nhiệm vụ tùy chọn, không ảnh hưởng tiến trình bán hàng.</p>
-                  </div>
-                </div>
-              ) : worldPanel === 'MAP' ? (
-                <div className="mt-3 space-y-3 text-xs text-slate-100">
-                  {worldNotice && <p className="border-l-4 border-amber-300 bg-amber-100/10 px-3 py-2 leading-relaxed text-amber-100">{worldNotice}</p>}
-                  <section className="border border-white/15 bg-black/20 p-3">
-                    <p className="font-black text-amber-200">🎮 CÁCH KHÁM PHÁ KHU PHỐ</p>
-                    <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                      <div className="flex gap-2"><span className="grid h-8 w-12 shrink-0 place-items-center border border-white/20 bg-white/10 font-black">WASD</span><span className="leading-relaxed">Di chuyển bằng W/A/S/D hoặc phím mũi tên.</span></div>
-                      <div className="flex gap-2"><span className="grid h-8 w-12 shrink-0 place-items-center border border-amber-200/40 bg-amber-200/10 font-black text-amber-100">E</span><span className="leading-relaxed">Nói chuyện hoặc tương tác với người/địa điểm gần nhất.</span></div>
-                      <div className="flex gap-2"><span className="grid h-8 w-12 shrink-0 place-items-center border border-white/20 bg-white/10 font-black">↑↓←→</span><span className="leading-relaxed">Trên điện thoại, dùng cụm nút mũi tên phía dưới.</span></div>
-                      <div className="flex gap-2"><span className="grid h-8 w-12 shrink-0 place-items-center border border-white/20 bg-white/10 font-black">E · XE</span><span className="leading-relaxed">Đến xe bánh tráng và tương tác để bắt đầu bán hàng.</span></div>
-                    </div>
-                  </section>
-                  <section className="border border-white/15 bg-black/20 p-3">
-                    <p className="font-black text-amber-200">📍 CÁC ĐIỂM CÓ THỂ GHÉ</p>
-                    <div className="mt-2 grid grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-2">
-                      <p>🛒 Tạp hóa đầu ngõ · nhập hàng</p><p>🍢 Sạp ăn vặt · gặp người bán</p>
-                      <p>🥤 Quán nước chú Ba · nghỉ chân</p><p>🏪 Cổng chợ · khám phá khu chợ</p>
-                      <p>🌺 Cô Sáu · người bán hoa</p><p>🛵 Tí · người giao hàng</p>
-                      <p>🔧 Chú Bảy · tiệm sửa xe</p><p>🏠 Bà Tư · hàng xóm</p>
-                      <p>👵 Cô Năm · hàng xóm</p><p>🛺 Xe bánh tráng · bắt đầu ca bán</p>
-                    </div>
-                    <p className="mt-2 text-[10px] leading-relaxed text-slate-400">Đi lại gần từng điểm để xem tên hiện trên nút E. Nếu đứng giữa hai điểm, game ưu tiên đối tượng gần bạn hơn.</p>
-                  </section>
-                  {nearbyWorldLocation && <section className="border border-emerald-300/30 bg-emerald-900/20 p-3"><p className="font-black text-emerald-200">ĐANG Ở GẦN: {nearbyWorldLocation.name.toUpperCase()}</p><p className="mt-1 leading-relaxed text-slate-200">{nearbyWorldLocation.description} {getWorldDialogue(nearbyWorldLocation)}</p></section>}
-                  <p className="text-[10px] italic text-slate-400">Mẹo: nhiệm vụ phụ là tùy chọn. Bạn có thể trò chuyện, khám phá trước rồi quay lại xe bánh tráng bất cứ lúc nào.</p>
-                </div>
-              ) : (
-                <p className="mt-2 text-xs leading-relaxed text-slate-200">{worldPanel === 'BAG' ? 'Tiền mặt: ' + hud.money.toLocaleString('vi-VN') + 'đ · Cấp độ: ' + hud.playerLevel + '. Kho nguyên liệu được quản lý trong hệ thống kinh doanh.' : 'Điện thoại khu phố: các liên hệ và thông báo kinh doanh sẽ được tích hợp tại đây.'}</p>
-              )}
-            </div>
-          )}
-          {worldHudOpen ? (
-          <>
-          <div className="world-mobile-dock" aria-label="Điều khiển bản đồ trên điện thoại">
-            <div className="world-mobile-tabs">
-              {([{id:'MAP',icon:'🗺️',label:'Bản đồ'},{id:'BAG',icon:'🎒',label:'Túi đồ'},{id:'JOURNAL',icon:'📖',label:'Nhiệm vụ'},{id:'PHONE',icon:'📱',label:'Điện thoại'}] as const).map((item) => (
-                <button key={item.id} type="button" onClick={() => setWorldPanel((current) => current === item.id ? null : item.id)} aria-pressed={worldPanel === item.id} className={worldPanel === item.id ? 'world-mobile-tab is-active' : 'world-mobile-tab'}><span>{item.icon}</span><b>{item.label}</b></button>
-              ))}
-            </div>
-            <div className="world-mobile-controls">
-              <div className="world-mobile-dpad" aria-label="Di chuyển nhân vật">
-                {([{direction:'up',label:'Đi lên',symbol:'↑'},{direction:'left',label:'Đi trái',symbol:'←'},{direction:'down',label:'Đi xuống',symbol:'↓'},{direction:'right',label:'Đi phải',symbol:'→'}] as const).map((item) => (
-                  <button key={item.direction} type="button" onPointerDown={(event) => { event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); startWorldTouchMove(item.direction); }} onPointerUp={() => stopWorldTouchMove(item.direction)} onPointerCancel={() => stopWorldTouchMove(item.direction)} onLostPointerCapture={() => stopWorldTouchMove(item.direction)} aria-label={item.label}>{item.symbol}</button>
-                ))}
-              </div>
-              <div className="world-mobile-actions">
-                {nearbyWorldLocation?.id === 'cart' && !cartVisitorEventSeen && <button type="button" className="world-mobile-visitor" onClick={() => { setCartVisitorEventSeen(true); setWorldNotice(CURIOUS_CART_VISITOR_EVENT.dialogue); setWorldPanel(null); }}>💬 Khách tò mò</button>}
-                <button type="button" className="world-mobile-interact" onClick={handleWorldInteract}><span>Ⓔ</span><b>{nearbyWorldLocation ? nearbyWorldLocation.name : 'TƯƠNG TÁC'}</b></button>
-                <p>{worldNotice || (nearbyWorldLocation ? 'Đang ở gần địa điểm · Chạm E để tương tác' : 'Giữ phím mũi tên để di chuyển')}</p>
-              </div>
-            </div>
-          </div>
-          <div className="world-controls-panel world-desktop-controls absolute bottom-3 left-1/2 z-30 w-[min(94%,620px)] border-[4px] border-[#35291f] bg-[#263b3b]/[.97] p-3 pt-5 font-mono shadow-[6px_6px_0_#172126]">
-            <button type="button" onClick={() => { setWorldHudOpen(false); setWorldPanel(null); }} aria-label="Ẩn bảng điều khiển" title="Ẩn bảng điều khiển" className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center border-2 border-[#5b2d25] bg-[#b95343] text-lg font-black leading-none text-white shadow-[2px_2px_0_#111] hover:bg-[#d46654]">×</button>
-            <div className="world-tab-row mb-2 flex flex-wrap items-center justify-center gap-2">
-              {([{id:'MAP',icon:'🗺️',label:'Bản đồ'},{id:'BAG',icon:'🎒',label:'Túi đồ'},{id:'JOURNAL',icon:'📖',label:'Nhiệm vụ'},{id:'PHONE',icon:'📱',label:'Điện thoại'}] as const).map((item) => (
-                <button key={item.id} type="button" onClick={() => setWorldPanel((current) => current === item.id ? null : item.id)} className={"world-tab-button flex min-w-[58px] flex-1 flex-col items-center border-[3px] px-2 py-1.5 font-mono text-[10px] font-bold shadow-[3px_3px_0_#111] sm:min-w-[62px] sm:flex-none sm:px-3 sm:py-2 " + (worldPanel === item.id ? "border-[#f6cf70] bg-[#8d633e] text-[#fff2c7]" : "border-[#8c9a83] bg-[#405653] text-[#f8edcf] hover:bg-[#587268]")}>
-                  <span className="text-xl">{item.icon}</span>{item.label}
-                </button>
-              ))}
-            </div>
-            <p className="world-hint text-center text-xs leading-relaxed text-slate-200">{worldNotice || (nearbyWorldLocation ? 'ĐANG GẦN: ' + nearbyWorldLocation.name + ' · NHẤN E ĐỂ TƯƠNG TÁC' : 'GIỮ MŨI TÊN ĐỂ DI CHUYỂN · ĐẾN GẦN ĐỊA ĐIỂM RỒI NHẤN E')}</p>
-            <div className="world-quest-reminders">
-            {neighborhoodHelpQuestStatus === 'ACCEPTED' && <p className="mt-1 text-center text-[10px] font-black text-amber-200">📌 NHIỆM VỤ PHỤ: {NEIGHBORHOOD_HELP_QUEST.objective}</p>}
-            {neighborhoodHelpQuestStatus === 'COMPLETED' && <p className="mt-1 text-center text-[10px] font-black text-emerald-200">✓ ĐÃ HOÀN THÀNH: {NEIGHBORHOOD_HELP_QUEST.title}</p>}
-            {neighborhoodParcelQuestStatus === 'ACCEPTED' && <p className="mt-1 text-center text-[10px] font-black text-amber-200">📌 NHIỆM VỤ PHỤ: {NEIGHBORHOOD_PARCEL_QUEST.objective}</p>}
-            {neighborhoodParcelQuestStatus === 'COMPLETED' && <p className="mt-1 text-center text-[10px] font-black text-emerald-200">✓ ĐÃ HOÀN THÀNH: {NEIGHBORHOOD_PARCEL_QUEST.title}</p>}
-            </div>
-            <div className="world-control-deck">
-            <div className="world-dpad mt-2 flex items-center justify-center gap-2">
-              {([
-                { direction: 'up', label: 'Đi lên', symbol: '↑' },
-                { direction: 'left', label: 'Đi trái', symbol: '←' },
-                { direction: 'down', label: 'Đi xuống', symbol: '↓' },
-                { direction: 'right', label: 'Đi phải', symbol: '→' },
-              ] as const).map((item) => (
-                <button
-                  key={item.direction}
-                  type="button"
-                  onPointerDown={(event) => { event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); startWorldTouchMove(item.direction); }}
-                  onPointerUp={() => stopWorldTouchMove(item.direction)}
-                  onPointerCancel={() => stopWorldTouchMove(item.direction)}
-                  onLostPointerCapture={() => stopWorldTouchMove(item.direction)}
-                  className="world-dpad-button touch-none select-none border border-white/30 bg-white/10 px-3 py-2 text-lg active:bg-amber-300/30"
-                  aria-label={item.label}
-                >{item.symbol}</button>
-              ))}
-            </div>
-            <div className={"world-action-row mt-2 flex flex-wrap items-center justify-center gap-2 " + (nearbyWorldLocation?.id === 'cart' && !cartVisitorEventSeen ? "has-curious-visitor" : "")}>
-              {nearbyWorldLocation?.id === 'cart' && !cartVisitorEventSeen && <button type="button" onClick={() => { setCartVisitorEventSeen(true); setWorldNotice(CURIOUS_CART_VISITOR_EVENT.dialogue); setWorldPanel(null); }} className="world-curious-button max-w-full border-[3px] border-[#6b5430] bg-[#f6dfa0] px-3 py-2 font-mono text-[10px] font-black text-[#392819] shadow-[3px_3px_0_#111] hover:bg-[#ffe9b2]">💬 KHÁCH TÒ MÒ</button>}
-              <button type="button" onClick={handleWorldInteract} className="world-interact-button max-w-full whitespace-normal break-words border-[3px] border-[#543a25] bg-[#f1c65e] px-4 py-2 text-center font-mono text-xs font-black text-[#392819] shadow-[4px_4px_0_#111] hover:bg-[#ffda79]">E · {nearbyWorldLocation ? nearbyWorldLocation.name.toUpperCase() : 'TƯƠNG TÁC'}</button>
-              <button type="button" onClick={() => { setWorldPanel((current) => current === 'MAP' ? null : 'MAP'); setWorldNotice('Bạn đang ở khu phố bán bánh tráng. Hãy đi dọc vỉa hè, gặp khách và đến xe bánh tráng để bắt đầu ca bán hàng.'); }} className="world-guide-button max-w-full border-[3px] border-[#9cae91] bg-[#405653] px-3 py-2 font-mono text-[10px] font-bold text-[#fff2d1] shadow-[3px_3px_0_#111]">Hướng dẫn</button>
-            </div>
-            </div>
-          </div>
-          </>
-          ) : (
-            <button type="button" onClick={() => setWorldHudOpen(true)} className="absolute bottom-3 left-1/2 z-30 -translate-x-1/2 border-[3px] border-[#e7c77e] bg-[#263b3b]/95 px-4 py-2 font-mono text-xs font-black text-[#fff2d1] shadow-[4px_4px_0_#111] hover:bg-[#405653]">☰ MỞ BẢNG ĐIỀU KHIỂN</button>
-          )}
-          {worldNotice && nearbyWorldLocation && !worldPanel && !neighborhoodHelpQuestOfferOpen && !neighborhoodParcelQuestOfferOpen && (
-            <WorldDialoguePanel npc={nearbyWorldLocation} message={worldNotice} onContinue={() => setWorldNotice('')} />
-          )}
-          {neighborhoodParcelQuestOfferOpen && (
-            <div className="absolute inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="parcel-quest-title">
-              <div className="max-h-[85dvh] w-full max-w-md overflow-y-auto overscroll-contain touch-pan-y border-[4px] border-[#35291f] bg-[#f4e2b8] p-4 font-mono text-[#392819] shadow-[7px_7px_0_#111]">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <h2 id="parcel-quest-title" className="text-sm font-black">📦 CHUYẾN HÀNG CUỐI NGÕ</h2>
-                  <button type="button" onClick={() => setNeighborhoodParcelQuestOfferOpen(false)} aria-label="Đóng lời mời" className="border-2 border-[#543a25] bg-[#e7c77e] px-2 py-1 font-black">×</button>
-                </div>
-                <p className="text-xs leading-relaxed">{NEIGHBORHOOD_PARCEL_QUEST.offerDialogue}</p>
-                <p className="mt-3 border-y-2 border-[#b99a69] py-2 text-xs font-bold">Nhiệm vụ: {NEIGHBORHOOD_PARCEL_QUEST.objective}</p>
-                <div className="mt-3 flex flex-wrap justify-end gap-2">
-                  <button type="button" onClick={() => { setNeighborhoodParcelQuestOfferOpen(false); setWorldNotice('Tí: “Dạ không sao, khi nào tiện thì anh/chị ghé giúp em nha!”'); }} className="border-[3px] border-[#765c3c] bg-[#e7c77e] px-3 py-2 text-[10px] font-black hover:bg-[#f1d89d]">ĐỂ LÚC KHÁC</button>
-                  <button type="button" onClick={() => { setNeighborhoodParcelQuestStatus('ACCEPTED'); setNeighborhoodParcelQuestOfferOpen(false); setWorldNotice(NEIGHBORHOOD_PARCEL_QUEST.acceptedDialogue); }} className="border-[3px] border-[#31533e] bg-[#8fbd8c] px-3 py-2 text-[10px] font-black hover:bg-[#a7d3a2]">NHẬN LỜI</button>
-                </div>
-              </div>
-            </div>
-          )}
-          {neighborhoodHelpQuestOfferOpen && (
-            <div className="absolute inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="neighbor-quest-title">
-              <div className="max-h-[85dvh] w-full max-w-md overflow-y-auto overscroll-contain touch-pan-y border-[4px] border-[#35291f] bg-[#f4e2b8] p-4 font-mono text-[#392819] shadow-[7px_7px_0_#111]">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <h2 id="neighbor-quest-title" className="text-sm font-black">📜 LỜI NHỜ TỪ HÀNG XÓM</h2>
-                  <button type="button" onClick={() => setNeighborhoodHelpQuestOfferOpen(false)} aria-label="Đóng lời mời" className="border-2 border-[#543a25] bg-[#e7c77e] px-2 py-1 font-black">×</button>
-                </div>
-                <p className="text-xs leading-relaxed">{NEIGHBORHOOD_HELP_QUEST.offerDialogue}</p>
-                <p className="mt-3 border-y-2 border-[#b99a69] py-2 text-xs font-bold">Nhiệm vụ: {NEIGHBORHOOD_HELP_QUEST.objective}</p>
-                <div className="mt-3 flex flex-wrap justify-end gap-2">
-                  <button type="button" onClick={() => { setNeighborhoodHelpQuestOfferOpen(false); setWorldNotice('Chú Bảy: “Không sao, khi nào tiện thì con ghé giúp chú cũng được!”'); }} className="border-[3px] border-[#765c3c] bg-[#e7c77e] px-3 py-2 text-[10px] font-black hover:bg-[#f1d89d]">ĐỂ LÚC KHÁC</button>
-                  <button type="button" onClick={() => { setNeighborhoodHelpQuestStatus('ACCEPTED'); setNeighborhoodHelpQuestOfferOpen(false); setWorldNotice(NEIGHBORHOOD_HELP_QUEST.acceptedDialogue); }} className="border-[3px] border-[#31533e] bg-[#8fbd8c] px-3 py-2 text-[10px] font-black hover:bg-[#a7d3a2]">NHẬN LỜI</button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        <NeighborhoodMapView
+          hud={hud}
+          player={worldPlayer}
+          nearbyLocation={nearbyWorldLocation}
+          neighborhoodEvent={neighborhoodEvent}
+          lighting={worldLighting}
+          selectedVendorSpot={selectedVendorSpot}
+          worldPanel={worldPanel}
+          onChangePanel={setWorldPanel}
+          worldNotice={worldNotice}
+          onDismissNotice={() => setWorldNotice('')}
+          cartVisitorEventSeen={cartVisitorEventSeen}
+          onTriggerCuriousVisitor={() => {
+            setCartVisitorEventSeen(true);
+            setWorldNotice(CURIOUS_CART_VISITOR_EVENT.dialogue);
+            setWorldPanel(null);
+          }}
+          onInteract={handleWorldInteract}
+          onClaimStoryMission={() => engineRef.current?.claimCurrentStoryMission()}
+          onSetTouchDirections={setWorldTouchDirections}
+          getLivePlayerPosition={() => worldPlayerRef.current}
+          helpQuestStatus={neighborhoodHelpQuestStatus}
+          helpQuestOfferOpen={neighborhoodHelpQuestOfferOpen}
+          onAcceptHelpQuest={() => {
+            setNeighborhoodHelpQuestStatus('ACCEPTED');
+            setNeighborhoodHelpQuestOfferOpen(false);
+            setWorldNotice(NEIGHBORHOOD_HELP_QUEST.acceptedDialogue);
+          }}
+          onDeferHelpQuest={() => {
+            setNeighborhoodHelpQuestOfferOpen(false);
+            setWorldNotice('Chú Bảy: “Không sao, khi nào tiện thì con ghé giúp chú cũng được!”');
+          }}
+          onCloseHelpQuestOffer={() => setNeighborhoodHelpQuestOfferOpen(false)}
+          parcelQuestStatus={neighborhoodParcelQuestStatus}
+          parcelQuestOfferOpen={neighborhoodParcelQuestOfferOpen}
+          onAcceptParcelQuest={() => {
+            setNeighborhoodParcelQuestStatus('ACCEPTED');
+            setNeighborhoodParcelQuestOfferOpen(false);
+            setWorldNotice(NEIGHBORHOOD_PARCEL_QUEST.acceptedDialogue);
+          }}
+          onDeferParcelQuest={() => {
+            setNeighborhoodParcelQuestOfferOpen(false);
+            setWorldNotice('Tí: “Dạ không sao, khi nào tiện thì anh/chị ghé giúp em nha!”');
+          }}
+          onCloseParcelQuestOffer={() => setNeighborhoodParcelQuestOfferOpen(false)}
+        />
       )}
 
       {/* TITLE SCREEN */}
@@ -1733,8 +1537,11 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => {
-                  if (hasSavedGame && !window.confirm('Bắt đầu trò chơi mới sẽ thay thế bản lưu hiện tại. Bạn có chắc chắn muốn tiếp tục?')) return;
-                  setOnboardingStep('MAP');
+                  if (hasSavedGame) {
+                    setNewGameConfirmTarget('MAP');
+                    return;
+                  }
+                  beginNewGameOnboarding('MAP');
                 }}
                 className="flex items-center gap-2 px-5 py-3.5 rounded-xl bg-[#10B981] hover:bg-[#34D399] text-white font-display font-extrabold text-base border-[3px] border-[#111318] comic-shadow transition-transform hover:-translate-y-0.5 active:translate-y-0.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
